@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "development": "tsx watch src/server.ts",
-    "production build": "tsc",
-    "production start": "node dist/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node ./node_modules/tsx/dist/cli.mjs watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
   },
   "keywords": [],
-  "author": "",
+  "author": "Abir Hasan Khan",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
@@ -28,6 +31,7 @@
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.1",
-    "@prisma/client": "^7.10.1"
+    "@prisma/client": "^7.10.1",
+    "zod": "^3.24.0"
   }
 }
