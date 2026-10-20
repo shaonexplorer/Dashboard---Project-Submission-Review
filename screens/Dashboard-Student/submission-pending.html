@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="web_standard" name="shell-type" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @layer base {
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          overscroll-behavior: none;
+        }
+        main > :first-child {
+          margin-top: 0 !important;
+        }
+        main > :last-child {
+          margin-bottom: 0 !important;
+        }
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container": "#e5eeff",
+              secondary: "#565e74",
+              "on-tertiary-container": "#d9d8ff",
+              "surface-container-low": "#eff4ff",
+              "on-primary-container": "#dad7ff",
+              "on-primary-fixed": "#0f0069",
+              "tertiary-fixed-dim": "#c0c1ff",
+              "inverse-on-surface": "#eaf1ff",
+              "on-surface-variant": "#464555",
+              "on-background": "#0b1c30",
+              outline: "#777587",
+              "surface-variant": "#d3e4fe",
+              "surface-container-lowest": "#ffffff",
+              "inverse-primary": "#c3c0ff",
+              "surface-bright": "#f8f9ff",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed": "#e1e0ff",
+              "secondary-fixed": "#dae2fd",
+              "tertiary-container": "#4b4dd8",
+              "surface-dim": "#cbdbf5",
+              "on-tertiary-fixed-variant": "#2f2ebe",
+              "secondary-container": "#dae2fd",
+              "on-secondary-container": "#5c647a",
+              surface: "#f8f9ff",
+              "secondary-fixed-dim": "#bec6e0",
+              "primary-fixed": "#e2dfff",
+              "on-secondary": "#ffffff",
+              "on-primary": "#ffffff",
+              "surface-tint": "#4d44e3",
+              "on-tertiary-fixed": "#07006c",
+              primary: "#3525cd",
+              "on-secondary-fixed-variant": "#3f465c",
+              "primary-container": "#4f46e5",
+              background: "#f8f9ff",
+              "on-primary-fixed-variant": "#3323cc",
+              "on-error-container": "#93000a",
+              "error-container": "#ffdad6",
+              "inverse-surface": "#213145",
+              "surface-container-high": "#dce9ff",
+              error: "#ba1a1a",
+              "on-surface": "#0b1c30",
+              "outline-variant": "#c7c4d8",
+              "on-error": "#ffffff",
+              "primary-fixed-dim": "#c3c0ff",
+              "on-secondary-fixed": "#131b2e",
+              "surface-container-highest": "#d3e4fe",
+              tertiary: "#3130c0",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              "space-xl": "2rem",
+              "space-xs": "0.25rem",
+              "space-md": "1rem",
+              "space-sm": "0.5rem",
+              "margin-mobile": "1rem",
+              "gutter-mobile": "1rem",
+              gutter: "1.5rem",
+              margin: "2rem",
+              "space-lg": "1.5rem",
+            },
+            fontFamily: {
+              "headline-lg-mobile": ["Inter"],
+              display: ["Inter"],
+              "label-md": ["Inter"],
+              "label-sm": ["Inter"],
+              "body-sm": ["Inter"],
+              "headline-md": ["Inter"],
+              "code-sm": ["JetBrains Mono"],
+              "headline-sm": ["Inter"],
+              "code-md": ["JetBrains Mono"],
+              "headline-lg": ["Inter"],
+              "display-mobile": ["Inter"],
+              "body-md": ["Inter"],
+              "body-lg": ["Inter"],
+            },
+            fontSize: {
+              "headline-lg-mobile": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.015em",
+                  fontWeight: "600",
+                },
+              ],
+              display: [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.025em",
+                  fontWeight: "700",
+                },
+              ],
+              "label-md": [
+                "13px",
+                {
+                  lineHeight: "18px",
+                  letterSpacing: "0.01em",
+                  fontWeight: "500",
+                },
+              ],
+              "label-sm": [
+                "11px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+              "body-sm": ["12px", { lineHeight: "18px", fontWeight: "400" }],
+              "headline-md": [
+                "20px",
+                {
+                  lineHeight: "28px",
+                  letterSpacing: "-0.015em",
+                  fontWeight: "600",
+                },
+              ],
+              "code-sm": ["11px", { lineHeight: "16px", fontWeight: "500" }],
+              "headline-sm": [
+                "16px",
+                {
+                  lineHeight: "24px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "code-md": ["13px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-lg": [
+                "30px",
+                {
+                  lineHeight: "38px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "600",
+                },
+              ],
+              "display-mobile": [
+                "28px",
+                {
+                  lineHeight: "36px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["14px", { lineHeight: "22px", fontWeight: "400" }],
+              "body-lg": ["16px", { lineHeight: "26px", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-background font-body-md text-on-surface antialiased">
+    <header
+      class="fixed top-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+    >
+      <div
+        class="h-16 max-w-[1440px] mx-auto px-margin flex items-center justify-between gap-gutter"
+      >
+        <div class="flex items-center gap-space-xl">
+          <a
+            class="flex items-center gap-space-sm"
+            data-path="dashboard"
+            href="#"
+            ><div
+              class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center"
+            >
+              <span
+                class="material-symbols-outlined text-on-primary text-[20px]"
+                >code_blocks</span
+              >
+            </div>
+            <span
+              class="font-headline-sm text-headline-sm tracking-tight text-on-surface font-semibold"
+              >ProjectHub</span
+            ></a
+          >
+          <nav
+            class="hidden md:flex items-center gap-space-xs"
+            data-active-classes="bg-surface-container-high text-on-surface font-label-md text-label-md rounded-lg"
+          >
+            <a
+              class="px-space-md py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              data-path="dashboard"
+              href="#"
+              >Dashboard</a
+            ><a
+              class="px-space-md py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              data-path="my-projects"
+              href="#"
+              >My Projects</a
+            ><a
+              class="px-space-md py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              data-path="submissions"
+              href="#"
+              >Submissions</a
+            ><a
+              class="px-space-md py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              data-path="rubrics"
+              href="#"
+              >Rubrics</a
+            >
+          </nav>
+        </div>
+        <div class="flex items-center gap-space-md">
+          <div class="flex items-center gap-space-sm pl-space-sm">
+            <div
+              class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
+            >
+              <span
+                class="material-symbols-outlined text-on-primary text-[18px]"
+                >person</span
+              >
+            </div>
+            <div class="hidden sm:flex flex-col text-left">
+              <span
+                class="font-label-md text-label-md text-on-surface leading-tight font-medium"
+                >Alex Rivera</span
+              ><span
+                class="font-label-sm text-label-sm text-on-surface-variant font-code-sm"
+                >Student ID · #8492</span
+              >
+            </div>
+          </div>
+          <div class="h-5 w-px bg-surface-container-high hidden sm:block"></div>
+          <a
+            class="flex items-center gap-space-xs px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+            data-path="login"
+            href="#"
+            ><span class="material-symbols-outlined text-[18px]">logout</span
+            ><span class="hidden md:inline">Logout</span></a
+          >
+        </div>
+      </div>
+    </header>
+    <main class="w-full pt-16 bg-background min-h-screen">
+      <div class="flex flex-col w-full">
+        <div class="max-w-[1200px] w-full mx-auto px-6 py-10">
+          <!-- Breadcrumbs & Header -->
+          <header class="pb-8 border-b border-surface-container-high/60">
+            <div
+              class="flex items-center gap-2 font-code-sm text-code-sm text-on-surface-variant mb-3"
+            >
+              <span
+                class="hover:text-on-surface transition-colors cursor-pointer"
+                >Student Portal</span
+              >
+              <span class="text-outline">/</span>
+              <span class="text-on-surface font-medium">Your Submission</span>
+            </div>
+            <div
+              class="flex flex-col md:flex-row md:items-end justify-between gap-4"
+            >
+              <div>
+                <h1
+                  class="font-display text-display text-on-surface font-bold tracking-tight"
+                >
+                  Your Submission
+                </h1>
+                <p
+                  class="font-body-md text-body-md text-on-surface-variant mt-1.5"
+                >
+                  Track the review status and evaluation benchmarks of your
+                  submitted project.
+                </p>
+              </div>
+              <div class="flex items-center gap-2.5">
+                <div
+                  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low border border-surface-container-high font-code-sm text-code-sm text-on-surface"
+                >
+                  <span
+                    class="h-2 w-2 rounded-full bg-primary animate-pulse"
+                  ></span>
+                  <span class="font-medium">Waiting for Review</span>
+                </div>
+                <div
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-surface-container-high font-code-sm text-code-sm text-secondary"
+                >
+                  <span class="material-symbols-outlined text-[16px]"
+                    >lock</span
+                  >
+                  <span>Locked</span>
+                </div>
+              </div>
+            </div>
+          </header>
+          <!-- Main Content Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start pt-8">
+            <!-- Left / Primary Column (7 cols) -->
+            <div class="lg:col-span-7 flex flex-col gap-8 min-w-0">
+              <!-- Project Summary & Meta Details -->
+              <section class="flex flex-col gap-5">
+                <div>
+                  <div
+                    class="flex items-center gap-3 font-code-sm text-code-sm text-secondary mb-2"
+                  >
+                    <span>#SUB-8492-01</span>
+                    <span>·</span>
+                    <span>Oct 20, 2026, 14:32 UTC</span>
+                    <span>·</span>
+                    <span class="text-on-surface font-medium"
+                      >Milestone 01</span
+                    >
+                  </div>
+                  <h2
+                    class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight"
+                  >
+                    Project Submission Dashboard
+                  </h2>
+                </div>
+                <p
+                  class="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+                >
+                  A full-stack application for managing student project
+                  submissions and mentor reviews with automated pre-flight
+                  checks, deterministic test harnesses, and rubric-driven
+                  evaluation workflows.
+                </p>
+                <!-- Stack Tags -->
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                  <span
+                    class="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-code-sm text-code-sm border border-surface-container-high/60"
+                    >TypeScript</span
+                  >
+                  <span
+                    class="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-code-sm text-code-sm border border-surface-container-high/60"
+                    >React</span
+                  >
+                  <span
+                    class="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-code-sm text-code-sm border border-surface-container-high/60"
+                    >Next.js</span
+                  >
+                  <span
+                    class="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-code-sm text-code-sm border border-surface-container-high/60"
+                    >Tailwind CSS</span
+                  >
+                  <span
+                    class="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-code-sm text-code-sm border border-surface-container-high/60"
+                    >PostgreSQL</span
+                  >
+                </div>
+                <!-- External Action Links (Clean Linear / Vercel style) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <a
+                    class="group flex items-center justify-between p-3.5 rounded-lg bg-surface-container-lowest border border-surface-container-high hover:border-primary/40 hover:bg-surface-container-low/40 transition-all"
+                    href="#"
+                  >
+                    <div class="flex items-center gap-3 min-w-0">
+                      <span
+                        class="material-symbols-outlined text-[20px] text-secondary group-hover:text-primary transition-colors"
+                        >code</span
+                      >
+                      <div class="flex flex-col min-w-0">
+                        <span
+                          class="font-label-md text-label-md font-semibold text-on-surface truncate"
+                          >View Repository</span
+                        >
+                        <span
+                          class="font-code-sm text-code-sm text-secondary truncate"
+                          >github.com/alexrivera/projecthub-core</span
+                        >
+                      </div>
+                    </div>
+                    <span
+                      class="material-symbols-outlined text-[16px] text-secondary group-hover:text-primary transition-colors shrink-0 ml-2"
+                      >north_east</span
+                    >
+                  </a>
+                  <a
+                    class="group flex items-center justify-between p-3.5 rounded-lg bg-surface-container-lowest border border-surface-container-high hover:border-primary/40 hover:bg-surface-container-low/40 transition-all"
+                    href="#"
+                  >
+                    <div class="flex items-center gap-3 min-w-0">
+                      <span
+                        class="material-symbols-outlined text-[20px] text-secondary group-hover:text-primary transition-colors"
+                        >rocket_launch</span
+                      >
+                      <div class="flex flex-col min-w-0">
+                        <span
+                          class="font-label-md text-label-md font-semibold text-on-surface truncate"
+                          >View Live Project</span
+                        >
+                        <span
+                          class="font-code-sm text-code-sm text-secondary truncate"
+                          >projecthub-core.assessment.run</span
+                        >
+                      </div>
+                    </div>
+                    <span
+                      class="material-symbols-outlined text-[16px] text-secondary group-hover:text-primary transition-colors shrink-0 ml-2"
+                      >north_east</span
+                    >
+                  </a>
+                </div>
+              </section>
+              <!-- Review Pipeline Section -->
+              <section
+                class="rounded-xl bg-surface-container-lowest border border-surface-container-high p-6 flex flex-col gap-6"
+              >
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-primary"
+                    >
+                      <span class="material-symbols-outlined text-[20px]"
+                        >schedule</span
+                      >
+                    </div>
+                    <div>
+                      <h3
+                        class="font-headline-sm text-headline-sm text-on-surface font-semibold"
+                      >
+                        Waiting for review
+                      </h3>
+                      <p
+                        class="font-body-sm text-body-sm text-on-surface-variant"
+                      >
+                        Your project has been submitted successfully and is
+                        queued for evaluation.
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    class="hidden sm:inline-block font-code-sm text-code-sm text-secondary bg-surface-container-low px-2.5 py-1 rounded"
+                  >
+                    Position #3
+                  </span>
+                </div>
+                <!-- Minimal Linear Timeline Stepper -->
+                <div class="pt-2 pb-1">
+                  <div class="grid grid-cols-4 gap-2 relative">
+                    <!-- Step 1 -->
+                    <div class="flex flex-col gap-2">
+                      <div class="h-1 w-full bg-primary rounded-full"></div>
+                      <div class="flex items-center gap-1.5">
+                        <span
+                          class="material-symbols-outlined text-[14px] text-primary"
+                          >check_circle</span
+                        >
+                        <span
+                          class="font-label-sm text-label-sm font-semibold text-on-surface"
+                          >Submitted</span
+                        >
+                      </div>
+                      <span class="font-code-sm text-[11px] text-secondary"
+                        >Oct 20, 14:32</span
+                      >
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="flex flex-col gap-2">
+                      <div class="h-1 w-full bg-primary rounded-full"></div>
+                      <div class="flex items-center gap-1.5">
+                        <span
+                          class="h-2 w-2 rounded-full bg-primary animate-pulse"
+                        ></span>
+                        <span
+                          class="font-label-sm text-label-sm font-semibold text-primary"
+                          >In Queue</span
+                        >
+                      </div>
+                      <span
+                        class="font-code-sm text-[11px] text-on-surface-variant"
+                        >Est. &lt; 48h</span
+                      >
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="flex flex-col gap-2 opacity-50">
+                      <div
+                        class="h-1 w-full bg-surface-container-high rounded-full"
+                      ></div>
+                      <div class="flex items-center gap-1.5">
+                        <span
+                          class="h-2 w-2 rounded-full bg-outline-variant"
+                        ></span>
+                        <span
+                          class="font-label-sm text-label-sm font-medium text-secondary"
+                          >Rubric</span
+                        >
+                      </div>
+                      <span class="font-code-sm text-[11px] text-secondary"
+                        >4 vectors</span
+                      >
+                    </div>
+                    <!-- Step 4 -->
+                    <div class="flex flex-col gap-2 opacity-50">
+                      <div
+                        class="h-1 w-full bg-surface-container-high rounded-full"
+                      ></div>
+                      <div class="flex items-center gap-1.5">
+                        <span
+                          class="h-2 w-2 rounded-full bg-outline-variant"
+                        ></span>
+                        <span
+                          class="font-label-sm text-label-sm font-medium text-secondary"
+                          >Decision</span
+                        >
+                      </div>
+                      <span class="font-code-sm text-[11px] text-secondary"
+                        >Target ≥ 85%</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <!-- Subtle Status Notice -->
+                <div
+                  class="flex items-center justify-between text-body-sm text-body-sm text-secondary pt-3 border-t border-surface-container-high/60"
+                >
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="material-symbols-outlined text-[16px] text-outline"
+                      >lock</span
+                    >
+                    <span>Projects cannot be edited after submission.</span>
+                  </div>
+                  <a
+                    class="font-code-sm text-code-sm text-primary hover:underline"
+                    href="#"
+                    >Need help?</a
+                  >
+                </div>
+              </section>
+              <!-- Automated Verification Checks (Clean compact row) -->
+              <section
+                class="rounded-xl bg-surface-container-lowest border border-surface-container-high p-5 flex flex-col gap-4"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="material-symbols-outlined text-primary text-[18px]"
+                      >verified</span
+                    >
+                    <span
+                      class="font-label-md text-label-md text-on-surface font-semibold"
+                      >Automated Integrity Checks</span
+                    >
+                  </div>
+                  <span
+                    class="font-code-sm text-code-sm text-primary font-semibold"
+                    >3 of 3 Passed</span
+                  >
+                </div>
+                <div
+                  class="divide-y divide-surface-container-high/60 font-code-sm text-code-sm"
+                >
+                  <div class="py-2.5 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="material-symbols-outlined text-primary text-[16px]"
+                        >check</span
+                      >
+                      <span class="text-on-surface">Git SHA Verification</span>
+                    </div>
+                    <span class="text-secondary">#a7f3c9e (clean tree)</span>
+                  </div>
+                  <div class="py-2.5 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="material-symbols-outlined text-primary text-[16px]"
+                        >check</span
+                      >
+                      <span class="text-on-surface"
+                        >Endpoint Health &amp; TLS</span
+                      >
+                    </div>
+                    <span class="text-secondary">200 OK · 42ms · TLS 1.3</span>
+                  </div>
+                  <div class="py-2.5 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="material-symbols-outlined text-primary text-[16px]"
+                        >check</span
+                      >
+                      <span class="text-on-surface"
+                        >Specification Compliance</span
+                      >
+                    </div>
+                    <span class="text-secondary"
+                      >Schema &amp; README present</span
+                    >
+                  </div>
+                </div>
+              </section>
+            </div>
+            <!-- Right / Operational Sidebar (5 cols) -->
+            <aside class="lg:col-span-5 flex flex-col gap-6">
+              <!-- Evaluation Rubric Breakdown -->
+              <div
+                class="bg-surface-container-lowest rounded-xl border border-surface-container-high p-5 flex flex-col gap-4"
+              >
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3
+                      class="font-label-md text-label-md text-on-surface font-bold"
+                    >
+                      Evaluation Rubric
+                    </h3>
+                    <p class="font-body-sm text-body-sm text-secondary">
+                      Target standard: 100 points
+                    </p>
+                  </div>
+                  <span
+                    class="font-code-sm text-code-sm px-2 py-0.5 rounded bg-surface-container-low text-secondary font-semibold"
+                    >Unscored</span
+                  >
+                </div>
+                <div
+                  class="flex flex-col divide-y divide-surface-container-high/60"
+                >
+                  <div class="py-3 flex flex-col gap-1.5">
+                    <div
+                      class="flex items-center justify-between font-label-md text-label-md"
+                    >
+                      <span class="text-on-surface font-medium"
+                        >Architectural Soundness</span
+                      >
+                      <span class="font-code-sm text-code-sm text-secondary"
+                        >40 pts</span
+                      >
+                    </div>
+                    <span class="text-[12px] text-secondary leading-normal"
+                      >Database schema, separation of concerns &amp; API
+                      design</span
+                    >
+                  </div>
+                  <div class="py-3 flex flex-col gap-1.5">
+                    <div
+                      class="flex items-center justify-between font-label-md text-label-md"
+                    >
+                      <span class="text-on-surface font-medium"
+                        >Deployment &amp; Stability</span
+                      >
+                      <span class="font-code-sm text-code-sm text-secondary"
+                        >30 pts</span
+                      >
+                    </div>
+                    <span class="text-[12px] text-secondary leading-normal"
+                      >Live URL accessibility, error handling &amp; SSL
+                      setup</span
+                    >
+                  </div>
+                  <div class="py-3 flex flex-col gap-1.5">
+                    <div
+                      class="flex items-center justify-between font-label-md text-label-md"
+                    >
+                      <span class="text-on-surface font-medium"
+                        >Git Hygiene &amp; History</span
+                      >
+                      <span class="font-code-sm text-code-sm text-secondary"
+                        >20 pts</span
+                      >
+                    </div>
+                    <span class="text-[12px] text-secondary leading-normal"
+                      >Atomic commits, clear messages &amp; conventional
+                      syntax</span
+                    >
+                  </div>
+                  <div class="py-3 flex flex-col gap-1.5">
+                    <div
+                      class="flex items-center justify-between font-label-md text-label-md"
+                    >
+                      <span class="text-on-surface font-medium"
+                        >Performance &amp; A11y</span
+                      >
+                      <span class="font-code-sm text-code-sm text-secondary"
+                        >10 pts</span
+                      >
+                    </div>
+                    <span class="text-[12px] text-secondary leading-normal"
+                      >Lighthouse score &gt;90 &amp; keyboard navigable
+                      layouts</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <!-- Snapshot Details Table -->
+              <div
+                class="bg-surface-container-lowest rounded-xl border border-surface-container-high p-5 flex flex-col gap-4"
+              >
+                <h3
+                  class="font-label-md text-label-md text-on-surface font-bold"
+                >
+                  Submission Snapshot
+                </h3>
+                <dl
+                  class="divide-y divide-surface-container-high/60 font-code-sm text-code-sm"
+                >
+                  <div class="py-2.5 flex items-center justify-between">
+                    <dt class="text-secondary">Tracked Branch</dt>
+                    <dd class="text-on-surface font-medium">main</dd>
+                  </div>
+                  <div class="py-2.5 flex items-center justify-between">
+                    <dt class="text-secondary">Commit Hash</dt>
+                    <dd class="text-on-surface font-medium">#a7f3c9e</dd>
+                  </div>
+                  <div class="py-2.5 flex items-center justify-between">
+                    <dt class="text-secondary">Archive Size</dt>
+                    <dd class="text-on-surface font-medium">4.8 MB tarball</dd>
+                  </div>
+                  <div class="py-2.5 flex items-center justify-between">
+                    <dt class="text-secondary">Allocated Mentor</dt>
+                    <dd class="text-secondary">Pending triage</dd>
+                  </div>
+                  <div class="py-2.5 flex items-center justify-between">
+                    <dt class="text-secondary">Cohort</dt>
+                    <dd class="text-on-surface font-medium">Cohort 24-B</dd>
+                  </div>
+                </dl>
+              </div>
+              <!-- Quiet Academic Help Footnote -->
+              <div
+                class="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex items-center justify-between font-body-sm text-body-sm text-secondary"
+              >
+                <span>Daily mentor office hours at 17:00 UTC.</span>
+                <a
+                  class="font-code-sm text-code-sm text-primary hover:underline flex items-center gap-1"
+                  href="#"
+                >
+                  <span>Discord #triage</span>
+                  <span class="material-symbols-outlined text-[14px]"
+                    >north_east</span
+                  >
+                </a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer
+      class="w-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] py-space-lg mt-auto"
+    >
+      <div
+        class="max-w-[1440px] mx-auto px-margin flex flex-col sm:flex-row items-center justify-between gap-space-md"
+      >
+        <div class="flex items-center gap-space-sm">
+          <span class="font-label-md text-label-md text-on-surface-variant"
+            >ProjectHub Learning Assessment Platform</span
+          ><span class="text-on-surface-variant font-label-sm text-label-sm"
+            >·</span
+          ><span class="font-code-sm text-code-sm text-secondary"
+            >v2.4.0-stable</span
+          >
+        </div>
+        <div
+          class="flex items-center gap-space-lg text-on-surface-variant font-label-sm text-label-sm"
+        >
+          <a class="hover:text-on-surface transition-colors" href="#"
+            >Academic Honesty</a
+          ><a class="hover:text-on-surface transition-colors" href="#"
+            >Rubric Standards</a
+          ><a class="hover:text-on-surface transition-colors" href="#"
+            >Support</a
+          ><span class="text-on-surface-variant"
+            >© 2025 ProjectHub. All rights reserved.</span
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

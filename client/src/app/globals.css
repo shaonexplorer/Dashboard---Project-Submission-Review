@@ -132,8 +132,11 @@
   /* Shadows */
   --shadow-level-0: none;
   --shadow-level-1: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-  --shadow-level-2: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-  --shadow-level-3: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+  --shadow-level-2:
+    0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-level-3:
+    0 20px 25px -5px rgba(15, 23, 42, 0.1),
+    0 8px 10px -6px rgba(15, 23, 42, 0.05);
 
   /* Focus ring */
   --focus-ring: 0 0 0 2px #fff, 0 0 0 4px #4d44e3;
@@ -254,8 +257,10 @@
   /* Shadows */
   --shadow-0: none;
   --shadow-1: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-3: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-2:
+    0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-3:
+    0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
 }
 
 @layer base {
@@ -396,7 +401,7 @@
     font-family: var(--font-sans);
   }
   .text-headline-lg {
-    @apply font-sans text-[30px] font-semibold leading-[38px] tracking-[-0.02em];
+    @apply font-sans text-[24px] font-semibold leading-[38px] tracking-[-0.02em];
     font-family: var(--font-sans);
   }
   .text-headline-lg-mobile {
@@ -511,16 +516,32 @@
 
 /* Animations */
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes slide-down {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {

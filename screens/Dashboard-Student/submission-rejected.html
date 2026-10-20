@@ -1,0 +1,1114 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="web_standard" name="shell-type" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      @layer base {
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          overscroll-behavior: none;
+        }
+        main > :first-child {
+          margin-top: 0 !important;
+        }
+        main > :last-child {
+          margin-bottom: 0 !important;
+        }
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container": "#e5eeff",
+              secondary: "#565e74",
+              "on-tertiary-container": "#d9d8ff",
+              "surface-container-low": "#eff4ff",
+              "on-primary-container": "#dad7ff",
+              "on-primary-fixed": "#0f0069",
+              "tertiary-fixed-dim": "#c0c1ff",
+              "inverse-on-surface": "#eaf1ff",
+              "on-surface-variant": "#464555",
+              "on-background": "#0b1c30",
+              outline: "#777587",
+              "surface-variant": "#d3e4fe",
+              "surface-container-lowest": "#ffffff",
+              "inverse-primary": "#c3c0ff",
+              "surface-bright": "#f8f9ff",
+              "on-tertiary": "#ffffff",
+              "tertiary-fixed": "#e1e0ff",
+              "secondary-fixed": "#dae2fd",
+              "tertiary-container": "#4b4dd8",
+              "surface-dim": "#cbdbf5",
+              "on-tertiary-fixed-variant": "#2f2ebe",
+              "secondary-container": "#dae2fd",
+              "on-secondary-container": "#5c647a",
+              surface: "#f8f9ff",
+              "secondary-fixed-dim": "#bec6e0",
+              "primary-fixed": "#e2dfff",
+              "on-secondary": "#ffffff",
+              "on-primary": "#ffffff",
+              "surface-tint": "#4d44e3",
+              "on-tertiary-fixed": "#07006c",
+              primary: "#3525cd",
+              "on-secondary-fixed-variant": "#3f465c",
+              "primary-container": "#4f46e5",
+              background: "#f8f9ff",
+              "on-primary-fixed-variant": "#3323cc",
+              "on-error-container": "#93000a",
+              "error-container": "#ffdad6",
+              "inverse-surface": "#213145",
+              "surface-container-high": "#dce9ff",
+              error: "#ba1a1a",
+              "on-surface": "#0b1c30",
+              "outline-variant": "#c7c4d8",
+              "on-error": "#ffffff",
+              "primary-fixed-dim": "#c3c0ff",
+              "on-secondary-fixed": "#131b2e",
+              "surface-container-highest": "#d3e4fe",
+              tertiary: "#3130c0",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              "space-xl": "2rem",
+              "space-xs": "0.25rem",
+              "space-md": "1rem",
+              "space-sm": "0.5rem",
+              "margin-mobile": "1rem",
+              "gutter-mobile": "1rem",
+              gutter: "1.5rem",
+              margin: "2rem",
+              "space-lg": "1.5rem",
+            },
+            fontFamily: {
+              "headline-lg-mobile": ["Inter"],
+              display: ["Inter"],
+              "label-md": ["Inter"],
+              "label-sm": ["Inter"],
+              "body-sm": ["Inter"],
+              "headline-md": ["Inter"],
+              "code-sm": ["JetBrains Mono"],
+              "headline-sm": ["Inter"],
+              "code-md": ["JetBrains Mono"],
+              "headline-lg": ["Inter"],
+              "display-mobile": ["Inter"],
+              "body-md": ["Inter"],
+              "body-lg": ["Inter"],
+            },
+            fontSize: {
+              "headline-lg-mobile": [
+                "24px",
+                {
+                  lineHeight: "32px",
+                  letterSpacing: "-0.015em",
+                  fontWeight: "600",
+                },
+              ],
+              display: [
+                "36px",
+                {
+                  lineHeight: "44px",
+                  letterSpacing: "-0.025em",
+                  fontWeight: "700",
+                },
+              ],
+              "label-md": [
+                "13px",
+                {
+                  lineHeight: "18px",
+                  letterSpacing: "0.01em",
+                  fontWeight: "500",
+                },
+              ],
+              "label-sm": [
+                "11px",
+                {
+                  lineHeight: "16px",
+                  letterSpacing: "0.02em",
+                  fontWeight: "500",
+                },
+              ],
+              "body-sm": ["12px", { lineHeight: "18px", fontWeight: "400" }],
+              "headline-md": [
+                "20px",
+                {
+                  lineHeight: "28px",
+                  letterSpacing: "-0.015em",
+                  fontWeight: "600",
+                },
+              ],
+              "code-sm": ["11px", { lineHeight: "16px", fontWeight: "500" }],
+              "headline-sm": [
+                "16px",
+                {
+                  lineHeight: "24px",
+                  letterSpacing: "-0.01em",
+                  fontWeight: "600",
+                },
+              ],
+              "code-md": ["13px", { lineHeight: "20px", fontWeight: "400" }],
+              "headline-lg": [
+                "30px",
+                {
+                  lineHeight: "38px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "600",
+                },
+              ],
+              "display-mobile": [
+                "28px",
+                {
+                  lineHeight: "36px",
+                  letterSpacing: "-0.02em",
+                  fontWeight: "700",
+                },
+              ],
+              "body-md": ["14px", { lineHeight: "22px", fontWeight: "400" }],
+              "body-lg": ["16px", { lineHeight: "26px", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-background font-body-md text-on-surface antialiased">
+    <header
+      class="fixed top-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+    >
+      <div
+        class="h-16 max-w-[1440px] mx-auto px-margin flex items-center justify-between gap-gutter"
+      >
+        <div class="flex items-center gap-space-xl">
+          <a
+            class="flex items-center gap-space-sm"
+            data-path="dashboard"
+            href="#"
+            ><div
+              class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center"
+            >
+              <span
+                class="material-symbols-outlined text-on-primary text-[20px]"
+                >code_blocks</span
+              >
+            </div>
+            <span
+              class="font-headline-sm text-headline-sm tracking-tight text-on-surface font-semibold"
+              >ProjectHub</span
+            ></a
+          >
+          <nav
+            class="hidden md:flex items-center gap-space-xs"
+            data-active-classes="bg-surface-container-high text-on-surface font-label-md text-label-md rounded-lg"
+          >
+            <a
+              class="px-space-md py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              data-path="dashboard"
+              href="#"
+              >Dashboard</a
+            ><a
+              class="px-space-md py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              data-path="my-projects"
+              href="#"
+              >My Projects</a
+            ><a
+              class="px-space-md py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              data-path="submissions"
+              href="#"
+              >Submissions</a
+            ><a
+              class="px-space-md py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              data-path="rubrics"
+              href="#"
+              >Rubrics</a
+            >
+          </nav>
+        </div>
+        <div class="flex items-center gap-space-md">
+          <div class="flex items-center gap-space-sm pl-space-sm">
+            <div
+              class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
+            >
+              <span
+                class="material-symbols-outlined text-on-primary text-[18px]"
+                >person</span
+              >
+            </div>
+            <div class="hidden sm:flex flex-col text-left">
+              <span
+                class="font-label-md text-label-md text-on-surface leading-tight font-medium"
+                >Alex Rivera</span
+              ><span
+                class="font-label-sm text-label-sm text-on-surface-variant font-code-sm"
+                >Student ID · #8492</span
+              >
+            </div>
+          </div>
+          <div class="h-5 w-px bg-surface-container-high hidden sm:block"></div>
+          <a
+            class="flex items-center gap-space-xs px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+            data-path="login"
+            href="#"
+            ><span class="material-symbols-outlined text-[18px]">logout</span
+            ><span class="hidden md:inline">Logout</span></a
+          >
+        </div>
+      </div>
+    </header>
+    <main class="w-full pt-16 bg-background min-h-screen">
+      <div class="flex flex-col w-full">
+        <div
+          class="max-w-[1440px] w-full mx-auto px-margin py-space-xl flex flex-col gap-space-xl"
+        >
+          <!-- PAGE HEADER -->
+          <div
+            class="flex flex-col md:flex-row md:items-end justify-between gap-space-lg"
+          >
+            <div class="flex flex-col gap-space-xs">
+              <div
+                class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm tracking-wide"
+              >
+                <span>Student Portal</span>
+                <span class="text-outline-variant">/</span>
+                <span class="text-on-surface font-medium">Your Submission</span>
+              </div>
+              <h1
+                class="font-headline-lg text-headline-lg text-on-surface tracking-tight"
+              >
+                Your Submission
+              </h1>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Track the review status and evaluation benchmarks of your
+                submitted project.
+              </p>
+            </div>
+            <!-- Top Right Status & Cohort Tags -->
+            <div class="flex flex-wrap items-center gap-space-sm">
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-sm font-label-md bg-surface-container-high text-on-surface-variant"
+              >
+                <span class="material-symbols-outlined text-[14px]"
+                  >school</span
+                >
+                Cohort 24-B • Milestone 01
+              </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-sm font-label-md bg-surface-container-high text-on-surface-variant"
+              >
+                <span class="material-symbols-outlined text-[14px]">lock</span>
+                Locked
+              </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-label-sm font-label-md bg-error-container text-on-error-container"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"
+                ></span>
+                CHANGES REQUIRED
+              </span>
+            </div>
+          </div>
+          <!-- STATUS BANNER / REVIEW TIMELINE PANEL -->
+          <div
+            class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-xl"
+          >
+            <!-- Main Status Alert Callout -->
+            <div
+              class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg bg-error-container/40 p-space-lg rounded-lg"
+            >
+              <div class="flex items-start gap-space-md">
+                <div
+                  class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center shrink-0 mt-0.5"
+                >
+                  <span class="material-symbols-outlined text-error text-[22px]"
+                    >cancel</span
+                  >
+                </div>
+                <div class="flex flex-col gap-space-xs">
+                  <div class="flex items-center gap-space-sm flex-wrap">
+                    <span
+                      class="font-headline-sm text-headline-sm text-on-surface font-semibold"
+                      >Changes required</span
+                    >
+                    <span
+                      class="px-2.5 py-0.5 rounded-full text-label-sm font-label-md bg-error text-on-error"
+                    >
+                      Revision Needed • 58 / 100
+                    </span>
+                  </div>
+                  <p class="font-body-md text-body-md text-on-surface-variant">
+                    Your project was reviewed by the technical committee but did
+                    not meet all required benchmark criteria.
+                  </p>
+                </div>
+              </div>
+              <!-- Lock Warning Notice -->
+              <div
+                class="flex items-center gap-space-sm bg-surface-container-lowest/80 px-space-md py-2.5 rounded-lg text-on-surface-variant font-label-sm text-label-sm shrink-0"
+              >
+                <span class="material-symbols-outlined text-outline text-[18px]"
+                  >lock_clock</span
+                >
+                <span
+                  >Projects cannot be edited after submission. Review mentor
+                  notes below.</span
+                >
+              </div>
+            </div>
+            <!-- Lifecycle Stepper / Audit Trail -->
+            <div
+              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md relative"
+            >
+              <!-- Step 1 -->
+              <div
+                class="flex flex-col gap-space-xs p-space-md rounded-lg bg-surface-container-low"
+              >
+                <div class="flex items-center justify-between">
+                  <span
+                    class="font-code-sm text-code-sm text-outline font-semibold"
+                    >STEP 01</span
+                  >
+                  <span
+                    class="material-symbols-outlined text-primary text-[18px]"
+                    >check_circle</span
+                  >
+                </div>
+                <span
+                  class="font-headline-sm text-headline-sm text-on-surface font-medium"
+                  >Submitted</span
+                >
+                <span class="font-code-sm text-code-sm text-on-surface-variant"
+                  >Oct 20, 14:32 UTC</span
+                >
+                <span class="font-body-sm text-body-sm text-secondary"
+                  >Verified payload seal</span
+                >
+              </div>
+              <!-- Step 2 -->
+              <div
+                class="flex flex-col gap-space-xs p-space-md rounded-lg bg-surface-container-low"
+              >
+                <div class="flex items-center justify-between">
+                  <span
+                    class="font-code-sm text-code-sm text-outline font-semibold"
+                    >STEP 02</span
+                  >
+                  <span
+                    class="material-symbols-outlined text-primary text-[18px]"
+                    >check_circle</span
+                  >
+                </div>
+                <span
+                  class="font-headline-sm text-headline-sm text-on-surface font-medium"
+                  >In Queue</span
+                >
+                <span class="font-code-sm text-code-sm text-on-surface-variant"
+                  >Oct 20, 15:10 UTC</span
+                >
+                <span class="font-body-sm text-body-sm text-secondary"
+                  >Triaged by Assessment Bot</span
+                >
+              </div>
+              <!-- Step 3 -->
+              <div
+                class="flex flex-col gap-space-xs p-space-md rounded-lg bg-surface-container-low"
+              >
+                <div class="flex items-center justify-between">
+                  <span
+                    class="font-code-sm text-code-sm text-outline font-semibold"
+                    >STEP 03</span
+                  >
+                  <span
+                    class="material-symbols-outlined text-primary text-[18px]"
+                    >check_circle</span
+                  >
+                </div>
+                <span
+                  class="font-headline-sm text-headline-sm text-on-surface font-medium"
+                  >Evaluation</span
+                >
+                <span class="font-code-sm text-code-sm text-on-surface-variant"
+                  >Oct 21, 09:40 UTC</span
+                >
+                <span class="font-body-sm text-body-sm text-secondary"
+                  >Peer &amp; Mentor matrix score</span
+                >
+              </div>
+              <!-- Step 4 (Changes Required / Alert state) -->
+              <div
+                class="flex flex-col gap-space-xs p-space-md rounded-lg bg-error-container/30"
+              >
+                <div class="flex items-center justify-between">
+                  <span
+                    class="font-code-sm text-code-sm text-error font-semibold"
+                    >STEP 04</span
+                  >
+                  <span class="material-symbols-outlined text-error text-[18px]"
+                    >error</span
+                  >
+                </div>
+                <span
+                  class="font-headline-sm text-headline-sm text-error font-semibold"
+                  >Changes Required</span
+                >
+                <span class="font-code-sm text-code-sm text-error font-medium"
+                  >Oct 21, 11:15 UTC</span
+                >
+                <span class="font-body-sm text-body-sm text-on-error-container"
+                  >Final Decision logged</span
+                >
+              </div>
+            </div>
+          </div>
+          <!-- MAIN TWO-COLUMN CONTENT AREA -->
+          <div
+            class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start"
+          >
+            <!-- LEFT COLUMN: FEEDBACK & SUBMISSION DETAILS (7 cols) -->
+            <div class="lg:col-span-7 flex flex-col gap-space-xl min-w-0">
+              <!-- MENTOR FEEDBACK CARD -->
+              <div
+                class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-lg"
+              >
+                <div
+                  class="flex items-center justify-between flex-wrap gap-space-sm pb-space-xs"
+                >
+                  <div class="flex items-center gap-space-sm">
+                    <div
+                      class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center"
+                    >
+                      <span
+                        class="material-symbols-outlined text-error text-[18px]"
+                        >rate_review</span
+                      >
+                    </div>
+                    <h2
+                      class="font-headline-sm text-headline-sm text-on-surface font-semibold"
+                    >
+                      Mentor Feedback
+                    </h2>
+                  </div>
+                  <span
+                    class="font-code-sm text-code-sm px-2.5 py-1 rounded bg-error-container text-on-error-container font-medium"
+                  >
+                    Revision Required · 58 / 100
+                  </span>
+                </div>
+                <!-- Evaluator Bio Strip -->
+                <div
+                  class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low"
+                >
+                  <div class="flex items-center gap-space-sm">
+                    <div
+                      class="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-md text-label-md font-semibold"
+                    >
+                      SC
+                    </div>
+                    <div class="flex flex-col">
+                      <span
+                        class="font-label-md text-label-md text-on-surface font-semibold"
+                        >Sarah Chen</span
+                      >
+                      <span
+                        class="font-label-sm text-label-sm text-on-surface-variant"
+                        >Lead Technical Mentor · Assessment Board</span
+                      >
+                    </div>
+                  </div>
+                  <span
+                    class="font-code-sm text-code-sm text-secondary hidden sm:inline"
+                    >Reviewed Oct 21, 2026</span
+                  >
+                </div>
+                <!-- Primary Mentor Quote -->
+                <div
+                  class="relative bg-surface-container-low/70 p-space-lg rounded-r-lg rounded-l-none pl-space-xl"
+                >
+                  <div
+                    class="absolute left-0 top-0 bottom-0 w-1.5 bg-error rounded-l"
+                  ></div>
+                  <p
+                    class="font-body-md text-body-md text-on-surface italic leading-relaxed"
+                  >
+                    “The repository does not contain the required backend
+                    implementation. Please ensure the Express API and database
+                    integration are included.”
+                  </p>
+                </div>
+                <!-- Structured Feedback Breakdown -->
+                <div class="flex flex-col gap-space-md">
+                  <!-- Missing Items -->
+                  <div
+                    class="flex flex-col gap-space-xs bg-error-container/20 p-space-md rounded-lg"
+                  >
+                    <div
+                      class="flex items-center gap-space-xs text-error font-label-md text-label-md font-semibold"
+                    >
+                      <span class="material-symbols-outlined text-[16px]"
+                        >priority_high</span
+                      >
+                      Missing Requirements Identified
+                    </div>
+                    <ul
+                      class="flex flex-col gap-space-xs text-on-surface-variant font-body-sm text-body-sm pl-space-md list-disc"
+                    >
+                      <li>
+                        <strong class="text-on-surface"
+                          >Express API Services:</strong
+                        >
+                        Expected routes under
+                        <code
+                          class="font-code-sm text-code-sm bg-surface-container px-1 py-0.5 rounded text-on-surface"
+                          >/api/v1/submissions</code
+                        >
+                        returned 404 in automated smoke testing.
+                      </li>
+                      <li>
+                        <strong class="text-on-surface"
+                          >Database Migrations:</strong
+                        >
+                        Schema definitions for PostgreSQL (<code
+                          class="font-code-sm text-code-sm bg-surface-container px-1 py-0.5 rounded text-on-surface"
+                          >prisma/migrations</code
+                        >
+                        or raw SQL) are omitted from commit
+                        <code
+                          class="font-code-sm text-code-sm bg-surface-container px-1 py-0.5 rounded text-on-surface"
+                          >#a7f3c9e</code
+                        >.
+                      </li>
+                      <li>
+                        <strong class="text-on-surface"
+                          >Integration Tests:</strong
+                        >
+                        12 of 28 automated harness assertions timed out waiting
+                        for backend connection string initialization.
+                      </li>
+                    </ul>
+                  </div>
+                  <!-- Next Steps & Resubmission Policy -->
+                  <div
+                    class="flex flex-col gap-space-xs bg-surface-container-low p-space-md rounded-lg"
+                  >
+                    <div
+                      class="flex items-center gap-space-xs text-primary font-label-md text-label-md font-semibold"
+                    >
+                      <span class="material-symbols-outlined text-[16px]"
+                        >info</span
+                      >
+                      Next Steps &amp; Resubmission Guidance
+                    </div>
+                    <p
+                      class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed"
+                    >
+                      A 72-hour revision slot will unlock after attending cohort
+                      triage office hours. Please sync with your mentor on
+                      Discord during Friday clinic (14:00–16:00 UTC) to review
+                      the API contract specifications before committing the
+                      final delta patch.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <!-- READ-ONLY SUBMISSION DETAILS CARD -->
+              <div
+                class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-lg"
+              >
+                <div class="flex flex-col gap-space-xs pb-space-xs">
+                  <span class="font-code-sm text-code-sm text-secondary">
+                    #SUB-8492-01 · Oct 20, 2026, 14:32 UTC · Milestone 01 ·
+                    commit: a7f3c9e
+                  </span>
+                  <h2
+                    class="font-headline-md text-headline-md text-on-surface font-semibold"
+                  >
+                    Project Submission Dashboard
+                  </h2>
+                </div>
+                <p
+                  class="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+                >
+                  A full-stack application for managing student project
+                  submissions and mentor reviews with automated pre-flight
+                  checks, deterministic test harnesses, and rubric-driven
+                  evaluation workflows.
+                </p>
+                <!-- Tech Stack Tags -->
+                <div class="flex flex-col gap-space-xs">
+                  <span
+                    class="font-label-sm text-label-sm text-outline uppercase tracking-wider font-semibold"
+                    >Declared Stack</span
+                  >
+                  <div class="flex flex-wrap gap-space-xs">
+                    <span
+                      class="px-2.5 py-1 rounded bg-surface-container font-code-sm text-code-sm text-on-surface font-medium"
+                      >TypeScript</span
+                    >
+                    <span
+                      class="px-2.5 py-1 rounded bg-surface-container font-code-sm text-code-sm text-on-surface font-medium"
+                      >React</span
+                    >
+                    <span
+                      class="px-2.5 py-1 rounded bg-surface-container font-code-sm text-code-sm text-on-surface font-medium"
+                      >Next.js</span
+                    >
+                    <span
+                      class="px-2.5 py-1 rounded bg-surface-container font-code-sm text-code-sm text-on-surface font-medium"
+                      >Tailwind CSS</span
+                    >
+                    <span
+                      class="px-2.5 py-1 rounded bg-surface-container font-code-sm text-code-sm text-on-surface font-medium"
+                      >PostgreSQL</span
+                    >
+                  </div>
+                </div>
+                <!-- Link Cards (Read-only outline links) -->
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 gap-space-md pt-space-xs"
+                >
+                  <!-- Repo Link -->
+                  <a
+                    class="group flex items-center justify-between p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors"
+                    href="https://github.com/alexrivera/projecthub-core"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <div class="flex items-center gap-space-sm min-w-0">
+                      <span
+                        class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-[20px]"
+                        >terminal</span
+                      >
+                      <div class="flex flex-col min-w-0">
+                        <span
+                          class="font-label-md text-label-md text-on-surface font-semibold"
+                          >View Repository</span
+                        >
+                        <span
+                          class="font-code-sm text-code-sm text-on-surface-variant truncate"
+                          >alexrivera/projecthub-core</span
+                        >
+                      </div>
+                    </div>
+                    <span
+                      class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors text-[18px]"
+                      >open_in_new</span
+                    >
+                  </a>
+                  <!-- Live Site Link -->
+                  <a
+                    class="group flex items-center justify-between p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors"
+                    href="https://projecthub-core.assessment.run"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <div class="flex items-center gap-space-sm min-w-0">
+                      <span
+                        class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-[20px]"
+                        >public</span
+                      >
+                      <div class="flex flex-col min-w-0">
+                        <span
+                          class="font-label-md text-label-md text-on-surface font-semibold"
+                          >View Live Project</span
+                        >
+                        <span
+                          class="font-code-sm text-code-sm text-on-surface-variant truncate"
+                          >projecthub-core.assessment.run</span
+                        >
+                      </div>
+                    </div>
+                    <span
+                      class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors text-[18px]"
+                      >open_in_new</span
+                    >
+                  </a>
+                </div>
+                <!-- Submission Immutability Banner -->
+                <div
+                  class="flex items-center gap-space-sm p-space-sm rounded-lg bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm"
+                >
+                  <span
+                    class="material-symbols-outlined text-outline text-[18px]"
+                    >verified_user</span
+                  >
+                  <span
+                    >Record locked under commit SHA
+                    <span
+                      class="font-code-sm text-code-sm font-semibold text-on-surface"
+                      >a7f3c9e</span
+                    >. Form fields disabled per academic honesty protocol.</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- RIGHT COLUMN: SIDEBAR EVALUATION RUBRICS & STATS (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col gap-space-xl">
+              <!-- EVALUATION RUBRIC CARD -->
+              <div
+                class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-lg"
+              >
+                <div class="flex items-center justify-between pb-space-xs">
+                  <div class="flex items-center gap-space-sm">
+                    <span
+                      class="material-symbols-outlined text-primary text-[20px]"
+                      >grading</span
+                    >
+                    <h2
+                      class="font-headline-sm text-headline-sm text-on-surface font-semibold"
+                    >
+                      Evaluation Rubric
+                    </h2>
+                  </div>
+                  <span
+                    class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-semibold"
+                  >
+                    Below Threshold
+                  </span>
+                </div>
+                <!-- Cumulative Score Block -->
+                <div
+                  class="flex items-center justify-between p-space-md rounded-lg bg-error-container/20"
+                >
+                  <div class="flex flex-col">
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold"
+                      >Cumulative Score</span
+                    >
+                    <span
+                      class="font-display text-display text-error font-bold leading-none mt-1"
+                      >58
+                      <span
+                        class="font-headline-sm text-headline-sm text-on-surface-variant font-normal"
+                        >/ 100 pts</span
+                      ></span
+                    >
+                  </div>
+                  <div class="flex flex-col items-end">
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant"
+                      >Min. Passing Bar</span
+                    >
+                    <span
+                      class="font-label-md text-label-md font-semibold text-on-surface"
+                      >85 / 100 pts</span
+                    >
+                    <span class="font-code-sm text-code-sm text-error mt-0.5"
+                      >-27 pts delta</span
+                    >
+                  </div>
+                </div>
+                <!-- Rubric Breakdown Vectors -->
+                <div class="flex flex-col gap-space-md">
+                  <!-- Vector 1: Architectural Soundness (Deficient) -->
+                  <div class="flex flex-col gap-space-xs">
+                    <div
+                      class="flex items-center justify-between font-label-md text-label-md"
+                    >
+                      <span
+                        class="text-on-surface font-medium flex items-center gap-1.5"
+                      >
+                        <span class="w-2 h-2 rounded-full bg-error"></span>
+                        Architectural Soundness
+                      </span>
+                      <span
+                        class="font-code-sm text-code-sm text-error font-semibold"
+                        >18 / 40 pts</span
+                      >
+                    </div>
+                    <div
+                      class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-error rounded-full"
+                        style="width: 45%"
+                      ></div>
+                    </div>
+                    <span class="font-label-sm text-label-sm text-error"
+                      >Missing Express API endpoints and database layer</span
+                    >
+                  </div>
+                  <!-- Vector 2: Deployment & Stability -->
+                  <div class="flex flex-col gap-space-xs">
+                    <div
+                      class="flex items-center justify-between font-label-md text-label-md"
+                    >
+                      <span
+                        class="text-on-surface font-medium flex items-center gap-1.5"
+                      >
+                        <span class="w-2 h-2 rounded-full bg-primary"></span>
+                        Deployment &amp; Stability
+                      </span>
+                      <span
+                        class="font-code-sm text-code-sm text-on-surface font-semibold"
+                        >22 / 30 pts</span
+                      >
+                    </div>
+                    <div
+                      class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-primary-container rounded-full"
+                        style="width: 73.3%"
+                      ></div>
+                    </div>
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant"
+                      >Vercel live preview up, API mock mode fallback
+                      active</span
+                    >
+                  </div>
+                  <!-- Vector 3: Git Hygiene & History -->
+                  <div class="flex flex-col gap-space-xs">
+                    <div
+                      class="flex items-center justify-between font-label-md text-label-md"
+                    >
+                      <span
+                        class="text-on-surface font-medium flex items-center gap-1.5"
+                      >
+                        <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                        Git Hygiene &amp; History
+                      </span>
+                      <span
+                        class="font-code-sm text-code-sm text-on-surface font-semibold"
+                        >11 / 20 pts</span
+                      >
+                    </div>
+                    <div
+                      class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-secondary rounded-full"
+                        style="width: 55%"
+                      ></div>
+                    </div>
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant"
+                      >Commit messages squashed; conventional commit syntax
+                      partial</span
+                    >
+                  </div>
+                  <!-- Vector 4: Performance & Accessibility -->
+                  <div class="flex flex-col gap-space-xs">
+                    <div
+                      class="flex items-center justify-between font-label-md text-label-md"
+                    >
+                      <span
+                        class="text-on-surface font-medium flex items-center gap-1.5"
+                      >
+                        <span class="w-2 h-2 rounded-full bg-primary"></span>
+                        Performance &amp; A11y
+                      </span>
+                      <span
+                        class="font-code-sm text-code-sm text-on-surface font-semibold"
+                        >7 / 10 pts</span
+                      >
+                    </div>
+                    <div
+                      class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-primary-container rounded-full"
+                        style="width: 70%"
+                      ></div>
+                    </div>
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant"
+                      >Lighthouse Desktop 94 · Contrast and ARIA pass
+                      baseline</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <!-- AUTOMATED INTEGRITY CHECKS CARD -->
+              <div
+                class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-md"
+              >
+                <div class="flex items-center justify-between">
+                  <h2
+                    class="font-headline-sm text-headline-sm text-on-surface font-semibold"
+                  >
+                    Integrity Checks
+                  </h2>
+                  <span class="font-code-sm text-code-sm text-secondary"
+                    >Pre-flight Harness</span
+                  >
+                </div>
+                <div class="flex flex-col gap-space-sm">
+                  <div
+                    class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low font-body-sm text-body-sm"
+                  >
+                    <div class="flex items-center gap-space-xs">
+                      <span
+                        class="material-symbols-outlined text-primary text-[18px]"
+                        >verified</span
+                      >
+                      <span class="text-on-surface font-medium"
+                        >Git SHA Verification</span
+                      >
+                    </div>
+                    <span
+                      class="font-code-sm text-code-sm text-primary font-semibold"
+                      >Clean</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low font-body-sm text-body-sm"
+                  >
+                    <div class="flex items-center gap-space-xs">
+                      <span
+                        class="material-symbols-outlined text-primary text-[18px]"
+                        >cloud_done</span
+                      >
+                      <span class="text-on-surface font-medium"
+                        >Endpoint Health &amp; TLS</span
+                      >
+                    </div>
+                    <span class="font-code-sm text-code-sm text-secondary"
+                      >200 OK · 42ms</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center justify-between p-space-sm rounded-lg bg-error-container/30 font-body-sm text-body-sm"
+                  >
+                    <div class="flex items-center gap-space-xs">
+                      <span
+                        class="material-symbols-outlined text-error text-[18px]"
+                        >warning</span
+                      >
+                      <span class="text-on-surface font-medium"
+                        >Specification Compliance</span
+                      >
+                    </div>
+                    <span
+                      class="font-code-sm text-code-sm text-error font-semibold"
+                      >Incomplete</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <!-- SUBMISSION SNAPSHOT CARD -->
+              <div
+                class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-md"
+              >
+                <h2
+                  class="font-headline-sm text-headline-sm text-on-surface font-semibold"
+                >
+                  Submission Snapshot
+                </h2>
+                <div
+                  class="flex flex-col gap-space-sm text-label-md font-label-md"
+                >
+                  <div class="flex items-center justify-between py-1">
+                    <span class="text-on-surface-variant">Tracked Branch</span>
+                    <span
+                      class="font-code-sm text-code-sm font-semibold text-on-surface bg-surface-container px-2 py-0.5 rounded"
+                      >main</span
+                    >
+                  </div>
+                  <div class="flex items-center justify-between py-1">
+                    <span class="text-on-surface-variant">Commit Hash</span>
+                    <span
+                      class="font-code-sm text-code-sm font-semibold text-on-surface"
+                      >#a7f3c9e</span
+                    >
+                  </div>
+                  <div class="flex items-center justify-between py-1">
+                    <span class="text-on-surface-variant">Lead Evaluator</span>
+                    <span class="font-medium text-on-surface">Sarah Chen</span>
+                  </div>
+                  <div class="flex items-center justify-between py-1">
+                    <span class="text-on-surface-variant"
+                      >Evaluation Closed</span
+                    >
+                    <span class="font-code-sm text-code-sm text-on-surface"
+                      >Oct 21, 2026 · 11:15 UTC</span
+                    >
+                  </div>
+                  <div class="flex items-center justify-between py-1">
+                    <span class="text-on-surface-variant">Cert Digest</span>
+                    <span
+                      class="font-code-sm text-code-sm text-secondary truncate max-w-[140px]"
+                      title="e2b10a99ff7491d908a46cf110a"
+                      >e2b10a99...f110a</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer
+      class="w-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] py-space-lg mt-auto"
+    >
+      <div
+        class="max-w-[1440px] mx-auto px-margin flex flex-col sm:flex-row items-center justify-between gap-space-md"
+      >
+        <div class="flex items-center gap-space-sm">
+          <span class="font-label-md text-label-md text-on-surface-variant"
+            >ProjectHub Learning Assessment Platform</span
+          ><span class="text-on-surface-variant font-label-sm text-label-sm"
+            >·</span
+          ><span class="font-code-sm text-code-sm text-secondary"
+            >v2.4.0-stable</span
+          >
+        </div>
+        <div
+          class="flex items-center gap-space-lg text-on-surface-variant font-label-sm text-label-sm"
+        >
+          <a class="hover:text-on-surface transition-colors" href="#"
+            >Academic Honesty</a
+          ><a class="hover:text-on-surface transition-colors" href="#"
+            >Rubric Standards</a
+          ><a class="hover:text-on-surface transition-colors" href="#"
+            >Support</a
+          ><span class="text-on-surface-variant"
+            >© 2025 ProjectHub. All rights reserved.</span
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
