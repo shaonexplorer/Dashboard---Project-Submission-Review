@@ -1,5 +1,7 @@
 import express from "express";
 
+import authRoutes from "../modules/auth/auth.routes";
+
 const router = express.Router();
 
 // Phase 03 keeps the routes layer ready for feature routes (auth,
@@ -12,6 +14,9 @@ router.get("/health", (_req, res) => {
     message: "Server is running",
   });
 });
+
+// Authentication routes
+router.use("/auth", authRoutes);
 
 
 export default router;

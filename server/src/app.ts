@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -12,14 +13,17 @@ dotenv.config();
 
 const app = express();
 
-// CORS — allow the configured frontend origin
-app.use(cors({ origin: env.CLIENT_URL }));
+// CORS — allow the configured frontend origin; credentials for cross-origin cookies
+app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
 
 // Helmet security headers
 app.use(helmet());
 
 // JSON body parsing
 app.use(express.json());
+
+// Cookie parsing
+app.use(cookieParser());
 
 // Application routes
 app.use("/api", routes);
