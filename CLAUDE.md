@@ -273,3 +273,42 @@ No test framework configured yet. Roadmap recommends:
 - Database: Neon / Supabase / Railway PostgreSQL
 
 Production env vars needed: `CLIENT_URL`, `NEXT_PUBLIC_API_URL`, `DATABASE_URL`, `JWT_SECRET`
+
+## Design System
+
+The project uses a custom design system defined in `design.md` and implemented in:
+
+- **CSS Variables** (`client/src/app/globals.css`): Complete design token system including colors, typography, spacing, shadows, and component styles
+- **Tailwind Config** (`client/tailwind.config.ts`): Extended theme with design tokens accessible as Tailwind utilities
+
+### Key Design Tokens
+
+**Colors**: Deep slate neutrals with indigo accents (#3525cd primary), semantic status colors (pending=amber, approved=emerald, rejected=rose)
+
+**Typography**: 
+- `Inter` for UI text (display, headline, body, label)
+- `JetBrains Mono` for code/monospace elements
+
+**Spacing**: 8pt base unit (space-xs=4px, space-sm=8px, space-md=16px, space-lg=24px, space-xl=32px)
+
+**Border Radius**: 8px default (rounded-lg), 6px for micro-controls, 9999px for badges
+
+**Shadows**: 4 levels (0-3) with cool-slate ambient shadows
+
+**Focus Rings**: Dual-ring (white inner + indigo outer) for WCAG 2.1 AA compliance
+
+### Component Classes (in globals.css)
+
+- `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-destructive`
+- `.input-base`, `.input-error`
+- `.badge-pending`, `.badge-approved`, `.badge-rejected`
+- `.card-base`, `.card-interactive`
+- `.code-block`, `.git-chip`
+- Typography utilities: `.text-display`, `.text-headline-lg`, `.text-body-md`, `.text-label-md`, `.text-code-md`, etc.
+- Layout: `.container-main` (max-width 1440px), `.sidebar` (260px fixed)
+
+### Fonts
+
+Loaded via `next/font/google` in `client/src/app/layout.tsx`:
+- `Inter` (variable: `--font-sans`)
+- `JetBrains Mono` (variable: `--font-mono`)

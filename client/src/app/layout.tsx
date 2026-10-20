@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
-import { Inter, Geist } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Project Submission & Review Dashboard",
@@ -18,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${geist.variable} font-sans`}>
-      <body className="bg-background text-foreground min-h-screen">
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
+      <body className="bg-background text-foreground min-h-screen antialiased">
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
