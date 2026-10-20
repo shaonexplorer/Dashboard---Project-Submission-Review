@@ -1,17 +1,46 @@
 "use client";
 
+import { useState } from "react";
 import { LoginForm } from "@/components/auth/login-form";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import { BrandPanel } from "@/components/auth/brand-panel";
+import { AuthStateSwitcher } from "@/components/auth/auth-state-switcher";
 
 export default function LoginPage() {
+  const [demoState, setDemoState] = useState<"default" | "error" | "loading" | "disabled">("default");
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-muted/30">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Project Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">Sign in to your account</p>
-        </div>
-        <LoginForm />
-      </div>
-    </main>
+    <AuthLayout
+      brandPanel={
+        <BrandPanel
+          cohortText="WINTER 2025 EVALUATION CYCLE"
+          headline="Submit. Review. Ship."
+          description="A single, authenticated gateway for students submitting production-grade course repos and mentors evaluating live merge requests."
+          features={[
+            {
+              icon: <span className="material-symbols-outlined text-[20px]">verified</span>,
+              title: "Synchronous Student & Mentor Workflows",
+              description: "Dynamic role routing directs students to project submissions and faculty to rubric evaluation queues.",
+            },
+            {
+              icon: <span className="material-symbols-outlined text-[20px]">terminal</span>,
+              title: "Git Metadata & Branch Attestation",
+              description: "Automated validation of commit sign-offs, CI telemetry, and cohort repo branches.",
+            },
+          ]}
+          terminal={{
+            prompt: "hub auth status --verified",
+            lines: [
+              { text: "> session: academic_id_980242" },
+              { text: "> key_exchange: TLSv1.3 [AES-GCM-256]" },
+              { text: "✓ ready for cohort assignment routing", className: "text-primary" },
+            ],
+          }}
+        />
+      }
+    >
+      <AuthStateSwitcher state={demoState} onStateChange={setDemoState} />
+      <LoginForm />
+    </AuthLayout>
   );
 }
