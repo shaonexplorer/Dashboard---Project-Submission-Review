@@ -142,14 +142,23 @@ npm run dev
 
 ## Seed mentor account
 
-There is no public mentor registration. A mentor account is created through the Prisma seed script:
+There is no public mentor registration. A mentor account is created through the Prisma seed script at `server/prisma/seed.ts`:
 
 ```text
 Email:    mentor@example.com
+Full name: System Mentor
 Role:     MENTOR
 ```
 
-See `server/prisma/seed.ts` and add the desired password in `.env` or the seed file as documented there.
+Run from the `server` directory:
+
+```bash
+npx prisma db seed
+```
+
+The seed is idempotent: it creates the mentor account on the first run and updates it (name, role, password hash) on subsequent runs, so it can safely be re-run after resets.
+
+The password is hashed with bcrypt and taken from the `SEED_MENTOR_PASSWORD` environment variable (see `server/.env.example`). Change it before any non-local deployment.
 
 ## API endpoints
 
