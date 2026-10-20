@@ -1,0 +1,534 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Font families */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Colors - Light Theme (Design System) */
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #464555;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-outline: #777587;
+  --color-outline-variant: #c7c4d8;
+  --color-surface-tint: #4d44e3;
+  --color-primary: #3525cd;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #4f46e5;
+  --color-on-primary-container: #dad7ff;
+  --color-inverse-primary: #c3c0ff;
+  --color-secondary: #565e74;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #dae2fd;
+  --color-on-secondary-container: #5c647a;
+  --color-tertiary: #3130c0;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #4b4dd8;
+  --color-on-tertiary-container: #d9d8ff;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #e2dfff;
+  --color-primary-fixed-dim: #c3c0ff;
+  --color-on-primary-fixed: #0f0069;
+  --color-on-primary-fixed-variant: #3323cc;
+  --color-secondary-fixed: #dae2fd;
+  --color-secondary-fixed-dim: #bec6e0;
+  --color-on-secondary-fixed: #131b2e;
+  --color-on-secondary-fixed-variant: #3f465c;
+  --color-tertiary-fixed: #e1e0ff;
+  --color-tertiary-fixed-dim: #c0c1ff;
+  --color-on-tertiary-fixed: #07006c;
+  --color-on-tertiary-fixed-variant: #2f2ebe;
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+  --color-surface-variant: #d3e4fe;
+
+  /* Semantic status colors */
+  --color-status-pending-bg: #fef3c7;
+  --color-status-pending-border: #fde68a;
+  --color-status-pending-text: #92400e;
+  --color-status-pending-dot: #d97706;
+  --color-status-approved-bg: #d1fae5;
+  --color-status-approved-border: #a7f3d0;
+  --color-status-approved-text: #065f46;
+  --color-status-approved-dot: #059669;
+  --color-status-rejected-bg: #ffe4e6;
+  --color-status-rejected-border: #fecdd3;
+  --color-status-rejected-text: #9f1239;
+  --color-status-rejected-dot: #e11d48;
+
+  /* Shadcn/ui color mappings (for @apply border-border, bg-background, etc.) */
+  --color-border: var(--color-outline-variant);
+  --color-input: var(--color-outline-variant);
+  --color-ring: var(--color-primary);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-on-background);
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-on-primary);
+  --color-secondary: var(--color-secondary-container);
+  --color-secondary-foreground: var(--color-on-secondary-container);
+  --color-destructive: var(--color-error);
+  --color-destructive-foreground: var(--color-on-error);
+  --color-muted: var(--color-surface-container);
+  --color-muted-foreground: var(--color-on-surface-variant);
+  --color-accent: var(--color-surface-container-low);
+  --color-accent-foreground: var(--color-on-surface);
+  --color-popover: var(--color-surface-container-lowest);
+  --color-popover-foreground: var(--color-on-surface);
+  --color-card: var(--color-surface-container-lowest);
+  --color-card-foreground: var(--color-on-surface);
+
+  /* Sidebar colors */
+  --color-sidebar: var(--color-surface-container-low);
+  --color-sidebar-foreground: var(--color-on-surface);
+  --color-sidebar-primary: var(--color-primary);
+  --color-sidebar-primary-foreground: var(--color-on-primary);
+  --color-sidebar-accent: var(--color-surface-container);
+  --color-sidebar-accent-foreground: var(--color-on-surface);
+  --color-sidebar-border: var(--color-outline-variant);
+  --color-sidebar-ring: var(--color-primary);
+
+  /* Chart colors */
+  --color-chart-1: var(--color-primary);
+  --color-chart-2: var(--color-secondary);
+  --color-chart-3: var(--color-tertiary);
+  --color-chart-4: var(--color-error);
+  --color-chart-5: var(--color-on-surface-variant);
+
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius-default: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --space-gutter: 1.5rem;
+  --space-gutter-mobile: 1rem;
+  --space-margin: 2rem;
+  --space-margin-mobile: 1rem;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* Shadows */
+  --shadow-level-0: none;
+  --shadow-level-1: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-level-2: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-level-3: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 2px #fff, 0 0 0 4px #4d44e3;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+}
+
+:root {
+  /* Light theme - mapped to shadcn/ui tokens */
+  --background: var(--color-background);
+  --foreground: var(--color-on-background);
+  --card: var(--color-surface-container-lowest);
+  --card-foreground: var(--color-on-surface);
+  --popover: var(--color-surface-container-lowest);
+  --popover-foreground: var(--color-on-surface);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-on-primary);
+  --secondary: var(--color-secondary-container);
+  --secondary-foreground: var(--color-on-secondary-container);
+  --muted: var(--color-surface-container);
+  --muted-foreground: var(--color-on-surface-variant);
+  --accent: var(--color-surface-container-low);
+  --accent-foreground: var(--color-on-surface);
+  --destructive: var(--color-error);
+  --destructive-foreground: var(--color-on-error);
+  --border: var(--color-outline-variant);
+  --input: var(--color-outline-variant);
+  --ring: var(--color-primary);
+  --radius: var(--radius-default);
+
+  /* Sidebar */
+  --sidebar: var(--color-surface-container-low);
+  --sidebar-foreground: var(--color-on-surface);
+  --sidebar-primary: var(--color-primary);
+  --sidebar-primary-foreground: var(--color-on-primary);
+  --sidebar-accent: var(--color-surface-container);
+  --sidebar-accent-foreground: var(--color-on-surface);
+  --sidebar-border: var(--color-outline-variant);
+  --sidebar-ring: var(--color-primary);
+
+  /* Chart colors */
+  --chart-1: var(--color-primary);
+  --chart-2: var(--color-secondary);
+  --chart-3: var(--color-tertiary);
+  --chart-4: var(--color-error);
+  --chart-5: var(--color-on-surface-variant);
+
+  /* Status colors */
+  --status-pending-bg: var(--color-status-pending-bg);
+  --status-pending-border: var(--color-status-pending-border);
+  --status-pending-text: var(--color-status-pending-text);
+  --status-pending-dot: var(--color-status-pending-dot);
+  --status-approved-bg: var(--color-status-approved-bg);
+  --status-approved-border: var(--color-status-approved-border);
+  --status-approved-text: var(--color-status-approved-text);
+  --status-approved-dot: var(--color-status-approved-dot);
+  --status-rejected-bg: var(--color-status-rejected-bg);
+  --status-rejected-border: var(--color-status-rejected-border);
+  --status-rejected-text: var(--color-status-rejected-text);
+  --status-rejected-dot: var(--color-status-rejected-dot);
+
+  /* Shadows */
+  --shadow-0: var(--shadow-level-0);
+  --shadow-1: var(--shadow-level-1);
+  --shadow-2: var(--shadow-level-2);
+  --shadow-3: var(--shadow-level-3);
+}
+
+.dark {
+  /* Dark theme - using design.md dark values where specified, otherwise adapted */
+  --background: var(--color-inverse-surface);
+  --foreground: var(--color-inverse-on-surface);
+  --card: #1a2536;
+  --card-foreground: var(--color-inverse-on-surface);
+  --popover: #1a2536;
+  --popover-foreground: var(--color-inverse-on-surface);
+  --primary: var(--color-inverse-primary);
+  --primary-foreground: var(--color-inverse-surface);
+  --secondary: #2a3548;
+  --secondary-foreground: var(--color-inverse-on-surface);
+  --muted: #2a3548;
+  --muted-foreground: #9aa4b2;
+  --accent: #2a3548;
+  --accent-foreground: var(--color-inverse-on-surface);
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+  --border: #2d3a4f;
+  --input: #2d3a4f;
+  --ring: var(--color-inverse-primary);
+  --radius: var(--radius-default);
+
+  /* Sidebar */
+  --sidebar: #1a2536;
+  --sidebar-foreground: var(--color-inverse-on-surface);
+  --sidebar-primary: var(--color-inverse-primary);
+  --sidebar-primary-foreground: var(--color-inverse-surface);
+  --sidebar-accent: #2a3548;
+  --sidebar-accent-foreground: var(--color-inverse-on-surface);
+  --sidebar-border: #2d3a4f;
+  --sidebar-ring: var(--color-inverse-primary);
+
+  /* Status colors in dark */
+  --status-pending-bg: #3d2e00;
+  --status-pending-border: #5c4500;
+  --status-pending-text: #fde68a;
+  --status-pending-dot: #fbbf24;
+  --status-approved-bg: #064e3b;
+  --status-approved-border: #0d6e4a;
+  --status-approved-text: #a7f3d0;
+  --status-approved-dot: #34d399;
+  --status-rejected-bg: #4c0f1a;
+  --status-rejected-border: #7a152a;
+  --status-rejected-text: #fecdd3;
+  --status-rejected-dot: #f87171;
+
+  /* Shadows */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-3: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer components {
+  /* Card base styles */
+  .card-base {
+    @apply bg-card border border-border rounded-lg shadow-[var(--shadow-1)] p-6 transition-all duration-200;
+  }
+  .card-interactive {
+    @apply bg-card border border-border rounded-lg shadow-[var(--shadow-1)] p-6 transition-all duration-200 hover:border-gray-300 hover:shadow-[var(--shadow-2)] hover:-translate-y-0.5 dark:hover:border-gray-600;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply inline-flex items-center justify-center h-10 px-4 rounded-md bg-primary text-primary-foreground font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  .btn-primary:hover {
+    background-color: #4338ca;
+  }
+  .btn-primary:active {
+    background-color: #3730a3;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center h-10 px-4 rounded-md border border-border bg-background text-foreground font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-secondary:hover {
+    @apply bg-muted border-border;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center h-10 px-4 rounded-md text-muted-foreground font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-ghost:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .btn-destructive {
+    @apply inline-flex items-center justify-center h-10 px-4 rounded-md bg-destructive text-destructive-foreground font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-destructive:hover {
+    background-color: #be123c;
+  }
+
+  /* Input styles */
+  .input-base {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-150;
+    border-color: var(--color-outline-variant);
+  }
+  .input-base:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+  .input-error {
+    @apply border-destructive focus-visible:ring-destructive/20;
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 3px rgba(186, 26, 26, 0.15);
+  }
+
+  /* Badge/Status variants */
+  .badge-pending {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    background-color: var(--status-pending-bg);
+    border: 1px solid var(--status-pending-border);
+    color: var(--status-pending-text);
+  }
+  .badge-pending::before {
+    content: "";
+    @apply w-1.5 h-1.5 rounded-full;
+    background-color: var(--status-pending-dot);
+  }
+
+  .badge-approved {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    background-color: var(--status-approved-bg);
+    border: 1px solid var(--status-approved-border);
+    color: var(--status-approved-text);
+  }
+  .badge-approved::before {
+    content: "";
+    @apply w-1.5 h-1.5 rounded-full;
+    background-color: var(--status-approved-dot);
+  }
+
+  .badge-rejected {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    background-color: var(--status-rejected-bg);
+    border: 1px solid var(--status-rejected-border);
+    color: var(--status-rejected-text);
+  }
+  .badge-rejected::before {
+    content: "";
+    @apply w-1.5 h-1.5 rounded-full;
+    background-color: var(--status-rejected-dot);
+  }
+
+  /* Code/monospace elements */
+  .code-block {
+    @apply font-mono text-sm rounded bg-muted border border-border p-2;
+    font-family: var(--font-mono);
+    background-color: var(--color-background);
+    border-color: var(--color-outline-variant);
+  }
+
+  .git-chip {
+    @apply inline-flex items-center rounded px-1.5 py-0.5 text-xs font-mono border;
+    background-color: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #475569;
+  }
+
+  /* Focus ring utility */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    box-shadow: var(--focus-ring);
+  }
+
+  /* Typography utilities */
+  .text-display {
+    @apply font-sans text-[36px] font-bold leading-[44px] tracking-[-0.025em];
+    font-family: var(--font-sans);
+  }
+  .text-display-mobile {
+    @apply font-sans text-[28px] font-bold leading-[36px] tracking-[-0.02em];
+    font-family: var(--font-sans);
+  }
+  .text-headline-lg {
+    @apply font-sans text-[30px] font-semibold leading-[38px] tracking-[-0.02em];
+    font-family: var(--font-sans);
+  }
+  .text-headline-lg-mobile {
+    @apply font-sans text-[24px] font-semibold leading-[32px] tracking-[-0.015em];
+    font-family: var(--font-sans);
+  }
+  .text-headline-md {
+    @apply font-sans text-[20px] font-semibold leading-[28px] tracking-[-0.015em];
+    font-family: var(--font-sans);
+  }
+  .text-headline-sm {
+    @apply font-sans text-[16px] font-semibold leading-[24px] tracking-[-0.01em];
+    font-family: var(--font-sans);
+  }
+  .text-body-lg {
+    @apply font-sans text-[16px] font-normal leading-[26px];
+    font-family: var(--font-sans);
+  }
+  .text-body-md {
+    @apply font-sans text-[14px] font-normal leading-[22px];
+    font-family: var(--font-sans);
+  }
+  .text-body-sm {
+    @apply font-sans text-[12px] font-normal leading-[18px];
+    font-family: var(--font-sans);
+  }
+  .text-label-md {
+    @apply font-sans text-[13px] font-medium leading-[18px] tracking-[0.01em];
+    font-family: var(--font-sans);
+  }
+  .text-label-sm {
+    @apply font-sans text-[11px] font-medium leading-[16px] tracking-[0.02em];
+    font-family: var(--font-sans);
+  }
+  .text-code-md {
+    @apply font-mono text-[13px] font-normal leading-[20px];
+    font-family: var(--font-mono);
+  }
+  .text-code-sm {
+    @apply font-mono text-[11px] font-medium leading-[16px];
+    font-family: var(--font-mono);
+  }
+
+  /* Layout utilities */
+  .container-main {
+    @apply max-w-[1440px] mx-auto px-6;
+  }
+  .grid-main {
+    @apply grid gap-6;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  /* Sidebar */
+  .sidebar {
+    @apply fixed inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300;
+    width: 260px;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 bg-black/45 backdrop-blur-sm;
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+  }
+
+  /* Modal content */
+  .modal-content {
+    @apply fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg bg-popover p-6 shadow-[var(--shadow-3)];
+    background-color: var(--color-popover);
+    box-shadow: var(--shadow-level-3);
+  }
+
+  /* Table styles */
+  .table-container {
+    @apply w-full overflow-x-auto rounded-lg border border-border;
+  }
+  .table-base {
+    @apply w-full caption-bottom text-sm;
+  }
+  .table-header {
+    @apply bg-muted;
+  }
+  .table-row {
+    @apply border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted;
+  }
+  .table-cell {
+    @apply p-4 align-middle;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-container);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
+}
+.animate-slide-up {
+  animation: slide-up 200ms ease-out;
+}
+.animate-slide-down {
+  animation: slide-down 200ms ease-out;
+}

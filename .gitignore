@@ -43,3 +43,8 @@ migrations/
 # Misc
 coverage/
 .turbo/
+
+
+.agents
+.claude
+.windsurf
