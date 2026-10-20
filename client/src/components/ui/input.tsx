@@ -3,8 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   /** Leading icon component */
   leadingIcon?: React.ReactNode;
   /** Trailing icon component */
@@ -40,7 +39,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const errorId = error ? `${id}-error` : undefined;
     const hintId = hint ? `${id}-hint` : undefined;
-    const describedBy = [ariaDescribedBy, errorId, hintId].filter(Boolean).join(" ") || undefined;
+    const describedBy =
+      [ariaDescribedBy, errorId, hintId].filter(Boolean).join(" ") || undefined;
 
     return (
       <div className="space-y-1.5">
@@ -50,7 +50,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className="block text-label-md font-medium text-on-surface"
           >
             {label}
-            {required && <span className="text-error ml-0.5" aria-hidden="true">*</span>}
+            {required && (
+              <span className="text-error ml-0.5" aria-hidden="true">
+                *
+              </span>
+            )}
           </label>
         )}
 
@@ -86,9 +90,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
 
           {trailingIcon && (
-            <div
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none"
-            >
+            <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center ">
               {trailingIcon}
             </div>
           )}

@@ -54,7 +54,10 @@ export function AuthFooter({
             </Link>
           </p>
           <div className="flex items-center gap-1 text-on-surface-variant">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span>
+            <span
+              className="w-1.5 h-1.5 rounded-full bg-emerald-500"
+              aria-hidden="true"
+            ></span>
             <span className="text-code-sm">SAML 2.0 Auth Ready</span>
           </div>
         </div>
@@ -74,7 +77,7 @@ export function AuthFooter({
         </div>
       )}
 
-      {showRoutingHint && (
+      {/* {showRoutingHint && (
         <div
           className="p-3 rounded-lg bg-surface-container flex items-start gap-2.5 text-on-secondary-container"
           role="note"
@@ -104,16 +107,19 @@ export function AuthFooter({
             upon identity verification.
           </p>
         </div>
-      )}
+      )} */}
 
-      <div className="mt-4 pt-4 border-t border-surface-container-high flex items-center justify-center gap-2 text-on-surface-variant">
-        <span className="material-symbols-outlined text-[16px] text-emerald-600" aria-hidden="true">
+      {/* <div className="mt-4 pt-4 border-t border-surface-container-high flex items-center justify-center gap-2 text-on-surface-variant">
+        <span
+          className="material-symbols-outlined text-[16px] text-emerald-600"
+          aria-hidden="true"
+        >
           lock
         </span>
         <span className="text-label-sm">
           Protected via 256-bit TLS & Academic Verification
         </span>
-      </div>
+      </div> */}
     </div>
   );
 }

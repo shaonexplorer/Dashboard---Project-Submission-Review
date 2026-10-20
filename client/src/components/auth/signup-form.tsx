@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -15,15 +14,12 @@ import {
   PrimaryActionButton,
   SSOButtons,
   AuthFooter,
-  SegmentedTabs,
 } from "@/components/auth";
+import React from "react";
 
 export function SignupForm() {
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [serverError, setServerError] = React.useState<string | null>(null);
   const { mutate: signup, isPending } = useSignup();
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("signup");
 
   const form = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
@@ -78,21 +74,17 @@ export function SignupForm() {
   ];
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-      {/* Segmented Tabs */}
-      <SegmentedTabs
-        items={[
-          { value: "login", label: "Log In" },
-          { value: "signup", label: "Create Account" },
-        ]}
-        value={activeTab}
-        onValueChange={setActiveTab}
-        maxWidth="max-w-[280px]"
-      />
-
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="space-y-4"
+      noValidate
+    >
       {/* Student Only Badge */}
-      <div className="hidden sm:flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md mx-auto max-w-[280px]">
-        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+      <div className="hidden sm:flex items-center justify-center gap-1 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md mx-auto max-w-[130px]">
+        <span
+          className="material-symbols-outlined text-[14px]"
+          aria-hidden="true"
+        >
           school
         </span>
         <span className="text-label-sm font-medium">Student Only</span>
@@ -159,57 +151,29 @@ export function SignupForm() {
         />
 
         {/* Password Strength Checklist */}
-        <PasswordStrength
+        {/* <PasswordStrength
           password={passwordValue}
           requirements={requirements}
-        />
+        /> */}
 
-        <InlineError
+        {/* <InlineError
           message={passwordError || ""}
           isVisible={!!passwordError}
-        />
+        /> */}
       </div>
 
       {/* Confirm Password Field */}
-      <div className="space-y-1.5">
-        <label
-          htmlFor="confirmPassword"
-          className="block text-label-md font-semibold text-on-surface flex items-center gap-1"
-        >
-          Confirm Password <span className="text-error" aria-hidden="true">*</span>
-        </label>
-        <div className="relative">
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm your password"
-            className="w-full h-11 pl-3.5 pr-11 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md placeholder:text-outline-variant focus:outline-none focus:ring-2 focus:ring-primary shadow-xs transition-all disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isPending}
-            required
-            {...form.register("confirmPassword")}
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword((prev) => !prev)}
-            disabled={isPending}
-            className="absolute right-0 top-0 h-11 w-11 flex items-center justify-center text-on-surface-variant hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
-            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-            aria-pressed={showConfirmPassword}
-          >
-            <span
-              className="material-symbols-outlined text-[19px]"
-              aria-hidden="true"
-            >
-              {showConfirmPassword ? "visibility_off" : "visibility"}
-            </span>
-          </button>
-        </div>
-        <InlineError
-          message={confirmPasswordError || ""}
-          isVisible={!!confirmPasswordError}
-        />
-      </div>
+      <PasswordInput
+        id="confirmPassword"
+        name="confirmPassword"
+        label="Confirm Password"
+        placeholder="Confirm your password"
+        error={confirmPasswordError}
+        isError={!!confirmPasswordError}
+        disabled={isPending}
+        required
+        {...form.register("confirmPassword")}
+      />
 
       {/* Academic Honor Code Checkbox */}
       <div className="pt-1.5">
@@ -225,25 +189,16 @@ export function SignupForm() {
             className="text-body-sm text-on-surface-variant leading-tight cursor-pointer"
           >
             I agree to the
-            <Link
-              href="#"
-              className="text-primary hover:underline font-medium"
-            >
+            <Link href="#" className="text-primary hover:underline font-medium">
               Academic Honor Code
             </Link>
             and
-            <Link
-              href="#"
-              className="text-primary hover:underline font-medium"
-            >
+            <Link href="#" className="text-primary hover:underline font-medium">
               Terms of Submission
             </Link>
           </label>
         </div>
-        <InlineError
-          message={honorError || ""}
-          isVisible={!!honorError}
-        />
+        <InlineError message={honorError || ""} isVisible={!!honorError} />
       </div>
 
       {/* Submit Button */}
@@ -276,7 +231,7 @@ export function SignupForm() {
       <AuthFooter
         primaryAction={{
           text: "Already have an account?",
-          link: "/login",
+          link: "/auth?tab=login",
           linkText: "Sign in",
         }}
         showRoutingHint

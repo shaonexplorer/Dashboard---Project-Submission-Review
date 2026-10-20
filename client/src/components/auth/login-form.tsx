@@ -14,13 +14,11 @@ import {
   PrimaryActionButton,
   SSOButtons,
   AuthFooter,
-  SegmentedTabs,
 } from "@/components/auth";
 
 export function LoginForm() {
   const [serverError, setServerError] = useState<string | null>(null);
   const { mutate: login, isPending } = useLogin();
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -44,17 +42,11 @@ export function LoginForm() {
   const passwordError = form.formState.errors.password?.message;
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" noValidate>
-      {/* Segmented Tabs */}
-      <SegmentedTabs
-        items={[
-          { value: "login", label: "Log In" },
-          { value: "signup", label: "Create Account" },
-        ]}
-        value={activeTab}
-        onValueChange={setActiveTab}
-      />
-
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="space-y-5"
+      noValidate
+    >
       {/* Card Header */}
       <div className="space-y-1.5 text-center">
         <h2 className="text-headline-lg text-on-surface font-semibold tracking-tight">
@@ -83,7 +75,14 @@ export function LoginForm() {
         isError={!!emailError}
         disabled={isPending}
         required
-        leadingIcon={<span className="material-symbols-outlined text-[18px]" aria-hidden="true">alternate_email</span>}
+        leadingIcon={
+          <span
+            className="material-symbols-outlined text-[18px]"
+            aria-hidden="true"
+          >
+            alternate_email
+          </span>
+        }
         {...form.register("email")}
       />
 
@@ -149,7 +148,7 @@ export function LoginForm() {
       <AuthFooter
         secondaryAction={{
           text: "Don't have an account?",
-          link: "/signup",
+          link: "/auth?tab=signup",
           linkText: "Create student account",
         }}
         showRoutingHint

@@ -35,7 +35,12 @@ export function SegmentedTabs({
         aria-label="Authentication mode"
       >
         {items.map((item) => (
-          <Tab key={item.value} value={item.value} disabled={item.disabled}>
+          <Tab
+            key={item.value}
+            value={item.value}
+            disabled={item.disabled}
+            className="text-sm sm:text-base font-medium sm:font-semibold"
+          >
             {item.label}
           </Tab>
         ))}

@@ -1,6 +1,7 @@
 export { AuthLayout } from "./auth-layout";
 export { BrandPanel } from "./brand-panel";
 export { AuthCard } from "./auth-card";
+export { AuthForms } from "./auth-forms";
 export { SegmentedTabs } from "./segmented-tabs";
 export { PasswordInput } from "./password-input";
 export { PasswordStrength, usePasswordStrength } from "./password-strength";

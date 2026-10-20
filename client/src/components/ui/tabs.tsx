@@ -29,7 +29,8 @@ const tabTriggerVariants = cva(
       },
       active: {
         true: "bg-surface-container-lowest text-on-surface font-semibold shadow-xs",
-        false: "text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50",
+        false:
+          "text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50",
       },
     },
     defaultVariants: {
@@ -40,7 +41,8 @@ const tabTriggerVariants = cva(
 );
 
 interface TabsContainerProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof tabsContainerVariants> {}
 
 const TabsContainer = React.forwardRef<HTMLDivElement, TabsContainerProps>(
@@ -57,20 +59,28 @@ const TabsContainer = React.forwardRef<HTMLDivElement, TabsContainerProps>(
 TabsContainer.displayName = "TabsContainer";
 
 interface TabTriggerProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof tabTriggerVariants> {
   /** Whether this tab is currently active */
   isActive?: boolean;
 }
 
 const TabTrigger = React.forwardRef<HTMLButtonElement, TabTriggerProps>(
-  ({ className, variant = "segmented", isActive = false, children, ...props }, ref) => (
+  (
+    { className, variant = "segmented", isActive = false, children, ...props },
+    ref,
+  ) => (
     <button
+      type="button"
       ref={ref}
       role="tab"
       aria-selected={isActive}
       tabIndex={isActive ? 0 : -1}
-      className={cn(tabTriggerVariants({ variant, active: isActive }), className)}
+      className={cn(
+        tabTriggerVariants({ variant, active: isActive }),
+        className,
+      )}
       {...props}
     >
       {children}
@@ -117,7 +127,9 @@ export function Tabs({
   children,
   className,
 }: TabsProps) {
-  const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue || "");
+  const [uncontrolledValue, setUncontrolledValue] = React.useState(
+    defaultValue || "",
+  );
   const isControlled = value !== undefined;
   const activeValue = isControlled ? value : uncontrolledValue;
 
@@ -145,17 +157,32 @@ export function Tabs({
   );
 }
 
-export function TabList({ children, className, "aria-label": ariaLabel }: TabListProps) {
+export function TabList({
+  children,
+  className,
+  "aria-label": ariaLabel,
+}: TabListProps) {
   const { orientation, variant } = useTabsContext();
 
   return (
-    <TabsContainer orientation={orientation} variant={variant} role="tablist" aria-label={ariaLabel} className={className}>
+    <TabsContainer
+      orientation={orientation}
+      variant={variant}
+      role="tablist"
+      aria-label={ariaLabel}
+      className={className}
+    >
       {children}
     </TabsContainer>
   );
 }
 
-export function Tab({ value, children, disabled = false, className }: TabProps) {
+export function Tab({
+  value,
+  children,
+  disabled = false,
+  className,
+}: TabProps) {
   const { activeValue, onValueChange, variant } = useTabsContext();
   const isActive = activeValue === value;
 

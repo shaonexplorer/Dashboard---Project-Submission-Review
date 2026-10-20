@@ -10,7 +10,12 @@ interface FeatureHighlightProps {
   className?: string;
 }
 
-export function FeatureHighlight({ icon, title, description, className }: FeatureHighlightProps) {
+export function FeatureHighlight({
+  icon,
+  title,
+  description,
+  className,
+}: FeatureHighlightProps) {
   return (
     <div
       className={cn(

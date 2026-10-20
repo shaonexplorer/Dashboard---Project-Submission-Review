@@ -4,8 +4,10 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-interface PasswordInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface PasswordInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "type"
+> {
   /** Label text */
   label?: string;
   /** Error message */
@@ -59,7 +61,10 @@ export function PasswordInput({
       disabled={disabled}
       required={required}
       leadingIcon={
-        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+        <span
+          className="material-symbols-outlined text-[18px]"
+          aria-hidden="true"
+        >
           lock
         </span>
       }
@@ -68,7 +73,7 @@ export function PasswordInput({
           type="button"
           onClick={toggleVisibility}
           disabled={disabled}
-          className="text-on-surface-variant hover:text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded transition-colors"
+          className="text-on-surface-variant hover:text-on-surface focus:outline-none   rounded transition-colors"
           aria-label={showPassword ? "Hide password" : "Show password"}
           aria-pressed={showPassword}
         >
