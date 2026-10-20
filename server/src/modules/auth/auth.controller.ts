@@ -27,7 +27,7 @@ export const signupController = asyncHandler(
 
     res.cookie("token", token, cookieOptions);
 
-    return sendResponse(res, 201, "Account created successfully", { user });
+    sendResponse(res, 201, "Account created successfully", { user });
   }
 );
 
@@ -40,7 +40,7 @@ export const loginController = asyncHandler(
 
     res.cookie("token", token, cookieOptions);
 
-    return sendResponse(res, 200, "Login successful", { user, token });
+    sendResponse(res, 200, "Login successful", { user, token });
   }
 );
 
@@ -54,5 +54,5 @@ export const meController = asyncHandler(async (req: Request, res: Response) => 
     throw new ApiError(401, "User not found");
   }
 
-  return sendResponse(res, 200, "Authenticated user", { user: getSafeUser(user) });
+  sendResponse(res, 200, "Authenticated user", { user: getSafeUser(user) });
 });

@@ -48,7 +48,7 @@ export function LoginForm() {
       noValidate
     >
       {/* Card Header */}
-      <div className="space-y-1.5 text-center">
+      <div className="space-y-1.5">
         <h2 className="text-headline-lg text-on-surface font-semibold tracking-tight">
           Welcome back
         </h2>

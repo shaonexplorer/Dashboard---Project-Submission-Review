@@ -40,7 +40,7 @@ export function useLogin() {
       // Invalidate and refetch current user
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
-      // Redirect based on role
+      // Redirect based on role and redirectTo parameter
       const user = data.data?.user;
       if (user) {
         const redirectTo = searchParams.get("redirectTo") ||
@@ -57,6 +57,7 @@ export function useLogin() {
 
 export function useSignup() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   return useMutation({
     mutationFn: signupApi,
@@ -65,7 +66,9 @@ export function useSignup() {
         saveToken(data.data.token);
         // If signup returns a token, redirect to dashboard
         const user = data.data.user;
-        const redirectTo = user?.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard";
+        // Signup always creates STUDENT, but respect redirectTo if provided
+        const redirectTo = searchParams.get("redirectTo") ||
+          (user?.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard");
         router.push(redirectTo);
         router.refresh();
       } else {

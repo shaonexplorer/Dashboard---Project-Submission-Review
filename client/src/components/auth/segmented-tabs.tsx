@@ -39,7 +39,7 @@ export function SegmentedTabs({
             key={item.value}
             value={item.value}
             disabled={item.disabled}
-            className="text-sm sm:text-base font-medium sm:font-semibold"
+            className="text-sm sm:text-base font-medium sm:font-semibold "
           >
             {item.label}
           </Tab>

@@ -79,6 +79,7 @@ const TabTrigger = React.forwardRef<HTMLButtonElement, TabTriggerProps>(
       tabIndex={isActive ? 0 : -1}
       className={cn(
         tabTriggerVariants({ variant, active: isActive }),
+        "w-fit",
         className,
       )}
       {...props}

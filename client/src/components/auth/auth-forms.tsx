@@ -22,17 +22,32 @@ export function AuthForms() {
 
   return (
     <div className="space-y-5">
-      {/* Segmented Tabs */}
-      <SegmentedTabs
-        items={[
-          { value: "login", label: "Log In" },
-          { value: "signup", label: "Create Account" },
-        ]}
-        value={activeTab}
-        onValueChange={handleTabChange}
-        className="mx-auto"
-        maxWidth="max-w-[400px]"
-      />
+      <div className="w-full flex items-center">
+        {/* Segmented Tabs */}
+        <SegmentedTabs
+          items={[
+            { value: "login", label: "Log In" },
+            { value: "signup", label: "Create Account" },
+          ]}
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full sm:min-w-[350px]"
+          maxWidth="max-w-[400px]"
+        />
+
+        {/* Student Only Badge */}
+        {initialTab === "signup" && (
+          <div className="ml-auto hidden sm:flex items-center justify-center gap-1 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md  w-fit">
+            <span
+              className="material-symbols-outlined text-[14px]"
+              aria-hidden="true"
+            >
+              school
+            </span>
+            <span className="text-label-sm font-medium">Student Only</span>
+          </div>
+        )}
+      </div>
 
       {/* Conditional Form Rendering */}
       {activeTab === "login" ? <LoginForm /> : <SignupForm />}

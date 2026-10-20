@@ -79,19 +79,8 @@ export function SignupForm() {
       className="space-y-4"
       noValidate
     >
-      {/* Student Only Badge */}
-      <div className="hidden sm:flex items-center justify-center gap-1 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md mx-auto max-w-[130px]">
-        <span
-          className="material-symbols-outlined text-[14px]"
-          aria-hidden="true"
-        >
-          school
-        </span>
-        <span className="text-label-sm font-medium">Student Only</span>
-      </div>
-
       {/* Card Header */}
-      <div className="space-y-1.5 text-center">
+      <div className="space-y-1.5  ">
         <h2 className="text-headline-lg text-on-surface font-semibold tracking-tight">
           Create your account
         </h2>
