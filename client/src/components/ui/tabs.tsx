@@ -50,7 +50,7 @@ const TabsContainer = React.forwardRef<HTMLDivElement, TabsContainerProps>(
     <div
       ref={ref}
       role="tablist"
-      aria-orientation={orientation}
+      aria-orientation={orientation ?? undefined}
       className={cn(tabsContainerVariants({ orientation }), className)}
       {...props}
     />
@@ -134,12 +134,15 @@ export function Tabs({
   const isControlled = value !== undefined;
   const activeValue = isControlled ? value : uncontrolledValue;
 
-  const handleTabChange = (tabValue: string) => {
-    if (!isControlled) {
-      setUncontrolledValue(tabValue);
-    }
-    onValueChange?.(tabValue);
-  };
+  const handleTabChange = React.useCallback(
+    (tabValue: string) => {
+      if (!isControlled) {
+        setUncontrolledValue(tabValue);
+      }
+      onValueChange?.(tabValue);
+    },
+    [isControlled, onValueChange],
+  );
 
   const contextValue = React.useMemo(
     () => ({
@@ -148,7 +151,7 @@ export function Tabs({
       orientation,
       variant,
     }),
-    [activeValue, orientation, variant, isControlled],
+    [activeValue, orientation, variant, handleTabChange],
   );
 
   return (
@@ -163,12 +166,11 @@ export function TabList({
   className,
   "aria-label": ariaLabel,
 }: TabListProps) {
-  const { orientation, variant } = useTabsContext();
+  const { orientation } = useTabsContext();
 
   return (
     <TabsContainer
       orientation={orientation}
-      variant={variant}
       role="tablist"
       aria-label={ariaLabel}
       className={className}

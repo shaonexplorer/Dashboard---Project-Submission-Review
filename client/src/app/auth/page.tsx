@@ -1,15 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AuthForms } from "@/components/auth/auth-forms";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { BrandPanel } from "@/components/auth/brand-panel";
-import { AuthStateSwitcher } from "@/components/auth/auth-state-switcher";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LoginPage() {
-  const searchParams = useSearchParams();
-  const currentTab = searchParams.get("tab") || "login";
-
   return (
     <AuthLayout
       brandPanel={
@@ -53,8 +51,36 @@ export default function LoginPage() {
         />
       }
     >
-      {/* <AuthStateSwitcher state={demoState} onStateChange={setDemoState} /> */}
-      <AuthForms key={currentTab} />
+      <Suspense fallback={<AuthFormsFallback />}>
+        <AuthFormsWithKey />
+      </Suspense>
     </AuthLayout>
+  );
+}
+
+/**
+ * Reads the requested tab from the URL.
+ *
+ * `useSearchParams` opts the component out of static rendering, so it has to
+ * live behind a Suspense boundary.
+ */
+function AuthFormsWithKey() {
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab") || "login";
+
+  return <AuthForms key={currentTab} />;
+}
+
+/** Placeholder shown while the URL parameters are resolved. */
+function AuthFormsFallback() {
+  return (
+    <div className="flex flex-col gap-5">
+      <Skeleton className="h-10 w-full sm:min-w-[350px]" />
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </div>
   );
 }

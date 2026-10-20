@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useLogout } from "@/hooks/use-auth";
 
 export default function MentorDashboardPage() {
-  const { data: user, isLoading } = useCurrentUser();
+  const { user, isResolving } = useCurrentUser();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
-  if (isLoading) {
+  if (isResolving) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -22,8 +22,11 @@ export default function MentorDashboardPage() {
       <main className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground">Please sign in to access the dashboard</p>
-          <Button asChild className="mt-4">
-            <a href="/login">Sign in</a>
+          <Button
+            render={<a href="/auth?tab=login">Sign in</a>}
+            className="mt-4"
+          >
+            Sign in
           </Button>
         </div>
       </main>

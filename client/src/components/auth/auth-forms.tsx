@@ -13,7 +13,11 @@ export function AuthForms() {
 
   // Update URL when tab changes (for shareable URLs)
   // Uses replaceState to avoid history clutter
-  const handleTabChange = (tab: "login" | "signup") => {
+  const handleTabChange = (tab: string) => {
+    if (tab !== "login" && tab !== "signup") {
+      return;
+    }
+
     setActiveTab(tab);
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);

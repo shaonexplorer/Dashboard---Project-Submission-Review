@@ -8,17 +8,17 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import Link from "next/link";
 
 export default function HomePage() {
-  const { data: user, isLoading } = useCurrentUser();
+  const { user, isResolving } = useCurrentUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isResolving && user) {
       const redirectTo = user.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard";
       router.push(redirectTo);
     }
-  }, [user, isLoading, router]);
+  }, [user, isResolving, router]);
 
-  if (isLoading) {
+  if (isResolving) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -52,11 +52,15 @@ export default function HomePage() {
                   Please sign in or create an account to continue.
                 </p>
                 <div className="flex flex-col space-y-2">
-                  <Button asChild className="w-full">
-                    <Link href="/login">Sign in</Link>
+                  <Button render={<Link href="/auth?tab=login" />} className="w-full">
+                    Sign in
                   </Button>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link href="/signup">Create account</Link>
+                  <Button
+                    render={<Link href="/auth?tab=signup" />}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Create account
                   </Button>
                 </div>
               </>
