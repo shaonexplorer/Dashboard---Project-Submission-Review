@@ -1,7 +1,12 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../../utils/async-handler";
-import { sendResponse } from "../../utils/api-response";
-import { createSubmissionService, getStudentSubmissionService } from "./submission.service";
+import { sendPaginatedResponse, sendResponse } from "../../utils/api-response";
+import {
+  createSubmissionService,
+  getStudentSubmissionService,
+  getSubmissionsService,
+} from "./submission.service";
+import type { SubmissionListQuery } from "./submission.validations";
 
 /**
  * Creates a new project submission for the authenticated student.
@@ -57,5 +62,29 @@ export const getMySubmissionController = asyncHandler(
     const submission = await getStudentSubmissionService(studentId);
 
     sendResponse(res, 200, "Submission retrieved", { submission });
+  }
+);
+
+/**
+ * Lists project submissions for the mentor table.
+ *
+ * Requires:
+ * - Authentication (handled by authenticate middleware)
+ * - MENTOR role (handled by authorize("MENTOR") middleware)
+ * - Valid query parameters (handled by validate(submissionListQuerySchema) middleware)
+ *
+ * The query has already been parsed and normalized by the validation
+ * middleware, so the controller only forwards it to the service.
+ *
+ * Returns 200 OK with the requested page of submissions and its pagination
+ * metadata.
+ */
+export const getSubmissionsController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const query = req.query as unknown as SubmissionListQuery;
+
+    const { data, pagination } = await getSubmissionsService(query);
+
+    sendPaginatedResponse(res, 200, "Submissions retrieved", data, pagination);
   }
 );

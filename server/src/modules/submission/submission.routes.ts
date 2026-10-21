@@ -3,8 +3,12 @@ import express from "express";
 import { validate } from "../../middleware/validate.middleware";
 import { authenticate, authorize } from "../auth/auth.middleware";
 import { submissionRateLimiter } from "./submissionRateLimiter.middleware";
-import { submissionSchema } from "./submission.validations";
-import { createSubmissionController, getMySubmissionController } from "./submission.controller";
+import { submissionListQuerySchema, submissionSchema } from "./submission.validations";
+import {
+  createSubmissionController,
+  getMySubmissionController,
+  getSubmissionsController,
+} from "./submission.controller";
 
 const router = express.Router();
 
@@ -61,6 +65,42 @@ router.get(
   authenticate,
   authorize("STUDENT"),
   getMySubmissionController
+);
+
+/**
+ * GET /api/submissions
+ *
+ * Lists every project submission for mentors, with server-side pagination,
+ * status filtering, search and sorting. All table operations are driven by
+ * query parameters.
+ *
+ * Middleware chain:
+ * 1. authenticate - Verifies JWT token from cookie
+ * 2. authorize("MENTOR") - Ensures user has MENTOR role
+ * 3. validate(submissionListQuerySchema, "query") - Validates and normalizes
+ *    the query parameters
+ *
+ * Query parameters:
+ * - page: positive integer, defaults to 1
+ * - limit: positive integer, at most 100, defaults to 10
+ * - status: PENDING | APPROVED | REJECTED
+ * - search: matched against project name, student name and student email
+ * - sortBy: createdAt | projectName | status, defaults to createdAt
+ * - sortOrder: asc | desc, defaults to desc
+ *
+ * Responses:
+ * - 200 OK: Paginated list of submissions
+ * - 400 Bad Request: Invalid query parameters
+ * - 401 Unauthorized: Missing or invalid token
+ * - 403 Forbidden: User is not a MENTOR
+ * - 500 Internal Server Error: Unexpected error
+ */
+router.get(
+  "/",
+  authenticate,
+  authorize("MENTOR"),
+  validate(submissionListQuerySchema, "query"),
+  getSubmissionsController
 );
 
 export default router;
