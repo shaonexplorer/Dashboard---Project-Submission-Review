@@ -6,9 +6,12 @@
  */
 export const queryKeys = {
   currentUser: ["currentUser"] as const,
-  submissions: {
-    all: ["submissions"] as const,
-    /** The authenticated student's own submission. */
-    mine: ["submissions", "mine"] as const,
-  },
+  /**
+   * Canonical cache entry for the authenticated student's own submission.
+   *
+   * The key is part of the submission contract: the query that loads the
+   * submission and every mutation that changes it must target this exact key,
+   * otherwise the UI can drift away from the backend.
+   */
+  mySubmission: ["mySubmission"] as const,
 } as const;

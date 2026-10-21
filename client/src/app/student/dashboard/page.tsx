@@ -11,9 +11,9 @@ import {
   PreflightCriteriaCard,
   StudentSubmissionForm,
   SubmittedProjectCard,
+  SubmissionLoadError,
   SubmissionSnapshotCard,
 } from "@/components/student";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiRequestError } from "@/lib/api/client";
@@ -213,24 +213,36 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
               />
               {hasSubmission ? "Submitted" : "Unsubmitted"}
             </span>
-            {submission && (
+            {submission ? (
               <>
                 <span className="text-outline font-code-sm text-code-sm" aria-hidden="true">
                   ·
                 </span>
                 <span className="font-code-sm text-code-sm text-secondary">
-                  Submitted {formatUtcDateTime(submission.createdAt)}
+                  Submitted {formatUtcDateTime(submission.submittedAt)}
                 </span>
               </>
-            )}
+            ) : null}
           </div>
 
           <h1 className="text-display text-on-surface font-bold tracking-tight">
             Project Submission
           </h1>
           <p className="text-body-md text-on-surface-variant mt-1.5">
-            Submit your project for mentor review and track its evaluation
-            status.
+            {hasSubmission ? (
+              <>
+                Your project has been handed in.{" "}
+                <Link
+                  href="/student/submission"
+                  className="text-primary font-medium hover:underline"
+                >
+                  View the full submission
+                </Link>
+                .
+              </>
+            ) : (
+              "You haven't submitted a project yet. Hand it in below and track its evaluation status here."
+            )}
           </p>
         </div>
 
@@ -249,58 +261,12 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
               {hasSubmission ? "SUBMITTED AT" : "REVIEW CYCLE"}
             </span>
             <span className="font-label-md text-label-md text-primary font-medium">
-              {hasSubmission
-                ? formatUtcDateTime(submission?.createdAt ?? new Date())
-                : "Standard"}
+              {submission ? formatUtcDateTime(submission.submittedAt) : "Standard"}
             </span>
           </div>
         </div>
       </div>
     </header>
-  );
-}
-
-/** Shown when the existing submission could not be loaded. */
-function SubmissionLoadError({
-  error,
-  onRetry,
-  isRetrying,
-}: {
-  error: unknown;
-  onRetry: () => void;
-  isRetrying: boolean;
-}) {
-  const isForbidden =
-    error instanceof ApiRequestError && error.status === 403;
-
-  return (
-    <div className="rounded-xl bg-surface-container-lowest border border-surface-container-high/80 p-6 sm:p-7 flex flex-col gap-5">
-      <Alert variant="destructive">
-        <AlertTitle className="text-headline-sm">
-          {isForbidden
-            ? "This workspace is not available to student accounts"
-            : "Could not load your submission"}
-        </AlertTitle>
-        <AlertDescription className="text-body-sm">
-          {isForbidden
-            ? "Only student accounts can use the submission workflow."
-            : "We could not reach the submission service. Your project has not been affected — please try again."}
-        </AlertDescription>
-      </Alert>
-
-      {!isForbidden && (
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onRetry}
-            disabled={isRetrying}
-          >
-            {isRetrying ? "Retrying…" : "Try again"}
-          </Button>
-        </div>
-      )}
-    </div>
   );
 }
 

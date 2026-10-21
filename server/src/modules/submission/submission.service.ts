@@ -3,26 +3,43 @@ import { prisma } from "../../config/prisma";
 import { ApiError } from "../../utils/api-error";
 
 /**
- * Returns submission data safe for API responses.
+ * A submission row as it is stored in the database.
+ *
+ * `feedback` and `reviewedAt` are nullable: a submission is created as PENDING
+ * and only gains mentor feedback once a review has been recorded.
  */
-export const getSafeSubmission = (submission: {
+type SubmissionRecord = {
   id: string;
   projectName: string;
   repoUrl: string;
   liveUrl: string;
   description: string;
   status: string;
+  feedback: string | null;
+  reviewedAt: Date | null;
   studentId: string;
   createdAt: Date;
   updatedAt: Date;
-}) => ({
+};
+
+/**
+ * Returns submission data safe for API responses.
+ *
+ * Reviewer metadata (`reviewedById`) is deliberately left out — the
+ * student-facing contract exposes only what the submission UI renders.
+ */
+export const getSafeSubmission = (submission: SubmissionRecord) => ({
   id: submission.id,
   projectName: submission.projectName,
   repoUrl: submission.repoUrl,
   liveUrl: submission.liveUrl,
   description: submission.description,
   status: submission.status,
+  feedback: submission.feedback,
+  reviewedAt: submission.reviewedAt,
   studentId: submission.studentId,
+  /** When the project was handed in — the row creation timestamp. */
+  submittedAt: submission.createdAt,
   createdAt: submission.createdAt,
   updatedAt: submission.updatedAt,
 });
@@ -92,8 +109,12 @@ export const createSubmissionService = async (
 /**
  * Retrieves a student's own submission.
  *
+ * The student identity always comes from the authenticated request context, so
+ * a client can never widen the lookup to another student's record.
+ *
  * @param studentId - ID of the authenticated student
- * @returns The submission or null if none exists
+ * @returns The submission belonging to that student
+ * @throws ApiError(404) if the student has not submitted a project yet
  */
 export const getStudentSubmissionService = async (studentId: string) => {
   const submission = await prisma.submission.findUnique({
@@ -101,7 +122,7 @@ export const getStudentSubmissionService = async (studentId: string) => {
   });
 
   if (!submission) {
-    return null;
+    throw new ApiError(404, "Submission not found");
   }
 
   return getSafeSubmission(submission);

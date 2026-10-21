@@ -47,10 +47,14 @@ router.post(
  * 2. authorize("STUDENT") - Ensures user has STUDENT role
  *
  * Responses:
- * - 200 OK: Submission retrieved (may be null if no submission exists)
+ * - 200 OK: Submission retrieved
  * - 401 Unauthorized: Missing or invalid token
  * - 403 Forbidden: User is not a STUDENT
+ * - 404 Not Found: The student has not submitted a project yet
  * - 500 Internal Server Error: Unexpected error
+ *
+ * Note: this route must stay registered before any dynamic `/:id` route, so
+ * that "me" is never interpreted as a submission identifier.
  */
 router.get(
   "/me",

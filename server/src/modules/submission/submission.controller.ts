@@ -42,7 +42,13 @@ export const createSubmissionController = asyncHandler(
  * - Authentication (handled by authenticate middleware)
  * - STUDENT role (handled by authorize("STUDENT") middleware)
  *
- * Returns 200 OK with the submission, or 200 OK with null if no submission exists.
+ * The student identity is taken from the authenticated request context, never
+ * from the client, so a student can only ever reach their own submission.
+ *
+ * Returns 200 OK with the submission, or 404 Not Found when the student has
+ * not submitted a project yet. The not-found case is a definitive answer
+ * ("there is nothing here"), which is what lets the frontend tell it apart
+ * from an unexpected server failure.
  */
 export const getMySubmissionController = asyncHandler(
   async (req: Request, res: Response) => {

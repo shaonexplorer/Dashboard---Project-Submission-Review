@@ -15,7 +15,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
   STUDENT: [
     { label: "Dashboard", href: "/student/dashboard" },
     { label: "My Projects" },
-    { label: "Submissions" },
+    { label: "Submissions", href: "/student/submission" },
     { label: "Rubrics" },
   ],
   MENTOR: [

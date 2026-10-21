@@ -5,8 +5,17 @@
  *
  * The dashboard always renders timestamps in UTC so students and mentors read
  * the same value regardless of their local timezone.
+ *
+ * A missing or unparseable value renders as an em dash. This matters for the
+ * nullable review timestamp: `new Date(null)` is the Unix epoch rather than an
+ * invalid date, so without the explicit null check a submission that has not
+ * been reviewed would be dated 01 Jan 1970.
  */
-export function formatUtcDateTime(value: string | Date): string {
+export function formatUtcDateTime(value: string | Date | null | undefined): string {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+
   const date = typeof value === "string" ? new Date(value) : value;
 
   if (Number.isNaN(date.getTime())) {
@@ -36,7 +45,11 @@ export function formatUtcDateTime(value: string | Date): string {
  * GitHub links keep their path (`github.com/user/repo`) because the repository
  * identity is meaningful; other links are reduced to their hostname.
  */
-export function formatUrlLabel(value: string): string {
+export function formatUrlLabel(value: string | null | undefined): string {
+  if (!value) {
+    return "—";
+  }
+
   try {
     const url = new URL(value);
     const path = url.pathname.replace(/\/+$/, "");

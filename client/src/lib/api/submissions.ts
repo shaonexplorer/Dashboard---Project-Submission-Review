@@ -7,19 +7,23 @@ export interface Submission {
   id: string;
   projectName: string;
   repoUrl: string;
-  liveUrl: string;
+  /**
+   * Live project URL. Nullable in the contract — a submission is always
+   * created with one, but the UI must cope with its absence rather than
+   * rendering an invalid link.
+   */
+  liveUrl: string | null;
   description: string;
   status: SubmissionStatus;
+  /** Mentor feedback. `null` until a mentor records a review. */
+  feedback: string | null;
+  /** Timestamp of the mentor decision. `null` until a review is recorded. */
+  reviewedAt: string | null;
   studentId: string;
+  /** When the project was handed in. */
+  submittedAt: string;
   createdAt: string;
   updatedAt: string;
-  /**
-   * Mentor feedback. Optional on the client because the current API response
-   * does not expose it yet — the review UI renders the block only when present.
-   */
-  feedback?: string | null;
-  /** Timestamp of the mentor decision, when the submission has been reviewed. */
-  reviewedAt?: string | null;
 }
 
 /** Payload accepted by `POST /api/submissions`. Ownership is decided server-side. */
@@ -39,11 +43,21 @@ interface SubmissionResponse {
 /**
  * Fetches the authenticated student's own submission.
  *
- * Resolves to `null` when the student has not submitted a project yet.
+ * Resolves to `null` when the student has not submitted a project yet: the API
+ * answers that case with `404 Not Found`, which is a definitive "there is
+ * nothing here" rather than a failure. Every other error — a 500 included — is
+ * re-thrown, so the UI can tell "no submission" apart from "could not load".
  */
 export async function getMySubmissionApi(): Promise<Submission | null> {
-  const response = await apiRequest<SubmissionResponse>("/submissions/me");
-  return response.data?.submission ?? null;
+  try {
+    const response = await apiRequest<SubmissionResponse>("/submissions/me");
+    return response.data?.submission ?? null;
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 /**
