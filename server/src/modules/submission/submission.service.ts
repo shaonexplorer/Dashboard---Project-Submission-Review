@@ -1,28 +1,47 @@
 import { UserRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
+import type { Prisma, SubmissionStatus } from "../../generated/prisma/client";
 import { ApiError } from "../../utils/api-error";
+import type { SubmissionListQuery } from "./submission.validations";
 
 /**
- * Returns submission data safe for API responses.
+ * A submission row as it is stored in the database.
+ *
+ * `feedback` and `reviewedAt` are nullable: a submission is created as PENDING
+ * and only gains mentor feedback once a review has been recorded.
  */
-export const getSafeSubmission = (submission: {
+type SubmissionRecord = {
   id: string;
   projectName: string;
   repoUrl: string;
   liveUrl: string;
   description: string;
   status: string;
+  feedback: string | null;
+  reviewedAt: Date | null;
   studentId: string;
   createdAt: Date;
   updatedAt: Date;
-}) => ({
+};
+
+/**
+ * Returns submission data safe for API responses.
+ *
+ * Reviewer metadata (`reviewedById`) is deliberately left out — the
+ * student-facing contract exposes only what the submission UI renders.
+ */
+export const getSafeSubmission = (submission: SubmissionRecord) => ({
   id: submission.id,
   projectName: submission.projectName,
   repoUrl: submission.repoUrl,
   liveUrl: submission.liveUrl,
   description: submission.description,
   status: submission.status,
+  feedback: submission.feedback,
+  reviewedAt: submission.reviewedAt,
   studentId: submission.studentId,
+  /** When the project was handed in — the row creation timestamp. */
+  submittedAt: submission.createdAt,
   createdAt: submission.createdAt,
   updatedAt: submission.updatedAt,
 });
@@ -92,8 +111,12 @@ export const createSubmissionService = async (
 /**
  * Retrieves a student's own submission.
  *
+ * The student identity always comes from the authenticated request context, so
+ * a client can never widen the lookup to another student's record.
+ *
  * @param studentId - ID of the authenticated student
- * @returns The submission or null if none exists
+ * @returns The submission belonging to that student
+ * @throws ApiError(404) if the student has not submitted a project yet
  */
 export const getStudentSubmissionService = async (studentId: string) => {
   const submission = await prisma.submission.findUnique({
@@ -101,8 +124,282 @@ export const getStudentSubmissionService = async (studentId: string) => {
   });
 
   if (!submission) {
-    return null;
+    throw new ApiError(404, "Submission not found");
   }
 
   return getSafeSubmission(submission);
+};
+
+/**
+ * Fields selected for a mentor-facing submission row.
+ *
+ * Only what the mentor table renders is selected — the student's password
+ * hash and any other account data never leave the database.
+ */
+const MENTOR_SUBMISSION_SELECT = {
+  id: true,
+  projectName: true,
+  repoUrl: true,
+  liveUrl: true,
+  description: true,
+  status: true,
+  feedback: true,
+  reviewedAt: true,
+  studentId: true,
+  createdAt: true,
+  updatedAt: true,
+  student: {
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+    },
+  },
+} satisfies Prisma.SubmissionSelect;
+
+/** A submission row as it is read back for a mentor. */
+type MentorSubmissionRow = {
+  id: string;
+  projectName: string;
+  repoUrl: string;
+  liveUrl: string;
+  description: string;
+  status: SubmissionStatus;
+  feedback: string | null;
+  reviewedAt: Date | null;
+  studentId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  student: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+};
+
+/**
+ * A submission row in the shape the mentor list returns.
+ *
+ * Mirrors the student-facing contract and adds the student identity the
+ * mentor table renders.
+ */
+export type MentorSubmission = MentorSubmissionRow & {
+  /** When the project was handed in — the row creation timestamp. */
+  submittedAt: Date;
+};
+
+/**
+ * Builds the Prisma `where` clause for a mentor list request.
+ *
+ * Status and search combine with AND semantics, while the three searchable
+ * fields combine with OR semantics. A blank search is dropped rather than
+ * turned into a filter that matches nothing.
+ */
+const buildSubmissionWhere = (query: SubmissionListQuery): Prisma.SubmissionWhereInput => {
+  const where: Prisma.SubmissionWhereInput = {};
+
+  if (query.status) {
+    where.status = query.status;
+  }
+
+  const search = query.search?.trim();
+  if (search) {
+    where.OR = [
+      { projectName: { contains: search, mode: "insensitive" } },
+      { student: { fullName: { contains: search, mode: "insensitive" } } },
+      { student: { email: { contains: search, mode: "insensitive" } } },
+    ];
+  }
+
+  return where;
+};
+
+/**
+ * Builds the Prisma `orderBy` clause for a mentor list request.
+ *
+ * The field is picked explicitly rather than spread from the client value,
+ * so only whitelisted columns can ever be sorted on.
+ */
+const buildSubmissionOrderBy = (
+  sortBy: SubmissionListQuery["sortBy"],
+  sortOrder: SubmissionListQuery["sortOrder"]
+): Prisma.SubmissionOrderByWithRelationInput => {
+  if (sortBy === "projectName") {
+    return { projectName: sortOrder };
+  }
+
+  if (sortBy === "status") {
+    return { status: sortOrder };
+  }
+
+  return { createdAt: sortOrder };
+};
+
+/**
+ * Lists submissions for the mentor table.
+ *
+ * Every table operation — pagination, filtering, searching and sorting — is
+ * performed by the database. The rows are never fetched in full and filtered
+ * in application memory.
+ *
+ * Authorization is enforced by the `authorize("MENTOR")` middleware on the
+ * route, before this service is reached.
+ *
+ * @param query - The normalized list query (already validated)
+ * @returns The requested page of submissions plus its pagination metadata
+ */
+export const getSubmissionsService = async (query: SubmissionListQuery) => {
+  const { page, limit, sortBy, sortOrder } = query;
+
+  const where = buildSubmissionWhere(query);
+  const orderBy = buildSubmissionOrderBy(sortBy, sortOrder);
+  const skip = (page - 1) * limit;
+
+  // The list and the count share one `where` clause, so the pagination
+  // metadata always describes the same data set the rows came from.
+  const [submissions, total] = await Promise.all([
+    prisma.submission.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      select: MENTOR_SUBMISSION_SELECT,
+    }),
+    prisma.submission.count({ where }),
+  ]);
+
+  const data: MentorSubmission[] = submissions.map((submission) => ({
+    ...submission,
+    submittedAt: submission.createdAt,
+  }));
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+/**
+ * The aggregate counts rendered by the mentor dashboard's statistics cards.
+ */
+export type SubmissionStats = {
+  /** Every submission in the table. */
+  total: number;
+  /** Submissions still waiting for a review decision. */
+  pending: number;
+  /** Submissions a mentor has approved. */
+  approved: number;
+  /** Submissions a mentor has rejected. */
+  rejected: number;
+};
+
+/**
+ * Aggregates submission counts by status.
+ *
+ * Both readings come from the database and are issued together, so the
+ * endpoint waits for one round of database work rather than two sequential
+ * ones. The total is read with its own count query instead of being summed
+ * from the status groups, so the figure the dashboard shows as "Total
+ * submissions" is an independent reading of the table.
+ *
+ * The counts describe the whole table. They are never derived from a
+ * paginated result, which would describe one slice of rows rather than the
+ * submissions themselves.
+ *
+ * Authorization is enforced by the `authorize("MENTOR")` middleware on the
+ * route, before this service is reached.
+ *
+ * @returns The total count and the per-status breakdown
+ */
+export const getSubmissionStatsService = async (): Promise<SubmissionStats> => {
+  const [total, groups] = await Promise.all([
+    prisma.submission.count(),
+    prisma.submission.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }),
+  ]);
+
+  // Every count starts at zero: a status with no rows is simply absent from
+  // the grouping, and must still be reported as 0 rather than left undefined.
+  const stats: SubmissionStats = {
+    total,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  };
+
+  for (const group of groups) {
+    const count = group._count._all;
+
+    if (group.status === "PENDING") {
+      stats.pending = count;
+    } else if (group.status === "APPROVED") {
+      stats.approved = count;
+    } else if (group.status === "REJECTED") {
+      stats.rejected = count;
+    }
+  }
+
+  return stats;
+};
+
+/**
+ * Records a mentor's review decision on a submission.
+ *
+ * The decision, the feedback and the reviewer are written together, so a
+ * submission can never end up marked as reviewed without saying who reviewed
+ * it or when.
+ *
+ * The reviewer identity comes from the authenticated request context, never
+ * from the client payload, so a mentor can only ever record a review under
+ * their own name.
+ *
+ * Authorization is enforced by the `authorize("MENTOR")` middleware on the
+ * route, before this service is reached.
+ *
+ * @param reviewerId - ID of the authenticated mentor
+ * @param submissionId - ID of the submission being reviewed
+ * @param data - The validated review decision
+ * @returns The updated submission in the mentor list shape
+ * @throws ApiError(404) if the submission does not exist
+ */
+export const updateSubmissionStatusService = async (
+  reviewerId: string,
+  submissionId: string,
+  data: { status: "APPROVED" | "REJECTED"; feedback?: string }
+) => {
+  const existing = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    throw new ApiError(404, "Submission not found");
+  }
+
+  // A blank feedback box is stored as "no feedback" rather than as an empty
+  // string, so the student view can tell "not reviewed" from "reviewed".
+  const feedback = data.feedback?.trim();
+
+  const submission = await prisma.submission.update({
+    where: { id: submissionId },
+    data: {
+      status: data.status,
+      feedback: feedback && feedback.length > 0 ? feedback : null,
+      reviewedAt: new Date(),
+      reviewedById: reviewerId,
+    },
+    select: MENTOR_SUBMISSION_SELECT,
+  });
+
+  return {
+    ...submission,
+    submittedAt: submission.createdAt,
+  };
 };

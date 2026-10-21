@@ -99,7 +99,6 @@ export function SignupForm() {
       {/* Full Name Field */}
       <Input
         id="fullName"
-        name="fullName"
         type="text"
         label="Full Name"
         placeholder="John Doe"
@@ -107,13 +106,21 @@ export function SignupForm() {
         isError={!!fullNameError}
         disabled={isPending}
         required
+        leadingIcon={
+          <span
+            className="material-symbols-outlined text-[18px]"
+            aria-hidden="true"
+          >
+            person
+          </span>
+        }
+        className="border-surface-container-high border"
         {...form.register("fullName")}
       />
 
       {/* Email Field */}
       <Input
         id="email"
-        name="email"
         type="email"
         label="Email Address"
         placeholder="john@example.com"
@@ -121,7 +128,16 @@ export function SignupForm() {
         error={emailError}
         isError={!!emailError}
         disabled={isPending}
+        className="border-surface-container-high border"
         required
+        leadingIcon={
+          <span
+            className="material-symbols-outlined text-[18px]"
+            aria-hidden="true"
+          >
+            alternate_email
+          </span>
+        }
         {...form.register("email")}
       />
 
@@ -129,12 +145,12 @@ export function SignupForm() {
       <div className="space-y-1.5">
         <PasswordInput
           id="password"
-          name="password"
           label="Password"
           placeholder="Create a password"
           error={passwordError}
           isError={!!passwordError}
           disabled={isPending}
+          className="border-surface-container-high border"
           required
           {...form.register("password")}
         />
@@ -154,12 +170,12 @@ export function SignupForm() {
       {/* Confirm Password Field */}
       <PasswordInput
         id="confirmPassword"
-        name="confirmPassword"
         label="Confirm Password"
         placeholder="Confirm your password"
         error={confirmPasswordError}
         isError={!!confirmPasswordError}
         disabled={isPending}
+        className="border-surface-container-high border"
         required
         {...form.register("confirmPassword")}
       />
@@ -178,11 +194,17 @@ export function SignupForm() {
             className="text-body-sm text-on-surface-variant leading-tight cursor-pointer"
           >
             I agree to the
-            <Link href="#" className="text-primary hover:underline font-medium">
+            <Link
+              href="#"
+              className="text-primary hover:underline font-medium m-0.5"
+            >
               Academic Honor Code
             </Link>
             and
-            <Link href="#" className="text-primary hover:underline font-medium">
+            <Link
+              href="#"
+              className="text-primary hover:underline font-medium m-0.5"
+            >
               Terms of Submission
             </Link>
           </label>

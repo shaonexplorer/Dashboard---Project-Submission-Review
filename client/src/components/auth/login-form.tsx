@@ -3,14 +3,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useLogin } from "@/hooks/use-auth";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { Input } from "@/components/ui";
 import {
   PasswordInput,
   ErrorBanner,
-  InlineError,
   PrimaryActionButton,
   SSOButtons,
   AuthFooter,
@@ -67,7 +65,6 @@ export function LoginForm() {
       {/* Email Field */}
       <Input
         id="email"
-        name="email"
         type="email"
         label="Email Address"
         placeholder="you@university.edu"
@@ -75,6 +72,7 @@ export function LoginForm() {
         isError={!!emailError}
         disabled={isPending}
         required
+        className="border-surface-container-high border"
         leadingIcon={
           <span
             className="material-symbols-outlined text-[18px]"
@@ -89,16 +87,13 @@ export function LoginForm() {
       {/* Password Field */}
       <PasswordInput
         id="password"
-        name="password"
         label="Password"
         placeholder="Enter your security password"
         error={passwordError}
         isError={!!passwordError}
         disabled={isPending}
+        className="border-surface-container-high border"
         required
-        onForgotPassword={() => {
-          // TODO: Implement forgot password
-        }}
         {...form.register("password")}
       />
 

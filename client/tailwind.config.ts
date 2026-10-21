@@ -33,12 +33,10 @@ export default {
         outline: "var(--color-outline)",
         "outline-variant": "var(--color-outline-variant)",
         "surface-tint": "var(--color-surface-tint)",
-        primary: "var(--color-primary)",
         "on-primary": "var(--color-on-primary)",
         "primary-container": "var(--color-primary-container)",
         "on-primary-container": "var(--color-on-primary-container)",
         "inverse-primary": "var(--color-inverse-primary)",
-        secondary: "var(--color-secondary)",
         "on-secondary": "var(--color-on-secondary)",
         "secondary-container": "var(--color-secondary-container)",
         "on-secondary-container": "var(--color-on-secondary-container)",
@@ -62,7 +60,6 @@ export default {
         "tertiary-fixed-dim": "var(--color-tertiary-fixed-dim)",
         "on-tertiary-fixed": "var(--color-on-tertiary-fixed)",
         "on-tertiary-fixed-variant": "var(--color-on-tertiary-fixed-variant)",
-        background: "var(--color-background)",
         "on-background": "var(--color-on-background)",
         "surface-variant": "var(--color-surface-variant)",
 
@@ -92,14 +89,14 @@ export default {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
-        background: "var(--background)",
+        background: "var(--color-background)",
         foreground: "var(--foreground)",
         primary: {
-          DEFAULT: "var(--primary)",
+          DEFAULT: "var(--color-primary)",
           foreground: "var(--primary-foreground)",
         },
         secondary: {
-          DEFAULT: "var(--secondary)",
+          DEFAULT: "var(--color-secondary)",
           foreground: "var(--secondary-foreground)",
         },
         destructive: {

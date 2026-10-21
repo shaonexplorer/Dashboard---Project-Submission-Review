@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { BrandPanel } from "./brand-panel";
 import { AuthCard } from "./auth-card";
@@ -51,7 +52,7 @@ export function AuthLayout({
 function AuthHeader() {
   return (
     <header className="w-full py-4 px-6 md:px-12 flex items-center justify-between border-b border-outline-variant/30 bg-surface-container-lowest/70 backdrop-blur-sm">
-      <a
+      <Link
         className="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-primary rounded-lg transition-transform active:scale-[0.98]"
         href="/"
       >
@@ -66,7 +67,7 @@ function AuthHeader() {
             Auth
           </span>
         </div>
-      </a>
+      </Link>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant shadow-xs">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>

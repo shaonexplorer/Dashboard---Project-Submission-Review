@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 interface PasswordInputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -18,14 +17,14 @@ interface PasswordInputProps extends Omit<
   placeholder?: string;
   /** ID for the input */
   id: string;
-  /** Name for form submission */
-  name: string;
+  /** Name for form submission — usually supplied by the form library */
+  name?: string;
   /** Whether input is disabled */
   disabled?: boolean;
   /** Whether input is required */
   required?: boolean;
-  /** Forgot password link handler */
-  onForgotPassword?: () => void;
+  /** Whether the field is in an error state */
+  isError?: boolean;
   /** Custom className */
   className?: string;
 }
@@ -39,7 +38,7 @@ export function PasswordInput({
   name,
   disabled,
   required,
-  onForgotPassword,
+  isError,
   className,
   ...props
 }: PasswordInputProps) {
@@ -60,6 +59,7 @@ export function PasswordInput({
       placeholder={placeholder}
       disabled={disabled}
       required={required}
+      isError={isError}
       leadingIcon={
         <span
           className="material-symbols-outlined text-[18px]"

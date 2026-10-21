@@ -21,7 +21,7 @@ const PUBLIC_ROUTES = ["/", "/auth", "/api", "/_next", "/favicon.ico"];
 /**
  * Check if a path matches any of the given route prefixes
  */
-function isPathMatch(pathname: string, routes: string[]): boolean {
+function isPathMatch(pathname: string, routes: readonly string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
 }
 
@@ -29,10 +29,9 @@ function isPathMatch(pathname: string, routes: string[]): boolean {
  * Check if a path is public (no auth required)
  */
 function isPublicRoute(pathname: string): boolean {
-  // Exact matches for root and auth
-  if (pathname === "/" || pathname === "/auth") return true;
-  // Prefix matches for API and static assets
-  return isPathMatch(pathname, ["/api", "/_next", "/favicon.ico"]);
+  return PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 }
 
 /**
@@ -47,7 +46,9 @@ function getRequiredRole(pathname: string): "STUDENT" | "MENTOR" | null {
 /**
  * Verify authentication token with backend and get user data
  */
-async function verifyAuth(token: string): Promise<{ user: { role: string; id: string } } | null> {
+async function verifyAuth(
+  token: string,
+): Promise<{ user: { role: string; id: string } } | null> {
   try {
     const response = await fetch(`${API_URL}/auth/me`, {
       method: "GET",
@@ -58,6 +59,8 @@ async function verifyAuth(token: string): Promise<{ user: { role: string; id: st
       // Don't cache auth verification
       cache: "no-store",
     });
+
+    console.log("Auth verification response status:", response);
 
     if (!response.ok) {
       return null;
@@ -118,7 +121,8 @@ export async function middleware(request: NextRequest) {
   // Check role-based access
   if (userRole !== requiredRole) {
     // Wrong role - redirect to appropriate dashboard
-    const redirectPath = userRole === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard";
+    const redirectPath =
+      userRole === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard";
     return NextResponse.redirect(new URL(redirectPath, request.url));
   }
 

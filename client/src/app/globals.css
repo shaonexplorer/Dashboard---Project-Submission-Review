@@ -73,15 +73,16 @@
   --color-status-rejected-dot: #e11d48;
 
   /* Shadcn/ui color mappings (for @apply border-border, bg-background, etc.) */
+  /* Note: the design tokens above already define --color-background,
+     --color-primary and --color-secondary. Re-declaring them here would
+     either create a cyclic self-reference (invalid at computed-value time) or
+     silently repoint the design token, so they are intentionally left alone. */
   --color-border: var(--color-outline-variant);
   --color-input: var(--color-outline-variant);
   --color-ring: var(--color-primary);
-  --color-background: var(--color-background);
   --color-foreground: var(--color-on-background);
-  --color-primary: var(--color-primary);
   --color-primary-foreground: var(--color-on-primary);
-  --color-secondary: var(--color-secondary-container);
-  --color-secondary-foreground: var(--color-on-secondary-container);
+  --color-secondary-foreground: var(--color-on-secondary);
   --color-destructive: var(--color-error);
   --color-destructive-foreground: var(--color-on-error);
   --color-muted: var(--color-surface-container);
@@ -156,8 +157,8 @@
   --popover-foreground: var(--color-on-surface);
   --primary: var(--color-primary);
   --primary-foreground: var(--color-on-primary);
-  --secondary: var(--color-secondary-container);
-  --secondary-foreground: var(--color-on-secondary-container);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-on-secondary);
   --muted: var(--color-surface-container);
   --muted-foreground: var(--color-on-surface-variant);
   --accent: var(--color-surface-container-low);
@@ -261,6 +262,27 @@
     0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
   --shadow-3:
     0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
+
+/*
+ * Material Symbols sizing.
+ *
+ * The Material Symbols stylesheet is loaded from the root layout. It is
+ * *unlayered*, and unlayered author styles beat layered ones — while Tailwind
+ * v4 puts `text-[Npx]` in `@layer utilities`. Left alone, Google's
+ * `.material-symbols-outlined { font-size: 24px }` wins and every icon renders
+ * at 24px regardless of the size its component asked for.
+ *
+ * Doubling the class raises specificity above Google's rule no matter which
+ * stylesheet loads first, and `revert-layer` hands font-size back to the
+ * cascade: a `text-[Npx]` utility decides the size, and an icon without one
+ * falls back to 16px.
+ *
+ * This rule must stay unlayered — inside `@layer components` it would lose to
+ * the unlayered Google rule.
+ */
+.material-symbols-outlined.material-symbols-outlined {
+  font-size: revert-layer;
 }
 
 @layer base {
