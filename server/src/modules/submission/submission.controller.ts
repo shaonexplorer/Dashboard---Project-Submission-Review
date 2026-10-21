@@ -3,12 +3,14 @@ import { asyncHandler } from "../../utils/async-handler";
 import { sendPaginatedResponse, sendResponse } from "../../utils/api-response";
 import {
   createSubmissionService,
-  getStudentSubmissionService,
+  getStudentSubmissionsService,
   getSubmissionsService,
   getSubmissionStatsService,
+  resubmitSubmissionService,
   updateSubmissionStatusService,
 } from "./submission.service";
 import type {
+  ResubmitInput,
   SubmissionIdParams,
   SubmissionListQuery,
   SubmissionStatusUpdateInput,
@@ -28,15 +30,15 @@ import type {
 export const createSubmissionController = asyncHandler(
   async (req: Request, res: Response) => {
     const studentId = req.user!.id;
-    const { projectName, repoUrl, liveUrl, description } = req.body as {
-      projectName: string;
+    const { projectId, repoUrl, liveUrl, description } = req.body as {
+      projectId: string;
       repoUrl: string;
       liveUrl: string;
       description: string;
     };
 
     const submission = await createSubmissionService(studentId, {
-      projectName,
+      projectId,
       repoUrl,
       liveUrl,
       description,
@@ -47,27 +49,57 @@ export const createSubmissionController = asyncHandler(
 );
 
 /**
- * Retrieves the authenticated student's own submission.
+ * Retrieves the authenticated student's own submissions.
  *
  * Requires:
  * - Authentication (handled by authenticate middleware)
  * - STUDENT role (handled by authorize("STUDENT") middleware)
  *
  * The student identity is taken from the authenticated request context, never
- * from the client, so a student can only ever reach their own submission.
+ * from the client, so a student can only ever reach their own submissions.
  *
- * Returns 200 OK with the submission, or 404 Not Found when the student has
- * not submitted a project yet. The not-found case is a definitive answer
- * ("there is nothing here"), which is what lets the frontend tell it apart
- * from an unexpected server failure.
+ * Returns 200 OK with the student's submissions, most recent first. A student
+ * who has not submitted anything gets an empty list — not a 404, because
+ * "nothing submitted yet" is an answer, not a failure.
  */
 export const getMySubmissionController = asyncHandler(
   async (req: Request, res: Response) => {
     const studentId = req.user!.id;
 
-    const submission = await getStudentSubmissionService(studentId);
+    const submissions = await getStudentSubmissionsService(studentId);
 
-    sendResponse(res, 200, "Submission retrieved", { submission });
+    sendResponse(res, 200, "Submissions retrieved", { submissions });
+  }
+);
+
+/**
+ * Replaces the deliverable of a rejected submission.
+ *
+ * Requires:
+ * - Authentication (handled by authenticate middleware)
+ * - STUDENT role (handled by authorize("STUDENT") middleware)
+ * - A valid submission id (handled by validate(submissionIdParamSchema) middleware)
+ * - A valid body (handled by validate(resubmitSchema) middleware)
+ *
+ * The submission is always the authenticated student's own: the id is matched
+ * against the row's owner, so a student can never resubmit somebody else's
+ * work.
+ *
+ * Returns 200 OK with the updated submission on success.
+ */
+export const resubmitSubmissionController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const studentId = req.user!.id;
+    const { id } = req.params as unknown as SubmissionIdParams;
+    const { repoUrl, liveUrl, description } = req.body as ResubmitInput;
+
+    const submission = await resubmitSubmissionService(studentId, id, {
+      repoUrl,
+      liveUrl,
+      description,
+    });
+
+    sendResponse(res, 200, "Submission resubmitted successfully", { submission });
   }
 );
 

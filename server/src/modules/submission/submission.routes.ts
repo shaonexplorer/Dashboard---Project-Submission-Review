@@ -4,6 +4,7 @@ import { validate } from "../../middleware/validate.middleware";
 import { authenticate, authorize } from "../auth/auth.middleware";
 import { submissionRateLimiter } from "./submissionRateLimiter.middleware";
 import {
+  resubmitSchema,
   submissionIdParamSchema,
   submissionListQuerySchema,
   submissionSchema,
@@ -14,6 +15,7 @@ import {
   getMySubmissionController,
   getSubmissionsController,
   getSubmissionStatsController,
+  resubmitSubmissionController,
   updateSubmissionStatusController,
 } from "./submission.controller";
 
@@ -25,25 +27,28 @@ const router = express.Router();
  * Creates a new project submission for the authenticated student.
  *
  * Middleware chain:
- * 1. submissionRateLimiter - 5 requests per 10 minutes per IP
- * 2. authenticate - Verifies JWT token from cookie
- * 3. authorize("STUDENT") - Ensures user has STUDENT role
- * 3. validate(submissionSchema) - Validates request body
+ * 1. authenticate - Verifies JWT token from cookie
+ * 2. authorize("STUDENT") - Ensures user has STUDENT role
+ * 3. submissionRateLimiter - 20 requests per 10 minutes per user
+ * 4. validate(submissionSchema) - Validates request body
+ *
+ * The rate limiter runs after authentication so it can key on the student's
+ * user id rather than on the shared IP address.
  *
  * Responses:
  * - 201 Created: Submission created successfully
- * - 400 Bad Request: Validation failed
+ * - 400 Bad Request: Validation failed, or the project is not in the catalog
  * - 401 Unauthorized: Missing or invalid token
  * - 403 Forbidden: User is not a STUDENT
- * - 409 Conflict: Student already has a submission
+ * - 409 Conflict: Student already submitted this project
  * - 429 Too Many Requests: Rate limit exceeded
  * - 500 Internal Server Error: Unexpected error
  */
 router.post(
   "/",
-  submissionRateLimiter,
   authenticate,
   authorize("STUDENT"),
+  submissionRateLimiter,
   validate(submissionSchema, "body"),
   createSubmissionController
 );
@@ -51,17 +56,17 @@ router.post(
 /**
  * GET /api/submissions/me
  *
- * Retrieves the authenticated student's own submission.
+ * Retrieves every submission the authenticated student has made.
  *
  * Middleware chain:
  * 1. authenticate - Verifies JWT token from cookie
  * 2. authorize("STUDENT") - Ensures user has STUDENT role
  *
  * Responses:
- * - 200 OK: Submission retrieved
+ * - 200 OK: The student's submissions, most recent first. A student who has
+ *   not submitted anything gets an empty list, never a 404.
  * - 401 Unauthorized: Missing or invalid token
  * - 403 Forbidden: User is not a STUDENT
- * - 404 Not Found: The student has not submitted a project yet
  * - 500 Internal Server Error: Unexpected error
  *
  * Note: this route must stay registered before any dynamic `/:id` route, so
@@ -119,6 +124,7 @@ router.get(
  * - page: positive integer, defaults to 1
  * - limit: positive integer, at most 100, defaults to 10
  * - status: PENDING | APPROVED | REJECTED
+ * - projectId: exact catalog code, e.g. "ph-01"
  * - search: matched against project name, student name and student email
  * - sortBy: createdAt | projectName | status, defaults to createdAt
  * - sortOrder: asc | desc, defaults to desc
@@ -136,6 +142,43 @@ router.get(
   authorize("MENTOR"),
   validate(submissionListQuerySchema, "query"),
   getSubmissionsController
+);
+
+/**
+ * PUT /api/submissions/:id/resubmit
+ *
+ * Replaces the deliverable of a rejected submission. The existing row is
+ * reused: the attempt counter goes up, the row returns to PENDING and the
+ * previous review is kept so the student can still read it.
+ *
+ * Middleware chain:
+ * 1. authenticate - Verifies JWT token from cookie
+ * 2. authorize("STUDENT") - Ensures user has STUDENT role
+ * 3. submissionRateLimiter - 20 requests per 10 minutes per user
+ * 4. validate(submissionIdParamSchema, "params") - Validates the submission id
+ * 5. validate(resubmitSchema, "body") - Validates the deliverable
+ *
+ * The project is not part of the body: a resubmission always stays on the
+ * project the submission was made for.
+ *
+ * Responses:
+ * - 200 OK: The updated submission
+ * - 400 Bad Request: Invalid submission id or body
+ * - 401 Unauthorized: Missing or invalid token
+ * - 403 Forbidden: User is not a STUDENT
+ * - 404 Not Found: No submission with that id, or it belongs to another student
+ * - 409 Conflict: The submission is not in a resubmittable state
+ * - 429 Too Many Requests: Rate limit exceeded
+ * - 500 Internal Server Error: Unexpected error
+ */
+router.put(
+  "/:id/resubmit",
+  authenticate,
+  authorize("STUDENT"),
+  submissionRateLimiter,
+  validate(submissionIdParamSchema, "params"),
+  validate(resubmitSchema, "body"),
+  resubmitSubmissionController
 );
 
 /**

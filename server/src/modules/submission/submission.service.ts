@@ -2,7 +2,22 @@ import { UserRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import type { Prisma, SubmissionStatus } from "../../generated/prisma/client";
 import { ApiError } from "../../utils/api-error";
-import type { SubmissionListQuery } from "./submission.validations";
+import type { ResubmitInput, SubmissionListQuery } from "./submission.validations";
+
+/**
+ * Machine-readable discriminators returned alongside a conflicting request.
+ *
+ * The client branches on the code, never on the message: the message is
+ * written for a human, the code is the contract.
+ */
+export const SUBMISSION_ERROR_CODES = {
+  /** The student already handed this project in and it is still under review or approved. */
+  DUPLICATE_SUBMISSION: "DUPLICATE_SUBMISSION",
+  /** The project was rejected, so the student has to resubmit rather than submit again. */
+  RESUBMIT_REQUIRED: "RESUBMIT_REQUIRED",
+  /** The submission cannot be resubmitted in its current state. */
+  NOT_RESUBMITTABLE: "NOT_RESUBMITTABLE",
+} as const;
 
 /**
  * A submission row as it is stored in the database.
@@ -12,6 +27,7 @@ import type { SubmissionListQuery } from "./submission.validations";
  */
 type SubmissionRecord = {
   id: string;
+  projectId: string;
   projectName: string;
   repoUrl: string;
   liveUrl: string;
@@ -20,6 +36,8 @@ type SubmissionRecord = {
   feedback: string | null;
   reviewedAt: Date | null;
   studentId: string;
+  attempt: number;
+  resubmittedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -32,6 +50,8 @@ type SubmissionRecord = {
  */
 export const getSafeSubmission = (submission: SubmissionRecord) => ({
   id: submission.id,
+  /** The catalog code of the project this submission belongs to. */
+  projectId: submission.projectId,
   projectName: submission.projectName,
   repoUrl: submission.repoUrl,
   liveUrl: submission.liveUrl,
@@ -40,6 +60,10 @@ export const getSafeSubmission = (submission: SubmissionRecord) => ({
   feedback: submission.feedback,
   reviewedAt: submission.reviewedAt,
   studentId: submission.studentId,
+  /** Which attempt this is — 1 for a first hand-in. */
+  attempt: submission.attempt,
+  /** When this attempt was handed in. `null` on a first attempt. */
+  resubmittedAt: submission.resubmittedAt,
   /** When the project was handed in — the row creation timestamp. */
   submittedAt: submission.createdAt,
   createdAt: submission.createdAt,
@@ -47,22 +71,59 @@ export const getSafeSubmission = (submission: SubmissionRecord) => ({
 });
 
 /**
+ * The student-facing submission shape returned by the API.
+ */
+export type SafeSubmission = ReturnType<typeof getSafeSubmission>;
+
+/**
+ * Builds the error thrown when a student hands the same project in twice.
+ *
+ * The two cases are told apart by the state of the existing submission: one
+ * that is still under review (or already approved) is a plain duplicate, while
+ * one that was rejected has to be resubmitted instead of submitted again.
+ */
+const buildDuplicateError = (existingStatus: string) => {
+  if (existingStatus === "REJECTED") {
+    return new ApiError(
+      409,
+      "This project was rejected. Resubmit it with the requested changes.",
+      undefined,
+      true,
+      SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED
+    );
+  }
+
+  return new ApiError(
+    409,
+    "You have already submitted this project",
+    undefined,
+    true,
+    SUBMISSION_ERROR_CODES.DUPLICATE_SUBMISSION
+  );
+};
+
+/**
  * Creates a new project submission for an authenticated student.
  *
  * Business rules enforced:
  * - Only STUDENT role can create submissions
- * - One submission per student (enforced at application and database level)
+ * - The project must be an active catalog entry
+ * - One submission per student per project (enforced at application and
+ *   database level)
+ * - The project name is written by the server from the catalog, never by the
+ *   client
  * - studentId is derived from authenticated user, never from client input
  *
  * @param studentId - ID of the authenticated student (from req.user)
  * @param data - Validated submission data
  * @returns The created submission (safe representation)
  * @throws ApiError(403) if user is not a student
- * @throws ApiError(409) if student already has a submission (application-level or DB-level)
+ * @throws ApiError(400) if the project is not in the catalog
+ * @throws ApiError(409) if the student already submitted this project
  */
 export const createSubmissionService = async (
   studentId: string,
-  data: { projectName: string; repoUrl: string; liveUrl: string; description: string }
+  data: { projectId: string; repoUrl: string; liveUrl: string; description: string }
 ) => {
   // Verify user is a student
   const user = await prisma.user.findUnique({ where: { id: studentId } });
@@ -73,25 +134,42 @@ export const createSubmissionService = async (
     throw new ApiError(403, "Forbidden: only students can submit projects");
   }
 
-  // Application-level duplicate check
+  // The project is resolved from the catalog, so the display name is written
+  // by the server and the client cannot invent one.
+  const project = await prisma.project.findFirst({
+    where: { id: data.projectId, isActive: true },
+    select: { id: true, name: true },
+  });
+
+  if (!project) {
+    throw new ApiError(400, "Selected project is not available", [
+      { field: "projectId", message: "Select a project from the catalog" },
+    ]);
+  }
+
+  // Application-level duplicate check for this student and this project.
   const existingSubmission = await prisma.submission.findUnique({
-    where: { studentId },
+    where: { studentId_projectId: { studentId, projectId: project.id } },
+    select: { status: true },
   });
 
   if (existingSubmission) {
-    throw new ApiError(409, "You have already submitted a project");
+    throw buildDuplicateError(existingSubmission.status);
   }
 
-  // Create submission - database-level @unique on studentId provides race-condition protection
+  // Create submission - the database-level @@unique([studentId, projectId])
+  // provides race-condition protection for two simultaneous requests.
   try {
     const submission = await prisma.submission.create({
       data: {
         studentId,
-        projectName: data.projectName,
+        projectId: project.id,
+        projectName: project.name,
         repoUrl: data.repoUrl,
         liveUrl: data.liveUrl,
         description: data.description,
         status: "PENDING",
+        attempt: 1,
       },
     });
 
@@ -99,9 +177,24 @@ export const createSubmissionService = async (
   } catch (error) {
     // Handle Prisma unique constraint violation (P2002) for concurrent duplicates
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
-      const prismaError = error as { meta?: { target?: string[] } };
-      if (prismaError.meta?.target?.includes("studentId")) {
-        throw new ApiError(409, "You have already submitted a project");
+      const prismaError = error as { meta?: { target?: string[] | string } };
+      const target = prismaError.meta?.target;
+      const targets = Array.isArray(target) ? target : typeof target === "string" ? [target] : [];
+
+      const isStudentProjectKey =
+        targets.includes("studentId_projectId") ||
+        (targets.includes("studentId") && targets.includes("projectId"));
+
+      if (isStudentProjectKey) {
+        // The race was lost to another request for the same student and
+        // project. Re-read the winning row so the response carries the same
+        // discriminator the pre-check would have produced.
+        const winner = await prisma.submission.findUnique({
+          where: { studentId_projectId: { studentId, projectId: project.id } },
+          select: { status: true },
+        });
+
+        throw buildDuplicateError(winner?.status ?? "PENDING");
       }
     }
     throw error;
@@ -109,23 +202,89 @@ export const createSubmissionService = async (
 };
 
 /**
- * Retrieves a student's own submission.
+ * Retrieves every submission a student has made.
  *
  * The student identity always comes from the authenticated request context, so
- * a client can never widen the lookup to another student's record.
+ * a client can never widen the lookup to another student's records.
+ *
+ * The list is never empty-by-error: a student who has not submitted anything
+ * simply gets an empty array. An empty list and a failed request are two
+ * different answers, and only one of them is a 404.
  *
  * @param studentId - ID of the authenticated student
- * @returns The submission belonging to that student
- * @throws ApiError(404) if the student has not submitted a project yet
+ * @returns The student's submissions, most recently handed in first
  */
-export const getStudentSubmissionService = async (studentId: string) => {
-  const submission = await prisma.submission.findUnique({
+export const getStudentSubmissionsService = async (studentId: string) => {
+  const submissions = await prisma.submission.findMany({
     where: { studentId },
+    orderBy: { createdAt: "desc" },
   });
 
-  if (!submission) {
+  return submissions.map(getSafeSubmission);
+};
+
+/**
+ * Replaces the deliverable of a rejected submission.
+ *
+ * A resubmission reuses the existing row instead of creating a second one:
+ * the attempt counter goes up, the row returns to PENDING, and the previous
+ * review is kept so the student can still see what the mentor asked for.
+ *
+ * The project is never changed by a resubmission — the row stays on the
+ * project it was made for, and the client cannot choose a different one.
+ *
+ * @param studentId - ID of the authenticated student
+ * @param submissionId - ID of the submission being resubmitted
+ * @param data - The validated deliverable
+ * @returns The updated submission (safe representation)
+ * @throws ApiError(404) if the submission does not exist or belongs to somebody else
+ * @throws ApiError(409) if the submission is not in a resubmittable state
+ */
+export const resubmitSubmissionService = async (
+  studentId: string,
+  submissionId: string,
+  data: ResubmitInput
+) => {
+  const existing = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    select: {
+      id: true,
+      studentId: true,
+      status: true,
+      attempt: true,
+    },
+  });
+
+  // A submission owned by somebody else is reported as missing rather than
+  // forbidden: the student has no business learning that it exists.
+  if (!existing || existing.studentId !== studentId) {
     throw new ApiError(404, "Submission not found");
   }
+
+  if (existing.status !== "REJECTED") {
+    throw new ApiError(
+      409,
+      "This submission cannot be resubmitted",
+      undefined,
+      true,
+      SUBMISSION_ERROR_CODES.NOT_RESUBMITTABLE
+    );
+  }
+
+  const submission = await prisma.submission.update({
+    where: { id: submissionId },
+    data: {
+      repoUrl: data.repoUrl,
+      liveUrl: data.liveUrl,
+      description: data.description,
+      status: "PENDING",
+      attempt: { increment: 1 },
+      resubmittedAt: new Date(),
+      // The previous review is deliberately left in place: the feedback,
+      // the reviewer and the review timestamp describe the attempt that was
+      // rejected, and the student is still working against them.
+    },
+  });
 
   return getSafeSubmission(submission);
 };
@@ -138,6 +297,7 @@ export const getStudentSubmissionService = async (studentId: string) => {
  */
 const MENTOR_SUBMISSION_SELECT = {
   id: true,
+  projectId: true,
   projectName: true,
   repoUrl: true,
   liveUrl: true,
@@ -146,6 +306,7 @@ const MENTOR_SUBMISSION_SELECT = {
   feedback: true,
   reviewedAt: true,
   studentId: true,
+  attempt: true,
   createdAt: true,
   updatedAt: true,
   student: {
@@ -160,6 +321,7 @@ const MENTOR_SUBMISSION_SELECT = {
 /** A submission row as it is read back for a mentor. */
 type MentorSubmissionRow = {
   id: string;
+  projectId: string;
   projectName: string;
   repoUrl: string;
   liveUrl: string;
@@ -168,6 +330,7 @@ type MentorSubmissionRow = {
   feedback: string | null;
   reviewedAt: Date | null;
   studentId: string;
+  attempt: number;
   createdAt: Date;
   updatedAt: Date;
   student: {
@@ -200,6 +363,10 @@ const buildSubmissionWhere = (query: SubmissionListQuery): Prisma.SubmissionWher
 
   if (query.status) {
     where.status = query.status;
+  }
+
+  if (query.projectId) {
+    where.projectId = query.projectId;
   }
 
   const search = query.search?.trim();

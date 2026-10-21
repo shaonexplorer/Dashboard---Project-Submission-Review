@@ -4,11 +4,12 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/use-auth";
-import { useMySubmission } from "@/hooks/use-submissions";
+import { useMySubmissions } from "@/hooks/use-submissions";
 import { AppFooter, AppHeader } from "@/components/layout";
 import {
   EvaluationRubricCard,
   MentorFeedbackCard,
+  ResubmitForm,
   SubmissionDetailsCard,
   SubmissionEmptyState,
   SubmissionLoadError,
@@ -24,23 +25,26 @@ import type { Submission } from "@/lib/api/submissions";
 import { formatUtcDateTime } from "@/lib/format";
 
 /**
- * The student's own submission.
+ * The student's own submissions.
  *
  * The page is a read-only view: everything it shows comes from
  * `GET /api/submissions/me`, and the loading, empty and error states are kept
  * apart so "there is no submission" never looks like "the request failed".
+ *
+ * A student may hold one submission per catalog project, so the page renders
+ * a block per submission rather than a single record.
  */
 export default function StudentSubmissionPage() {
   const router = useRouter();
   const { user, isResolving: isUserResolving } = useCurrentUser();
   const {
-    data: submission,
+    data: submissions = [],
     isPending: isSubmissionPending,
     isError: isSubmissionError,
     error: submissionError,
-    refetch: refetchSubmission,
+    refetch: refetchSubmissions,
     isFetching: isRefetching,
-  } = useMySubmission();
+  } = useMySubmissions();
 
   // An expired session is handled by the authentication flow, not by the page.
   useEffect(() => {
@@ -88,11 +92,11 @@ export default function StudentSubmissionPage() {
               lock
             </span>
             <h1 className="text-headline-md text-on-surface">
-              Please sign in to view your submission
+              Please sign in to view your submissions
             </h1>
             <p className="text-body-md text-on-surface-variant">
               Your session is missing or has expired. Sign in again to continue
-              with your project submission.
+              with your project submissions.
             </p>
             <Button
               render={
@@ -115,7 +119,7 @@ export default function StudentSubmissionPage() {
 
       <main className="flex-1 w-full pt-16">
         <div className="max-w-[1440px] w-full mx-auto px-6 py-10 flex flex-col gap-6">
-          <PageHeader submission={submission} />
+          <PageHeader submissions={submissions} />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-8">
             <div className="lg:col-span-7 flex flex-col gap-6 min-w-0">
@@ -124,28 +128,24 @@ export default function StudentSubmissionPage() {
               ) : isSubmissionError ? (
                 <SubmissionLoadError
                   error={submissionError}
-                  onRetry={() => void refetchSubmission()}
+                  onRetry={() => void refetchSubmissions()}
                   isRetrying={isRefetching}
                 />
-              ) : submission ? (
-                <>
-                  <SubmissionStatusPanel
-                    status={submission.status}
-                    hasFeedback={Boolean(submission.feedback?.trim())}
-                  />
-
-                  <SubmissionDetailsCard submission={submission} />
-
-                  <MentorFeedbackCard submission={submission} />
-                </>
-              ) : (
+              ) : submissions.length === 0 ? (
                 <SubmissionEmptyState />
+              ) : (
+                submissions.map((submission) => (
+                  <SubmissionBlock
+                    key={submission.id}
+                    submission={submission}
+                  />
+                ))
               )}
             </div>
 
             <aside className="lg:col-span-5 flex flex-col gap-6">
-              {submission ? (
-                <SubmissionSnapshotCard submission={submission} />
+              {submissions.length > 0 ? (
+                <SubmissionSnapshotCard submissions={submissions} />
               ) : (
                 <PreflightHint />
               )}
@@ -169,12 +169,76 @@ export default function StudentSubmissionPage() {
 }
 
 /**
+ * One submission, in full.
+ *
+ * The project the submission belongs to is named in the block header, so a
+ * student with several submissions can tell them apart without reading every
+ * card.
+ */
+function SubmissionBlock({ submission }: { submission: Submission }) {
+  const isRejected = submission.status === "REJECTED";
+
+  return (
+    <section className="flex flex-col gap-6" aria-labelledby={`submission-${submission.id}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="font-code-sm text-code-sm font-semibold uppercase text-secondary">
+            {submission.projectId}
+          </span>
+          <h2
+            id={`submission-${submission.id}`}
+            className="text-headline-lg text-on-surface tracking-tight truncate"
+          >
+            {submission.projectName}
+          </h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface font-code-sm text-code-sm">
+            Attempt {submission.attempt}
+          </span>
+          <SubmissionStatusBadge status={submission.status} />
+        </div>
+      </div>
+
+      <SubmissionStatusPanel
+        status={submission.status}
+        hasFeedback={Boolean(submission.feedback?.trim())}
+        attempt={submission.attempt}
+      />
+
+      <SubmissionDetailsCard submission={submission} />
+
+      <MentorFeedbackCard submission={submission} />
+
+      {isRejected ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-surface-container-high/80 bg-surface-container-lowest p-5">
+          <div className="flex items-start gap-3 min-w-0">
+            <span
+              className="material-symbols-outlined text-error text-[20px] shrink-0"
+              aria-hidden="true"
+            >
+              sync
+            </span>
+            <p className="text-body-sm text-on-surface-variant">
+              Changes were requested. Resubmit this project to send attempt{" "}
+              {submission.attempt + 1} for review.
+            </p>
+          </div>
+          <ResubmitForm submission={submission} />
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/**
  * Page header with the current submission state.
  *
  * Every value shown here comes from the server.
  */
-function PageHeader({ submission }: { submission?: Submission | null }) {
-  const hasSubmission = Boolean(submission);
+function PageHeader({ submissions }: { submissions: Submission[] }) {
+  const hasSubmission = submissions.length > 0;
+  const latest = submissions[0];
 
   return (
     <header className="pb-8 border-b border-surface-container-high/60">
@@ -184,7 +248,7 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
           <span className="text-outline" aria-hidden="true">
             /
           </span>
-          <span className="text-on-surface font-medium">Your Submission</span>
+          <span className="text-on-surface font-medium">Your Submissions</span>
         </div>
 
         {hasSubmission ? (
@@ -198,7 +262,7 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
               </span>
               Locked
             </span>
-            <SubmissionStatusBadge status={submission!.status} />
+            <SubmissionStatusBadge status={latest!.status} />
           </div>
         ) : null}
       </div>
@@ -208,17 +272,24 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
           {hasSubmission ? (
             <div className="flex items-center gap-3 mb-2 flex-wrap">
               <span className="font-code-sm text-code-sm text-secondary">
-                Submitted {formatUtcDateTime(submission!.submittedAt)}
+                {submissions.length}{" "}
+                {submissions.length === 1 ? "project" : "projects"} submitted
+              </span>
+              <span className="text-outline font-code-sm text-code-sm" aria-hidden="true">
+                ·
+              </span>
+              <span className="font-code-sm text-code-sm text-secondary">
+                Latest {formatUtcDateTime(latest!.submittedAt)}
               </span>
             </div>
           ) : null}
 
           <h1 className="text-display text-on-surface font-bold tracking-tight">
-            Your Submission
+            Your Submissions
           </h1>
           <p className="text-body-md text-on-surface-variant mt-1.5">
             {hasSubmission
-              ? "The record of the project you handed in, together with its review status and the mentor's assessment."
+              ? "The record of every project you handed in, together with its review status and the mentor's assessment."
               : "You haven't submitted a project yet. Your project details and mentor feedback will appear here once you hand it in."}
           </p>
         </div>

@@ -1,25 +1,31 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createSubmissionApi, getMySubmissionApi } from "@/lib/api/submissions";
+import {
+  createSubmissionApi,
+  getMySubmissionsApi,
+  resubmitSubmissionApi,
+  type Submission,
+} from "@/lib/api/submissions";
 import { ApiRequestError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/query-keys";
 import { hasToken } from "@/lib/auth/token";
 
 /**
- * Loads the authenticated student's own submission.
+ * Loads every submission the authenticated student owns.
  *
- * Resolves to `null` when the student has not submitted a project yet, which
- * is what decides between the submission form and the submitted-project view.
+ * The list is empty when nothing has been submitted yet — that is a normal
+ * state, not a failure — so the hook resolves to `[]` and the page decides
+ * what to render from the length of the list.
  */
-export function useMySubmission() {
+export function useMySubmissions() {
   return useQuery({
-    queryKey: queryKeys.mySubmission,
-    queryFn: getMySubmissionApi,
+    queryKey: queryKeys.mySubmissions,
+    queryFn: getMySubmissionsApi,
     // The request only runs when a token is stored locally, which is the
     // session marker the logout flow clears.
     enabled: hasToken(),
-    // The server is the source of truth for "does a submission exist", so the
+    // The server is the source of truth for "what has been submitted", so the
     // query should never be served from a stale cache after a navigation.
     staleTime: 0,
     // A 401/403 will not succeed on retry — surface the error immediately.
@@ -42,13 +48,44 @@ export function useCreateSubmission() {
   return useMutation({
     mutationFn: createSubmissionApi,
     onSuccess: (submission) => {
-      queryClient.setQueryData(queryKeys.mySubmission, submission);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.mySubmission });
+      queryClient.setQueryData<Submission[]>(queryKeys.mySubmissions, (current) =>
+        current ? [submission, ...current] : [submission],
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.mySubmissions });
     },
     onError: (error) => {
       if (error instanceof ApiRequestError && error.status === 409) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.mySubmission });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.mySubmissions });
       }
+    },
+  });
+}
+
+/**
+ * Replaces the deliverable of a rejected submission.
+ *
+ * The server reuses the existing row, so the returned submission replaces the
+ * old one in the cache rather than being appended to the list. The cache is
+ * then invalidated so the attempt counter and the review state come from the
+ * server.
+ */
+export function useResubmitSubmission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      submissionId,
+      payload,
+    }: {
+      submissionId: string;
+      payload: Parameters<typeof resubmitSubmissionApi>[1];
+    }) => resubmitSubmissionApi(submissionId, payload),
+    onSuccess: (submission) => {
+      queryClient.setQueryData<Submission[]>(queryKeys.mySubmissions, (current) =>
+        current?.map((item) => (item.id === submission.id ? submission : item)) ??
+          [submission],
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.mySubmissions });
     },
   });
 }

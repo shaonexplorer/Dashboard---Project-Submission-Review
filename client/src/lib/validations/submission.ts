@@ -10,11 +10,17 @@ import { z } from "zod";
  * The backend remains authoritative — this schema exists for fast UX feedback.
  */
 export const submissionSchema = z.object({
-  projectName: z
+  /**
+   * The catalog code of the project being submitted.
+   *
+   * The project is no longer typed in by hand: the student picks an entry
+   * from the catalog and the server writes the display name itself.
+   */
+  projectId: z
     .string()
     .trim()
-    .min(1, "Project name is required")
-    .max(150, "Project name must be at most 150 characters"),
+    .min(1, "Project is required")
+    .max(50, "Project code must be at most 50 characters"),
   repoUrl: z
     .string()
     .trim()
@@ -67,8 +73,22 @@ export const submissionSchema = z.object({
 
 export type SubmissionFormValues = z.infer<typeof submissionSchema>;
 
-/** Maximum length of the project name, used for the field hint. */
-export const PROJECT_NAME_MAX_LENGTH = 150;
+/**
+ * Client-side resubmission schema.
+ *
+ * The same three deliverable rules as the create form, without the project:
+ * a resubmission always stays on the project the submission was made for.
+ */
+export const resubmitSchema = z.object({
+  repoUrl: submissionSchema.shape.repoUrl,
+  liveUrl: submissionSchema.shape.liveUrl,
+  description: submissionSchema.shape.description,
+});
+
+export type ResubmitFormValues = z.infer<typeof resubmitSchema>;
+
+/** Maximum length of the project code, used for the field hint. */
+export const PROJECT_ID_MAX_LENGTH = 50;
 
 /** Maximum length of the description, used for the character counter. */
 export const DESCRIPTION_MAX_LENGTH = 5000;

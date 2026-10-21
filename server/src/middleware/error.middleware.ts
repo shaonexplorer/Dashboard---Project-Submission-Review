@@ -26,6 +26,12 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     body.errors = err.errors;
   }
 
+  // The machine-readable discriminator is copied into the body only when the
+  // error set one. Every other error response stays exactly as it was.
+  if (err.code !== undefined) {
+    body.code = err.code;
+  }
+
   if (!isOperational) {
     console.error(err);
   }

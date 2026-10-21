@@ -29,25 +29,36 @@ setInterval(() => {
  * Submission-specific rate limiter (in-memory implementation).
  *
  * Configuration:
- * - 5 requests per 10 minutes per IP address
+ * - 20 requests per 10 minutes per authenticated user
  * - Returns 429 Too Many Requests when exceeded
  * - Uses the application's standard API error format
+ *
+ * The budget is keyed on the authenticated user id, not on the IP address.
+ * A cohort frequently shares one public address — a classroom, a campus NAT —
+ * and a per-IP window would let the first student to submit exhaust a budget
+ * that every other student shares, so students who have done nothing wrong
+ * would start seeing `429`. The IP is only used as a fallback for requests
+ * that reach the limiter without an authenticated user.
+ *
+ * The window is 10 minutes and the budget is 20 requests, which is enough for
+ * a student to hand in every project in the catalog and still resubmit the
+ * ones that came back rejected.
  */
 export const submissionRateLimiter = (
   req: Request,
   _res: Response,
   next: NextFunction
 ): void => {
-  const ip = req.ip ?? "unknown";
+  const key = req.user?.id ?? req.ip ?? "unknown";
   const now = Date.now();
   const windowMs = 10 * 60 * 1000; // 10 minutes
-  const max = 5;
+  const max = 20;
 
-  const entry = store.get(ip);
+  const entry = store.get(key);
 
   if (!entry || entry.resetTime < now) {
     // First request or window expired
-    store.set(ip, { count: 1, resetTime: now + windowMs });
+    store.set(key, { count: 1, resetTime: now + windowMs });
     return next();
   }
 

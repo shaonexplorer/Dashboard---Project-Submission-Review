@@ -7,13 +7,21 @@
 export const queryKeys = {
   currentUser: ["currentUser"] as const,
   /**
-   * Canonical cache entry for the authenticated student's own submission.
+   * Canonical cache entry for the authenticated student's own submissions.
    *
    * The key is part of the submission contract: the query that loads the
-   * submission and every mutation that changes it must target this exact key,
-   * otherwise the UI can drift away from the backend.
+   * submissions and every mutation that changes them must target this exact
+   * key, otherwise the UI can drift away from the backend.
    */
-  mySubmission: ["mySubmission"] as const,
+  mySubmissions: ["mySubmissions"] as const,
+  /**
+   * The project catalog.
+   *
+   * The catalog is read-only and effectively static, so it lives under its
+   * own key: invalidating the student's submissions must not force the picker
+   * to refetch the catalog.
+   */
+  projects: ["projects"] as const,
   /**
    * Root key of the mentor dashboard data.
    *

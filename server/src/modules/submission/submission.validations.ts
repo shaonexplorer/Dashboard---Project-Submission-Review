@@ -1,17 +1,21 @@
 import { z } from "zod";
+import { projectIdSchema } from "../project/project.validations";
 
 /**
  * Input validation schema for project submission.
  *
- * All four fields are required and must be valid URLs where applicable.
+ * The project is no longer a free-text field: the client names a catalog
+ * entry by its code and the server writes the display name itself. The three
+ * deliverable fields are required and must be valid URLs where applicable.
  * Strings are trimmed to reject whitespace-only input.
+ *
+ * Unknown keys are stripped rather than rejected, so a stale client that
+ * still sends `projectName` is simply ignored on that key — but because
+ * `projectId` is required, such a request still fails with a field error
+ * pointing at `projectId`.
  */
 export const submissionSchema = z.object({
-  projectName: z
-    .string()
-    .trim()
-    .min(1, "Project name is required")
-    .max(150, "Project name must be at most 150 characters"),
+  projectId: projectIdSchema,
   repoUrl: z
     .string()
     .trim()
@@ -63,6 +67,24 @@ export const submissionSchema = z.object({
 });
 
 export type SubmissionInput = z.infer<typeof submissionSchema>;
+
+/**
+ * Body schema for resubmitting an already-rejected submission.
+ *
+ * A resubmission replaces the deliverable of an existing row. The project is
+ * not part of it: a resubmission always stays on the project it was made
+ * for, so the catalog code cannot be swapped here.
+ */
+export const resubmitSchema = z.object({
+  repoUrl: submissionSchema.shape.repoUrl,
+  liveUrl: submissionSchema.shape.liveUrl,
+  description: submissionSchema.shape.description,
+});
+
+/**
+ * The normalized resubmission payload.
+ */
+export type ResubmitInput = z.infer<typeof resubmitSchema>;
 
 /**
  * Statuses a mentor can filter the submission list by.
@@ -117,6 +139,7 @@ export const submissionListQuerySchema = z.object({
     .max(MAX_SUBMISSION_LIST_LIMIT, `Limit must be at most ${MAX_SUBMISSION_LIST_LIMIT}`)
     .default(DEFAULT_SUBMISSION_LIST_LIMIT),
   status: z.enum(SUBMISSION_STATUSES).optional(),
+  projectId: projectIdSchema.optional(),
   search: z
     .string()
     .trim()

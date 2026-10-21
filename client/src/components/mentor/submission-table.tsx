@@ -91,10 +91,22 @@ export function SubmissionTable({
       }),
       columnHelper.accessor("projectName", {
         header: "Project",
-        cell: ({ getValue }) => (
-          <span className="text-body-md text-on-surface font-medium">
-            {getValue()}
-          </span>
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="font-code-sm text-code-sm uppercase font-semibold text-secondary">
+                {row.original.projectId}
+              </span>
+              <span className="truncate text-body-md text-on-surface font-medium">
+                {row.original.projectName}
+              </span>
+            </div>
+            {row.original.attempt > 1 ? (
+              <span className="w-fit px-2 py-0.5 rounded bg-surface-container-low text-on-surface font-code-sm text-code-sm">
+                Attempt {row.original.attempt}
+              </span>
+            ) : null}
+          </div>
         ),
       }),
       columnHelper.accessor("repoUrl", {

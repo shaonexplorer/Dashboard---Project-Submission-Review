@@ -8,8 +8,12 @@ import type { Submission, SubmissionStatus } from "./submissions";
  * identity the mentor table renders. Everything else — status, links,
  * timestamps — is identical, so the two views can never disagree about what a
  * submission is.
+ *
+ * `resubmittedAt` is the one field the mentor list does not carry: the
+ * list grew `projectId` and `attempt`, and nothing else, so that every
+ * other field of the response stays exactly as it was.
  */
-export interface MentorSubmission extends Submission {
+export interface MentorSubmission extends Omit<Submission, "resubmittedAt"> {
   student: {
     id: string;
     fullName: string;

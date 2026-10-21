@@ -16,12 +16,27 @@ export interface ApiFieldError {
 export class ApiRequestError extends Error {
   readonly status: number;
   readonly fieldErrors: ApiFieldError[];
+  /**
+   * Machine-readable discriminator for the failure, when the API set one.
+   *
+   * The server sends `code` on the failures a client has to tell apart — a
+   * duplicate submission, a submission that has to be resubmitted, a
+   * submission that cannot be resubmitted. The message is written for a human;
+   * the code is the contract the client branches on.
+   */
+  readonly code?: string;
 
-  constructor(status: number, message: string, fieldErrors: ApiFieldError[] = []) {
+  constructor(
+    status: number,
+    message: string,
+    fieldErrors: ApiFieldError[] = [],
+    code?: string,
+  ) {
     super(message);
     this.name = "ApiRequestError";
     this.status = status;
     this.fieldErrors = fieldErrors;
+    this.code = code;
 
     Object.setPrototypeOf(this, ApiRequestError.prototype);
   }
@@ -80,7 +95,11 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
   }
 
   if (!response.ok) {
-    const body = (payload ?? {}) as { message?: unknown; errors?: unknown };
+    const body = (payload ?? {}) as {
+      message?: unknown;
+      errors?: unknown;
+      code?: unknown;
+    };
     const message =
       typeof body.message === "string" && body.message.trim().length > 0
         ? body.message
@@ -88,8 +107,10 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
     const fieldErrors = Array.isArray(body.errors)
       ? body.errors.filter(isApiFieldError)
       : [];
+    const code =
+      typeof body.code === "string" && body.code.length > 0 ? body.code : undefined;
 
-    throw new ApiRequestError(response.status, message, fieldErrors);
+    throw new ApiRequestError(response.status, message, fieldErrors, code);
   }
 
   return payload as T;
