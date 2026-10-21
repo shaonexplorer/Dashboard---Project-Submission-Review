@@ -11,7 +11,9 @@
  * invalid date, so without the explicit null check a submission that has not
  * been reviewed would be dated 01 Jan 1970.
  */
-export function formatUtcDateTime(value: string | Date | null | undefined): string {
+export function formatUtcDateTime(
+  value: string | Date | null | undefined,
+): string {
   if (value === null || value === undefined) {
     return "—";
   }

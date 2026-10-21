@@ -1,18 +1,17 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { cn } from "@/lib/utils";
-import type { SubmissionStatus } from "@/lib/api/submissions";
-import type { SubmissionStats } from "@/lib/api/mentor-submissions";
+import { useEffect, useRef, useState } from "react";
 
-/** The status filter options, in the order they are shown. */
-const STATUS_FILTERS = [
-  { value: "ALL", label: "All Submissions", countKey: "total" },
-  { value: "PENDING", label: "Pending Review", countKey: "pending" },
-  { value: "APPROVED", label: "Approved", countKey: "approved" },
-  { value: "REJECTED", label: "Changes Required", countKey: "rejected" },
-] as const;
+import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
+import type { SubmissionStatus } from "@/lib/api/submissions";
+import type {
+  SubmissionSortField,
+  SubmissionSortOrder,
+  SubmissionStats,
+} from "@/lib/api/mentor-submissions";
+import { StatusFilterTabs } from "./status-filter-tabs";
+import { SubmissionSortControl } from "./submission-sort-control";
 
 export interface SubmissionToolbarProps {
   /** The raw text in the search box. */
@@ -25,13 +24,22 @@ export interface SubmissionToolbarProps {
   onStatusChange: (status: SubmissionStatus | undefined) => void;
   /** Counts shown next to each filter option. */
   stats: SubmissionStats;
+  /** The column the server is ordering the results by. */
+  sortBy: SubmissionSortField;
+  /** The direction the server is ordering the results in. */
+  sortOrder: SubmissionSortOrder;
+  /** Called with the new column and direction. */
+  onSortChange: (
+    sortBy: SubmissionSortField,
+    sortOrder: SubmissionSortOrder,
+  ) => void;
 }
 
 /**
- * The controls above the submission table: free-text search and the status
- * filter.
+ * The controls above the submission table: free-text search, the status
+ * filter and the sort.
  *
- * Both controls describe *what the server should return* — neither one filters
+ * Every control describes *what the server should return* — none of them filter
  * the rows that are already on screen.
  */
 export function SubmissionToolbar({
@@ -40,12 +48,40 @@ export function SubmissionToolbar({
   status,
   onStatusChange,
   stats,
+  sortBy,
+  sortOrder,
+  onSortChange,
 }: SubmissionToolbarProps) {
-  const activeValue = status ?? "ALL";
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const handleStatusChange = (value: string) => {
-    onStatusChange(value === "ALL" ? undefined : (value as SubmissionStatus));
-  };
+  // The shortcut is shown as `⌘K` on Apple devices and `Ctrl K` everywhere
+  // else. It is read after mount, because the server has no idea which
+  // platform is asking.
+  const [shortcut, setShortcut] = useState("⌘K");
+
+  useEffect(() => {
+    const isApple = /Mac|iPhone|iPad|iPod/i.test(
+      navigator.userAgent ?? navigator.platform,
+    );
+
+    setShortcut(isApple ? "⌘K" : "Ctrl K");
+  }, []);
+
+  // `⌘K` / `Ctrl K` moves the caret into the search box from anywhere on the
+  // page, so a mentor can start a search without reaching for the mouse.
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    }
+
+    document.addEventListener("keydown", handleShortcut);
+
+    return () => document.removeEventListener("keydown", handleShortcut);
+  }, []);
 
   return (
     <div className="flex flex-col gap-4 p-6">
@@ -56,83 +92,57 @@ export function SubmissionToolbar({
           </label>
           <Input
             id="submission-search"
-            type="search"
+            ref={searchInputRef}
+            // type="search"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search student name, project title, or email..."
+            className="border border-surface-container-high pr-24"
             leadingIcon={
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-[18px]"
+                aria-hidden="true"
+              >
                 search
               </span>
             }
             trailingIcon={
-              search.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => onSearchChange("")}
-                  aria-label="Clear search"
-                  className="flex items-center justify-center rounded-md p-1 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
-                >
-                  <span
-                    className="material-symbols-outlined text-[16px]"
-                    aria-hidden="true"
+              <div className="flex items-center gap-1">
+                <Kbd className="pointer-events-none select-none">
+                  {shortcut}
+                </Kbd>
+                {search.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => onSearchChange("")}
+                    aria-label="Clear search"
+                    className="flex items-center justify-center rounded-md p-1 text-on-surface-variant transition-colors hover:bg-surface-container hover:text-on-surface"
                   >
-                    close
-                  </span>
-                </button>
-              ) : undefined
+                    <span
+                      className="material-symbols-outlined text-[16px]"
+                      aria-hidden="true"
+                    >
+                      close
+                    </span>
+                  </button>
+                ) : null}
+              </div>
             }
           />
         </div>
 
-        <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
-          <span className="font-code-sm text-code-sm">Sort by:</span>
-          <span className="text-label-md text-on-surface font-medium">
-            Column headers
-          </span>
-        </div>
+        <SubmissionSortControl
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+        />
       </div>
 
-      <div className="flex items-center justify-between gap-4 overflow-x-auto">
-        <ToggleGroup
-          value={[activeValue]}
-          onValueChange={(values) => {
-            // A single-selection group reports an empty array when the active
-            // option is pressed again. The filter always has one active
-            // option, so an empty selection is ignored.
-            const next = values[values.length - 1];
-
-            if (next) {
-              handleStatusChange(next);
-            }
-          }}
-          aria-label="Filter submissions by status"
-        >
-          {STATUS_FILTERS.map((filter) => (
-            <ToggleGroupItem key={filter.value} value={filter.value}>
-              <span className="flex items-center gap-2">
-                {filter.value === "PENDING" ? (
-                  <span
-                    className="size-2 rounded-full bg-primary"
-                    aria-hidden="true"
-                  />
-                ) : null}
-                <span>{filter.label}</span>
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 py-0.2 text-code-sm",
-                    filter.value === activeValue
-                      ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold"
-                      : "bg-surface-container text-on-surface-variant",
-                  )}
-                >
-                  {stats[filter.countKey]}
-                </span>
-              </span>
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
-      </div>
+      <StatusFilterTabs
+        status={status}
+        onStatusChange={onStatusChange}
+        stats={stats}
+      />
     </div>
   );
 }

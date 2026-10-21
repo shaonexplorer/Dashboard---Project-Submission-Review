@@ -34,6 +34,7 @@ import type {
   ReviewDecision,
   SubmissionListQuery,
   SubmissionSortField,
+  SubmissionSortOrder,
 } from "@/lib/api/mentor-submissions";
 import type { SubmissionStatus } from "@/lib/api/submissions";
 
@@ -115,18 +116,23 @@ export default function MentorDashboardPage() {
   // once per search term rather than once per keystroke.
   const debouncedSearch = useDebouncedValue(searchInput, 400);
 
-  const listQuery = useMemo<SubmissionListQuery>(() => {
-    const sortField = toSortField(tableState.sorting[0]?.id);
+  // The order the server is asked for. It is derived from the table's own
+  // sorting state, so the sortable headers and the sort control always agree.
+  const sortBy = toSortField(tableState.sorting[0]?.id);
+  const sortOrder: SubmissionSortOrder =
+    tableState.sorting[0]?.desc === false ? "asc" : "desc";
 
-    return {
+  const listQuery = useMemo<SubmissionListQuery>(
+    () => ({
       page: tableState.pageIndex + 1,
       limit: PAGE_SIZE,
       search: tableState.search || undefined,
       status: tableState.status,
-      sortBy: sortField,
-      sortOrder: tableState.sorting[0]?.desc === false ? "asc" : "desc",
-    };
-  }, [tableState]);
+      sortBy,
+      sortOrder,
+    }),
+    [tableState.pageIndex, tableState.search, tableState.status, sortBy, sortOrder],
+  );
 
   const submissionsQuery = useMentorSubmissions(listQuery);
   const statsQuery = useSubmissionStats();
@@ -221,6 +227,23 @@ export default function MentorDashboardPage() {
       }
 
       return { ...previous, sorting: next, pageIndex: 0 };
+    });
+  };
+
+  const handleSortChange = (
+    field: SubmissionSortField,
+    order: SubmissionSortOrder,
+  ) => {
+    setTableState((previous) => {
+      const nextSorting: SortingState = [{ id: field, desc: order === "desc" }];
+
+      if (isSameSorting(nextSorting, previous.sorting)) {
+        return previous;
+      }
+
+      // The page number means nothing for a different order, so the queue goes
+      // back to the first page.
+      return { ...previous, sorting: nextSorting, pageIndex: 0 };
     });
   };
 
@@ -442,6 +465,9 @@ export default function MentorDashboardPage() {
               status={tableState.status}
               onStatusChange={handleStatusChange}
               stats={stats}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
             />
 
             {isLoading ? (

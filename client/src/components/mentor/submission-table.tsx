@@ -21,7 +21,11 @@ import {
 import { SubmissionStatusBadge } from "@/components/submissions";
 import { formatUrlLabel, formatUtcDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { MentorSubmission, ReviewDecision } from "@/lib/api/mentor-submissions";
+import type {
+  MentorSubmission,
+  ReviewDecision,
+} from "@/lib/api/mentor-submissions";
+import { StudentAvatar } from "./student-avatar";
 import { SubmissionActions } from "./submission-actions";
 
 const columnHelper = createColumnHelper<MentorSubmission>();
@@ -40,10 +44,7 @@ export interface SubmissionTableProps {
   /** Opens the review drawer for a submission. */
   onReview: (submission: MentorSubmission) => void;
   /** Records a review decision for a submission. */
-  onDecision: (
-    submission: MentorSubmission,
-    decision: ReviewDecision,
-  ) => void;
+  onDecision: (submission: MentorSubmission, decision: ReviewDecision) => void;
 }
 
 /**
@@ -72,18 +73,16 @@ export function SubmissionTable({
         // does not offer a sort control.
         enableSorting: false,
         cell: ({ row }) => (
-          <div className="flex items-center gap-3 min-w-0">
-            <span
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-fixed font-label-md text-label-md text-on-primary-fixed-variant font-bold"
-              aria-hidden="true"
-            >
-              {initials(row.original.student.fullName)}
-            </span>
+          <div className="flex items-center gap-3 min-w-0 ">
+            <StudentAvatar
+              name={row.original.student.fullName}
+              studentId={row.original.student.id}
+            />
             <div className="flex min-w-0 flex-col">
               <span className="truncate text-label-md text-on-surface font-semibold">
                 {row.original.student.fullName}
               </span>
-              <span className="truncate text-code-sm text-on-surface-variant">
+              <span className="truncate text-code-sm text-on-surface-variant max-w-[130px]">
                 {row.original.student.email}
               </span>
             </div>
@@ -118,7 +117,7 @@ export function SubmissionTable({
               >
                 code
               </span>
-              <span className="max-w-[180px] truncate">
+              <span className="max-w-[130px] truncate">
                 {formatUrlLabel(url)}
               </span>
               <span className="sr-only">(opens in a new tab)</span>
@@ -135,7 +134,10 @@ export function SubmissionTable({
 
           if (!url) {
             return (
-              <span className="text-body-sm text-on-surface-variant" aria-label="No live link provided">
+              <span
+                className="text-body-sm text-on-surface-variant"
+                aria-label="No live link provided"
+              >
                 —
               </span>
             );
@@ -154,7 +156,7 @@ export function SubmissionTable({
               >
                 public
               </span>
-              <span className="max-w-[160px] truncate">
+              <span className="max-w-[100px] truncate">
                 {formatUrlLabel(url)}
               </span>
               <span className="sr-only">(opens in a new tab)</span>
@@ -275,7 +277,11 @@ export function SubmissionTable({
  * The sort state lives outside the table, so the click handler is the one the
  * dashboard passed in — the header only reports that sorting was requested.
  */
-function SortableHeader({ column }: { column: Column<MentorSubmission, unknown> }) {
+function SortableHeader({
+  column,
+}: {
+  column: Column<MentorSubmission, unknown>;
+}) {
   const sorted = column.getIsSorted();
   const label = String(column.columnDef.header ?? "");
 
@@ -302,19 +308,4 @@ function SortableHeader({ column }: { column: Column<MentorSubmission, unknown> 
       </span>
     </button>
   );
-}
-
-/** Two-letter initials for the student avatar. */
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-
-  if (parts.length === 0) {
-    return "?";
-  }
-
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }

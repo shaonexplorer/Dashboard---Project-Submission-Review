@@ -50,7 +50,9 @@ const STATUS_META: Record<SubmissionStatus, SubmissionStatusMeta> = {
  * throwing, so a value the client has never seen still renders as a badge
  * instead of taking the table down.
  */
-export function getSubmissionStatusMeta(status: SubmissionStatus): SubmissionStatusMeta {
+export function getSubmissionStatusMeta(
+  status: SubmissionStatus,
+): SubmissionStatusMeta {
   return STATUS_META[status] ?? STATUS_META.PENDING;
 }
 

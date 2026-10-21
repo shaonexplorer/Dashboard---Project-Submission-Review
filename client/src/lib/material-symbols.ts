@@ -31,6 +31,7 @@ export const MATERIAL_SYMBOL_ICON_NAMES = [
   "done",
   "done_all",
   "error",
+  "expand_more",
   "folder_open",
   "grading",
   "hourglass_empty",
@@ -69,11 +70,22 @@ export const MATERIAL_SYMBOL_ICON_NAMES = [
  * Stylesheet URL for the subset font.
  *
  * The variation axes are requested so the `FILL` and `GRAD` axes stay
- * available, and `display=optional` keeps the font from blocking first
- * paint — an icon that has not loaded yet is better than a stalled render.
+ * available.
+ *
+ * `display=block` is deliberate. These icons are *ligatures*: the browser
+ * turns the literal text "expand_more" into a glyph. Until the font arrives
+ * there is no glyph to draw, so the fallback renders the raw name — the user
+ * sees "expand_more" spelled out on the page.
+ *
+ * `optional` is the worst possible choice here. It gives the font a ~100ms
+ * block period; if the font misses it, the browser keeps the fallback for
+ * the lifetime of the page and never swaps, so *every* icon on the page
+ * stays spelled out even though the font has since loaded. `block` hides
+ * the text for up to 3s instead, which is invisible in practice — and when
+ * it fails, it fails as blank space rather than as a wall of icon names.
  */
 export const materialSymbolsHref =
   "https://fonts.googleapis.com/css2" +
   "?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" +
-  "&display=optional" +
+  "&display=block" +
   `&icon_names=${MATERIAL_SYMBOL_ICON_NAMES.join(",")}`;

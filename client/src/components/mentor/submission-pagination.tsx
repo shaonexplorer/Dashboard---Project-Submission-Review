@@ -65,7 +65,7 @@ export function SubmissionPagination({
           >
             chevron_left
           </span>
-          Previous
+          Prev
         </Button>
 
         {pageNumbers(page, totalPages).map((pageNumber, index) =>
@@ -130,11 +130,7 @@ function pageNumbers(current: number, totalPages: number): (number | null)[] {
   const window = 2;
   const pages = new Set<number>([1, totalPages]);
 
-  for (
-    let page = current - window;
-    page <= current + window;
-    page += 1
-  ) {
+  for (let page = current - window; page <= current + window; page += 1) {
     if (page >= 1 && page <= totalPages) {
       pages.add(page);
     }

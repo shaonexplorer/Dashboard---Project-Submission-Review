@@ -15,10 +15,22 @@ export interface StatCardProps {
   share: number;
   /** Text of the small chip next to the value. */
   chip: string;
+  /**
+   * Colour of the dot inside the chip.
+   *
+   * When set, a small dot is drawn before the chip's label — the way the
+   * mockup marks the status a card is about. Omitted for cards that are not
+   * about one particular status.
+   */
+  chipDotClassName?: string;
+  /** Colour of the chip next to the value. */
+  chipClassName?: string;
   /** Supporting sentence at the bottom left of the card. */
   hint: string;
   /** Supporting value at the bottom right of the card. */
   detail: string;
+  /** Colour of the supporting value at the bottom right of the card. */
+  detailClassName?: string;
 }
 
 /**
@@ -36,8 +48,11 @@ export function StatCard({
   barClassName,
   share,
   chip,
+  chipDotClassName,
+  chipClassName,
   hint,
   detail,
+  detailClassName,
 }: StatCardProps) {
   // The bar is clamped so a rounding artefact can never make it overflow.
   const width = Math.min(100, Math.max(0, share));
@@ -65,14 +80,31 @@ export function StatCard({
 
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-display text-on-surface font-bold">{value}</span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-container px-2 py-0.5 text-code-sm text-on-surface-variant font-medium">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-code-sm font-medium",
+            chipClassName ??
+              "bg-surface-container text-on-surface-variant",
+          )}
+        >
+          {chipDotClassName ? (
+            <span
+              className={cn("size-1.5 rounded-full", chipDotClassName)}
+              aria-hidden="true"
+            />
+          ) : null}
           {chip}
         </span>
       </div>
 
       <div className="flex items-center justify-between gap-3 text-body-sm text-on-surface-variant">
         <span className="truncate">{hint}</span>
-        <span className="shrink-0 text-code-sm text-on-surface font-medium">
+        <span
+          className={cn(
+            "shrink-0 text-code-sm font-medium",
+            detailClassName ?? "text-on-surface",
+          )}
+        >
           {detail}
         </span>
       </div>

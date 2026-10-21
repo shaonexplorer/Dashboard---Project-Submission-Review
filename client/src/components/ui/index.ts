@@ -16,6 +16,7 @@ export {
   FieldSet,
   FieldTitle,
 } from "./field";
+export { Kbd } from "./kbd";
 export { Label } from "./label";
 export { Separator } from "./separator";
 export { Skeleton } from "./skeleton";

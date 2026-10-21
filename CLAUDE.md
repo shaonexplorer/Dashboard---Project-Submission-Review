@@ -266,6 +266,19 @@ No test framework configured yet. Roadmap recommends:
 - Backend: Vitest + Supertest
 - Priority tests: Authentication, RBAC, duplicate prevention, pagination, filtering, review status updates
 
+### Icon subset check
+
+```bash
+npm run check:icons   # client/ — fails if a Material Symbols ligature is missing from the subset font
+```
+
+Material Symbols are loaded as a *subset* — only the ligature names in
+`client/src/lib/material-symbols.ts` are served. A name outside that list has no
+glyph, so the browser renders the raw name as visible text instead of an icon.
+The failure is silent, so **every `material-symbols-outlined` name used in a
+component must be listed in `MATERIAL_SYMBOL_ICON_NAMES`**. Run `check:icons`
+after adding an icon.
+
 ## Deployment Targets (from specs)
 
 - Frontend: Vercel

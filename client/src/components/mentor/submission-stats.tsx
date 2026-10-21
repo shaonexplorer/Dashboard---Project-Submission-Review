@@ -7,6 +7,10 @@ import type { SubmissionStats } from "@/lib/api/mentor-submissions";
  *
  * Every number is the one the server reported: the counts describe the whole
  * table, not the rows the table currently holds.
+ *
+ * The chips beside the values repeat the status a card is about — each with
+ * its own colour and dot — so the four cards can be told apart at a glance
+ * without reading their labels.
  */
 export function SubmissionStatsGrid({ stats }: { stats: SubmissionStats }) {
   const total = Math.max(stats.total, 0);
@@ -33,6 +37,7 @@ export function SubmissionStatsGrid({ stats }: { stats: SubmissionStats }) {
           chip="All time"
           hint="Active cycle"
           detail="Every submission"
+          detailClassName="text-on-surface-variant"
         />
         <StatCard
           label="Pending"
@@ -42,6 +47,8 @@ export function SubmissionStatsGrid({ stats }: { stats: SubmissionStats }) {
           barClassName="bg-secondary"
           share={shareOf(stats.pending)}
           chip="Awaiting review"
+          chipDotClassName="bg-secondary animate-pulse"
+          chipClassName="bg-secondary-container text-on-secondary-container font-semibold"
           hint="Review queue"
           detail={`${percent(stats.pending)} of total`}
         />
@@ -53,6 +60,8 @@ export function SubmissionStatsGrid({ stats }: { stats: SubmissionStats }) {
           barClassName="bg-tertiary-container"
           share={shareOf(stats.approved)}
           chip={`${percent(stats.approved)} pass rate`}
+          chipDotClassName="bg-tertiary"
+          chipClassName="bg-surface-container text-on-surface font-semibold"
           hint="Benchmark met"
           detail="Approved work"
         />
@@ -64,8 +73,11 @@ export function SubmissionStatsGrid({ stats }: { stats: SubmissionStats }) {
           barClassName="bg-error"
           share={shareOf(stats.rejected)}
           chip={`${percent(stats.rejected)} revisions`}
+          chipDotClassName="bg-error"
+          chipClassName="bg-error-container text-on-error-container font-semibold"
           hint="Action required"
           detail="Pending re-submit"
+          detailClassName="text-error font-semibold"
         />
       </div>
     </section>

@@ -6,7 +6,8 @@
     "dev": "node ./node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:icons": "node ./scripts/check-material-symbols.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
