@@ -100,19 +100,12 @@ interface SubmissionResponse {
  *
  * The list is empty when the student has not submitted anything yet — that is
  * a normal state, not a failure, so the endpoint answers `200` with an empty
- * array. A `404` is still tolerated for the same reason, so an older server
- * cannot break the dashboard.
+ * array rather than a `404`. The response is therefore never treated as a
+ * failure here: only a real request failure is.
  */
 export async function getMySubmissionsApi(): Promise<Submission[]> {
-  try {
-    const response = await apiRequest<SubmissionsResponse>("/submissions/me");
-    return response.data?.submissions ?? [];
-  } catch (error) {
-    if (error instanceof ApiRequestError && error.status === 404) {
-      return [];
-    }
-    throw error;
-  }
+  const response = await apiRequest<SubmissionsResponse>("/submissions/me");
+  return response.data?.submissions ?? [];
 }
 
 /**

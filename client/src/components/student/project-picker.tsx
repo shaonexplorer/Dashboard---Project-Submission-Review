@@ -333,8 +333,11 @@ export function ProjectPicker({
         never opens the list must still see that the catalog failed to load,
         and must be offered the retry, rather than discovering it as a
         validation error on submit.
+
+        It is only rendered while the dialog is closed: the two are live
+        regions, and a state that is announced twice is announced twice.
       */}
-      {isLoading || loadError ? (
+      {!open && (isLoading || loadError) ? (
         <CatalogStatus
           isLoading={isLoading}
           loadError={loadError}
@@ -406,6 +409,13 @@ function CatalogStatus({
  * without relying on the icon or the colour. A project that is already under
  * review or approved cannot be picked again; a rejected one can be, because
  * the server answers that case with a pointer to the resubmission path.
+ *
+ * An entry that cannot be picked stays focusable. A disabled button is
+ * skipped by the keyboard entirely, which would hide the state text from the
+ * very people who need it — a student tabbing through the list has to be
+ * able to read that a project is already in review. The button is marked
+ * `aria-disabled` instead, so it is announced as unavailable and refuses
+ * activation, but it can still be reached and read.
  */
 function ProjectOptionButton({
   option,
@@ -426,14 +436,16 @@ function ProjectOptionButton({
       variant="outline"
       onClick={onSelect}
       disabled={isUnavailable}
-      aria-pressed={isSelected}
+      focusableWhenDisabled
+      aria-pressed={isUnavailable ? undefined : isSelected}
       aria-current={isSelected ? "true" : undefined}
       className={cn(
         "h-auto w-full items-start justify-start gap-3 px-3.5 py-3",
         "border-surface-container-high bg-surface-container-lowest",
         "text-left font-normal",
         isSelected && "border-primary bg-primary-container/20",
-        isUnavailable && "opacity-70",
+        isUnavailable &&
+          "opacity-70 cursor-not-allowed hover:bg-surface-container-lowest",
       )}
     >
       <span className="flex min-w-0 flex-1 flex-col gap-1">

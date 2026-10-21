@@ -177,13 +177,29 @@ export const createSubmissionService = async (
   } catch (error) {
     // Handle Prisma unique constraint violation (P2002) for concurrent duplicates
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
-      const prismaError = error as { meta?: { target?: string[] | string } };
+      const prismaError = error as {
+        meta?: { target?: string[] | string; modelName?: string };
+      };
       const target = prismaError.meta?.target;
-      const targets = Array.isArray(target) ? target : typeof target === "string" ? [target] : [];
+      const targets = Array.isArray(target)
+        ? target
+        : typeof target === "string"
+          ? [target]
+          : [];
 
+      /**
+       * `@@unique([studentId, projectId])` is the only unique constraint on
+       * Submission, so a unique violation on that model is the duplicate
+       * conflict. The constraint's columns are used when the driver reports
+       * them; when it does not — some driver-adapter paths omit the target —
+       * the model name is enough to tell the conflict apart from every other
+       * failure, because nothing else on Submission is unique.
+       */
       const isStudentProjectKey =
-        targets.includes("studentId_projectId") ||
-        (targets.includes("studentId") && targets.includes("projectId"));
+        targets.length === 0
+          ? prismaError.meta?.modelName === "Submission"
+          : targets.includes("studentId_projectId") ||
+            (targets.includes("studentId") && targets.includes("projectId"));
 
       if (isStudentProjectKey) {
         // The race was lost to another request for the same student and

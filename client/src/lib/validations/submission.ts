@@ -1,6 +1,14 @@
 import { z } from "zod";
 
 /**
+ * Longest repository or live URL the API accepts.
+ *
+ * Mirrors `MAX_SUBMISSION_URL_LENGTH` in
+ * `server/src/modules/submission/submission.validations.ts`.
+ */
+export const MAX_SUBMISSION_URL_LENGTH = 150;
+
+/**
  * Client-side submission schema.
  *
  * This mirrors `server/src/modules/submission/submission.validations.ts` exactly
@@ -25,6 +33,10 @@ export const submissionSchema = z.object({
     .string()
     .trim()
     .min(1, "Repository URL is required")
+    .max(
+      MAX_SUBMISSION_URL_LENGTH,
+      `Repository URL must be at most ${MAX_SUBMISSION_URL_LENGTH} characters`
+    )
     .url("Repository URL must be a valid URL")
     .refine(
       (url) => {
@@ -52,6 +64,10 @@ export const submissionSchema = z.object({
     .string()
     .trim()
     .min(1, "Live URL is required")
+    .max(
+      MAX_SUBMISSION_URL_LENGTH,
+      `Live URL must be at most ${MAX_SUBMISSION_URL_LENGTH} characters`
+    )
     .url("Live URL must be a valid URL")
     .refine(
       (url) => {

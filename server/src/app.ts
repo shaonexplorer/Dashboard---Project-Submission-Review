@@ -8,6 +8,7 @@ import { env } from "./config/env";
 import routes from "./routes";
 import { errorHandler } from "./middleware/error.middleware";
 import { notFound } from "./middleware/not-found.middleware";
+import { globalRateLimiter } from "./middleware/rateLimiter.middleware";
 
 dotenv.config();
 
@@ -24,6 +25,11 @@ app.use(express.json());
 
 // Cookie parsing
 app.use(cookieParser());
+
+// Global rate limiter — 100 requests per 15 minutes per session.
+// It runs after cookie parsing so an authenticated request can be keyed on
+// its session rather than on a shared IP address.
+app.use(globalRateLimiter);
 
 // Application routes
 app.use("/api", routes);

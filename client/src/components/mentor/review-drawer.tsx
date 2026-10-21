@@ -91,7 +91,22 @@ export function ReviewDrawer({
           </div>
 
           <div className="flex flex-col gap-1">
-            <SheetTitle>{submission.projectName}</SheetTitle>
+            {/*
+              The catalog code and the attempt are the two things that tell
+              a mentor which project, and which hand-in of it, they are
+              looking at. The table shows both, and the drawer has to agree
+              with it — a resubmission is reviewed as an attempt, not as a
+              fresh submission.
+            */}
+            <div className="flex flex-wrap items-center gap-2">
+              <SheetTitle>{submission.projectName}</SheetTitle>
+              <span className="px-2 py-0.5 rounded bg-surface-container font-code-sm text-code-sm uppercase font-semibold text-secondary">
+                {submission.projectId}
+              </span>
+              <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface font-code-sm text-code-sm">
+                Attempt {submission.attempt}
+              </span>
+            </div>
             <SheetDescription>
               {submission.student.fullName} · {submission.student.email}
             </SheetDescription>

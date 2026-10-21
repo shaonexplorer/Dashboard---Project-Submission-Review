@@ -24,10 +24,24 @@ export function MentorFeedbackCard({ submission }: { submission: Submission }) {
   const hasNotes = notes.length > 0;
   const hasReviewDate = Boolean(submission.reviewedAt);
   /**
-   * The retained notes belong to an earlier attempt as soon as the student has
-   * handed the project in again.
+   * The retained notes belong to an earlier attempt only while the review
+   * recorded on the row predates the latest hand-in.
+   *
+   * A resubmission keeps the previous review on the row, so between the
+   * resubmission and the next review the notes are the old ones. Once a
+   * mentor reviews the new attempt, `reviewedAt` moves past `resubmittedAt`
+   * and the notes belong to the attempt that is on screen — the attempt
+   * counter alone cannot tell the two apart, because it stays at the same
+   * value across both.
    */
-  const isFromPreviousAttempt = submission.attempt > 1;
+  const isFromPreviousAttempt =
+    submission.attempt > 1 &&
+    submission.resubmittedAt !== null &&
+    submission.reviewedAt !== null &&
+    new Date(submission.reviewedAt).getTime() <
+      new Date(submission.resubmittedAt).getTime();
+  /** The attempt the retained notes were written for. */
+  const notesAttempt = isFromPreviousAttempt ? submission.attempt - 1 : submission.attempt;
 
   return (
     <div className="rounded-xl bg-surface-container-lowest p-6 md:p-8 shadow-sm flex flex-col gap-6">
@@ -50,16 +64,22 @@ export function MentorFeedbackCard({ submission }: { submission: Submission }) {
           <div>
             <h3 className="text-headline-sm text-on-surface">Mentor Feedback</h3>
             <p className="text-label-sm text-secondary">
-              {hasReviewDate
-                ? "Verified assessment record"
-                : "Awaiting a mentor assessment"}
+              {isFromPreviousAttempt
+                ? `Assessment of attempt ${notesAttempt}`
+                : hasReviewDate
+                  ? "Verified assessment record"
+                  : "Awaiting a mentor assessment"}
             </p>
           </div>
         </div>
 
         <span className="text-code-sm text-secondary">
           {hasReviewDate
-            ? `Reviewed ${formatUtcDateTime(submission.reviewedAt)}`
+            ? `${
+                isFromPreviousAttempt
+                  ? `Attempt ${notesAttempt} reviewed`
+                  : "Reviewed"
+              } ${formatUtcDateTime(submission.reviewedAt)}`
             : "Not reviewed yet"}
         </span>
       </div>
@@ -74,7 +94,7 @@ export function MentorFeedbackCard({ submission }: { submission: Submission }) {
           />
           {isFromPreviousAttempt ? (
             <span className="font-code-sm text-code-sm uppercase tracking-wider text-secondary">
-              Previous attempt · attempt {submission.attempt - 1}
+              Previous attempt · attempt {notesAttempt}
             </span>
           ) : null}
           <p className="text-body-md text-on-surface italic leading-relaxed whitespace-pre-line">

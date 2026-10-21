@@ -2,6 +2,14 @@ import { z } from "zod";
 import { projectIdSchema } from "../project/project.validations";
 
 /**
+ * Longest repository or live URL the API accepts.
+ *
+ * Both URLs are bounded: a submission row should hold a link a human can read
+ * and copy, not an arbitrarily long string that no browser renders usefully.
+ */
+export const MAX_SUBMISSION_URL_LENGTH = 150;
+
+/**
  * Input validation schema for project submission.
  *
  * The project is no longer a free-text field: the client names a catalog
@@ -20,6 +28,10 @@ export const submissionSchema = z.object({
     .string()
     .trim()
     .min(1, "Repository URL is required")
+    .max(
+      MAX_SUBMISSION_URL_LENGTH,
+      `Repository URL must be at most ${MAX_SUBMISSION_URL_LENGTH} characters`
+    )
     .url("Repository URL must be a valid URL")
     .refine(
       (url) => {
@@ -47,6 +59,10 @@ export const submissionSchema = z.object({
     .string()
     .trim()
     .min(1, "Live URL is required")
+    .max(
+      MAX_SUBMISSION_URL_LENGTH,
+      `Live URL must be at most ${MAX_SUBMISSION_URL_LENGTH} characters`
+    )
     .url("Live URL must be a valid URL")
     .refine(
       (url) => {

@@ -22,10 +22,7 @@ import { useCreateSubmission, useMySubmissions } from "@/hooks/use-submissions";
 import { useProjects } from "@/hooks/use-projects";
 import { queryKeys } from "@/lib/query/query-keys";
 import { ApiRequestError } from "@/lib/api/client";
-import {
-  SUBMISSION_ERROR_CODES,
-  type Submission,
-} from "@/lib/api/submissions";
+import { SUBMISSION_ERROR_CODES, type Submission } from "@/lib/api/submissions";
 import {
   DESCRIPTION_MAX_LENGTH,
   submissionSchema,
@@ -72,10 +69,10 @@ export function StudentSubmissionForm() {
     data: projects = [],
     isPending: isCatalogPending,
     isError: isCatalogError,
-    error: catalogError,
     refetch: refetchCatalog,
   } = useProjects();
-  const { data: submissions = [] } = useMySubmissions();
+  const { data: submissions = [], refetch: refetchSubmissions } =
+    useMySubmissions();
 
   const options = useMemo(
     () => buildProjectOptions(projects, submissions),
@@ -114,7 +111,7 @@ export function StudentSubmissionForm() {
     setConflictingSubmission(null);
   }
 
-  function handleError(error: unknown) {
+  async function handleError(error: unknown) {
     if (!(error instanceof ApiRequestError)) {
       setServerError(
         "We could not submit your project right now. Please try again.",
@@ -152,7 +149,7 @@ export function StudentSubmissionForm() {
         setServerError("Only student accounts can submit a project.");
         break;
       case 409:
-        handleConflict(error);
+        await handleConflict(error);
         break;
       case 429:
         setServerError("Too many submission attempts. Please try again later.");
@@ -169,7 +166,7 @@ export function StudentSubmissionForm() {
    * the message: a project that is already in review gets no resubmission
    * action, while a rejected one is pointed at the resubmission path.
    */
-  function handleConflict(error: ApiRequestError) {
+  async function handleConflict(error: ApiRequestError) {
     const selectedProjectId = form.getValues("projectId");
     // The cache is read at the moment the conflict arrives rather than from
     // the render closure, so the submission that caused it is found even when
@@ -177,9 +174,20 @@ export function StudentSubmissionForm() {
     const cached = queryClient.getQueryData<Submission[]>(
       queryKeys.mySubmissions,
     );
-    const existing = (cached ?? submissions).find(
+    let existing = (cached ?? submissions).find(
       (submission) => submission.projectId === selectedProjectId,
     );
+
+    if (error.code === SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED && !existing) {
+      // The rejected submission is not in the list yet — the cache is cold,
+      // or it was written by another tab. The list is fetched once more
+      // before the conflict is reported, because the resubmission path can
+      // only be offered when the rejected submission is actually in hand.
+      const refreshed = await refetchSubmissions();
+      existing = (refreshed.data ?? []).find(
+        (submission) => submission.projectId === selectedProjectId,
+      );
+    }
 
     if (error.code === SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED && existing) {
       setConflictingSubmission(existing);
@@ -201,6 +209,11 @@ export function StudentSubmissionForm() {
 
     createSubmission(values, {
       onSuccess: () => {
+        // The form is cleared, because the student may hand in another
+        // project from the catalog right away — the deliverable that was
+        // just accepted belongs to the project it was written for.
+        form.reset();
+        form.clearErrors();
         toast.success("Project submitted successfully", {
           description: "Your submission is now queued for mentor review.",
         });
@@ -423,7 +436,7 @@ export function StudentSubmissionForm() {
             type="submit"
             size="lg"
             disabled={isDisabled || isCatalogUnavailable}
-            className="px-4 text-label-md shadow-sm"
+            className="px-4 text-label-md shadow-sm text-white"
           >
             {isPending ? (
               <>

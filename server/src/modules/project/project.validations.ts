@@ -12,12 +12,3 @@ export const projectIdSchema = z
   .trim()
   .min(1, "Project is required")
   .max(50, "Project code must be at most 50 characters");
-
-/**
- * Query schema for the catalog listing.
- *
- * The endpoint is a plain read of the whole active catalog, so it takes no
- * parameters. The schema exists so the route can state that explicitly rather
- * than accepting — and silently ignoring — anything a client sends.
- */
-export const projectListQuerySchema = z.object({}).passthrough();
