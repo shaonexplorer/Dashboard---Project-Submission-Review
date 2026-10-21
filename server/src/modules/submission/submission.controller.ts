@@ -6,8 +6,13 @@ import {
   getStudentSubmissionService,
   getSubmissionsService,
   getSubmissionStatsService,
+  updateSubmissionStatusService,
 } from "./submission.service";
-import type { SubmissionListQuery } from "./submission.validations";
+import type {
+  SubmissionIdParams,
+  SubmissionListQuery,
+  SubmissionStatusUpdateInput,
+} from "./submission.validations";
 
 /**
  * Creates a new project submission for the authenticated student.
@@ -108,5 +113,35 @@ export const getSubmissionStatsController = asyncHandler(
     const stats = await getSubmissionStatsService();
 
     sendResponse(res, 200, "Submission statistics retrieved", stats);
+  }
+);
+
+/**
+ * Records a mentor's review decision on a submission.
+ *
+ * Requires:
+ * - Authentication (handled by authenticate middleware)
+ * - MENTOR role (handled by authorize("MENTOR") middleware)
+ * - A valid submission id (handled by validate(submissionIdParamSchema) middleware)
+ * - A valid review body (handled by validate(submissionStatusUpdateSchema) middleware)
+ *
+ * The reviewer identity is taken from the authenticated request context, never
+ * from the client, so a mentor can only ever record a review under their own
+ * name.
+ *
+ * Returns 200 OK with the updated submission on success.
+ */
+export const updateSubmissionStatusController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const reviewerId = req.user!.id;
+    const { id } = req.params as unknown as SubmissionIdParams;
+    const { status, feedback } = req.body as SubmissionStatusUpdateInput;
+
+    const submission = await updateSubmissionStatusService(reviewerId, id, {
+      status,
+      feedback,
+    });
+
+    sendResponse(res, 200, "Submission status updated", { submission });
   }
 );

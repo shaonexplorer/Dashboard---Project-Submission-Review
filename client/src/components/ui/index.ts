@@ -22,3 +22,25 @@ export { Skeleton } from "./skeleton";
 export { Spinner } from "./spinner";
 export { Textarea } from "./textarea";
 export { Toaster } from "./sonner";
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableCaption,
+} from "./table";
+export {
+  Sheet,
+  SheetTrigger,
+  SheetPortal,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "./sheet";
+export { ToggleGroup, ToggleGroupItem } from "./toggle-group";

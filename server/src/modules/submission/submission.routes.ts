@@ -3,12 +3,18 @@ import express from "express";
 import { validate } from "../../middleware/validate.middleware";
 import { authenticate, authorize } from "../auth/auth.middleware";
 import { submissionRateLimiter } from "./submissionRateLimiter.middleware";
-import { submissionListQuerySchema, submissionSchema } from "./submission.validations";
+import {
+  submissionIdParamSchema,
+  submissionListQuerySchema,
+  submissionSchema,
+  submissionStatusUpdateSchema,
+} from "./submission.validations";
 import {
   createSubmissionController,
   getMySubmissionController,
   getSubmissionsController,
   getSubmissionStatsController,
+  updateSubmissionStatusController,
 } from "./submission.controller";
 
 const router = express.Router();
@@ -130,6 +136,35 @@ router.get(
   authorize("MENTOR"),
   validate(submissionListQuerySchema, "query"),
   getSubmissionsController
+);
+
+/**
+ * PATCH /api/submissions/:id/status
+ *
+ * Records a mentor's review decision on a submission. The status, the
+ * feedback, the reviewer and the review timestamp are written together.
+ *
+ * Middleware chain:
+ * 1. authenticate - Verifies JWT token from cookie
+ * 2. authorize("MENTOR") - Ensures user has MENTOR role
+ * 3. validate(submissionIdParamSchema, "params") - Validates the submission id
+ * 4. validate(submissionStatusUpdateSchema, "body") - Validates the decision
+ *
+ * Responses:
+ * - 200 OK: The updated submission
+ * - 400 Bad Request: Invalid submission id or review body
+ * - 401 Unauthorized: Missing or invalid token
+ * - 403 Forbidden: User is not a MENTOR
+ * - 404 Not Found: No submission with that id
+ * - 500 Internal Server Error: Unexpected error
+ */
+router.patch(
+  "/:id/status",
+  authenticate,
+  authorize("MENTOR"),
+  validate(submissionIdParamSchema, "params"),
+  validate(submissionStatusUpdateSchema, "body"),
+  updateSubmissionStatusController
 );
 
 export default router;

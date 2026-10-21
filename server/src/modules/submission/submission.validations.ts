@@ -133,3 +133,55 @@ export const submissionListQuerySchema = z.object({
  * strings are parsed exactly once — in the validation middleware.
  */
 export type SubmissionListQuery = z.infer<typeof submissionListQuerySchema>;
+
+/**
+ * Review decisions a mentor may record.
+ *
+ * `PENDING` is deliberately excluded: it is the state a submission starts in,
+ * not a decision a mentor makes. Moving a submission back into the queue is
+ * not part of the review workflow.
+ */
+export const REVIEW_DECISIONS = ["APPROVED", "REJECTED"] as const;
+
+/** Longest feedback a mentor can attach to a review. */
+export const MAX_REVIEW_FEEDBACK_LENGTH = 2000;
+
+/**
+ * Body schema for a mentor review decision.
+ *
+ * The status is restricted to the decisions above, so a client can never push
+ * an arbitrary string into the `status` column.
+ */
+export const submissionStatusUpdateSchema = z.object({
+  status: z.enum(REVIEW_DECISIONS, {
+    errorMap: () => ({ message: "Status must be APPROVED or REJECTED" }),
+  }),
+  feedback: z
+    .string()
+    .trim()
+    .max(
+      MAX_REVIEW_FEEDBACK_LENGTH,
+      `Feedback must be at most ${MAX_REVIEW_FEEDBACK_LENGTH} characters`
+    )
+    .optional(),
+});
+
+/**
+ * The normalized review payload.
+ */
+export type SubmissionStatusUpdateInput = z.infer<typeof submissionStatusUpdateSchema>;
+
+/**
+ * Params schema for the review route.
+ *
+ * The identifier is checked before it reaches the service, so a malformed id
+ * is rejected as a bad request instead of being forwarded to the database.
+ */
+export const submissionIdParamSchema = z.object({
+  id: z.string().uuid("Submission id must be a valid identifier"),
+});
+
+/**
+ * The normalized review route params.
+ */
+export type SubmissionIdParams = z.infer<typeof submissionIdParamSchema>;

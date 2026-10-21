@@ -1,0 +1,85 @@
+"use client";
+
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
+  getSubmissionsApi,
+  getSubmissionStatsApi,
+  updateSubmissionStatusApi,
+} from "@/lib/api/mentor-submissions";
+import type {
+  ReviewSubmissionPayload,
+  SubmissionListQuery,
+} from "@/lib/api/mentor-submissions";
+import { queryKeys } from "@/lib/query/query-keys";
+import { hasToken } from "@/lib/auth/token";
+
+/**
+ * Loads one page of the mentor submission table.
+ *
+ * The query key carries the whole table state, so changing the page, the
+ * status filter, the search term or the sorting produces a different key and
+ * therefore a new server request. The rows of the previous page stay on screen
+ * while the next one is loading, which keeps the layout stable without ever
+ * showing stale rows as if they were the new result.
+ */
+export function useMentorSubmissions(query: SubmissionListQuery) {
+  return useQuery({
+    queryKey: queryKeys.mentorSubmissions(query),
+    queryFn: () => getSubmissionsApi(query),
+    enabled: hasToken(),
+    // Keep the previous page visible while the next one loads, instead of
+    // collapsing the table into a skeleton on every interaction.
+    placeholderData: keepPreviousData,
+    // The server is the source of truth for the queue, so the table is
+    // re-read whenever the dashboard is opened.
+    staleTime: 0,
+    retry: false,
+  });
+}
+
+/**
+ * Loads the aggregate counts shown in the statistics cards.
+ *
+ * The counts describe the whole table, so they are never derived from the
+ * rows the table happens to have loaded.
+ */
+export function useSubmissionStats() {
+  return useQuery({
+    queryKey: queryKeys.mentorSubmissionStats,
+    queryFn: getSubmissionStatsApi,
+    enabled: hasToken(),
+    staleTime: 0,
+    retry: false,
+  });
+}
+
+/**
+ * Records a review decision on a submission.
+ *
+ * A review changes both the row in the table and the counts in the
+ * statistics cards, so the whole mentor dashboard is invalidated once the
+ * server has confirmed the change.
+ */
+export function useReviewSubmission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      submissionId,
+      payload,
+    }: {
+      submissionId: string;
+      payload: ReviewSubmissionPayload;
+    }) => updateSubmissionStatusApi(submissionId, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.mentorDashboard,
+      });
+    },
+  });
+}

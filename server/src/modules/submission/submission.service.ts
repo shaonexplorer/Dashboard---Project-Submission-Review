@@ -348,3 +348,58 @@ export const getSubmissionStatsService = async (): Promise<SubmissionStats> => {
 
   return stats;
 };
+
+/**
+ * Records a mentor's review decision on a submission.
+ *
+ * The decision, the feedback and the reviewer are written together, so a
+ * submission can never end up marked as reviewed without saying who reviewed
+ * it or when.
+ *
+ * The reviewer identity comes from the authenticated request context, never
+ * from the client payload, so a mentor can only ever record a review under
+ * their own name.
+ *
+ * Authorization is enforced by the `authorize("MENTOR")` middleware on the
+ * route, before this service is reached.
+ *
+ * @param reviewerId - ID of the authenticated mentor
+ * @param submissionId - ID of the submission being reviewed
+ * @param data - The validated review decision
+ * @returns The updated submission in the mentor list shape
+ * @throws ApiError(404) if the submission does not exist
+ */
+export const updateSubmissionStatusService = async (
+  reviewerId: string,
+  submissionId: string,
+  data: { status: "APPROVED" | "REJECTED"; feedback?: string }
+) => {
+  const existing = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    throw new ApiError(404, "Submission not found");
+  }
+
+  // A blank feedback box is stored as "no feedback" rather than as an empty
+  // string, so the student view can tell "not reviewed" from "reviewed".
+  const feedback = data.feedback?.trim();
+
+  const submission = await prisma.submission.update({
+    where: { id: submissionId },
+    data: {
+      status: data.status,
+      feedback: feedback && feedback.length > 0 ? feedback : null,
+      reviewedAt: new Date(),
+      reviewedById: reviewerId,
+    },
+    select: MENTOR_SUBMISSION_SELECT,
+  });
+
+  return {
+    ...submission,
+    submittedAt: submission.createdAt,
+  };
+};
