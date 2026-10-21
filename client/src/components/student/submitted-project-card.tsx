@@ -1,6 +1,9 @@
 import { formatUrlLabel, formatUtcDateTime } from "@/lib/format";
 import type { Submission, SubmissionStatus } from "@/lib/api/submissions";
-import { SubmissionStatusBadge, getSubmissionStatusMeta } from "./submission-status-badge";
+import {
+  SubmissionStatusBadge,
+  getSubmissionStatusMeta,
+} from "./submission-status-badge";
 
 interface StatusPanel {
   icon: string;
@@ -43,7 +46,12 @@ const STATUS_PANEL: Record<SubmissionStatus, StatusPanel> = {
 };
 
 /** The four lifecycle stages, in order. */
-const LIFECYCLE_STAGES = ["Submitted", "In Queue", "Evaluation", "Decision"] as const;
+const LIFECYCLE_STAGES = [
+  "Submitted",
+  "In Queue",
+  "Evaluation",
+  "Decision",
+] as const;
 
 type StageState = "complete" | "active" | "todo";
 
@@ -66,7 +74,11 @@ function deriveStageStates(status: SubmissionStatus): StageState[] {
  * Replaces the submission form once the server confirms the submission, and
  * is also what a student sees after a refresh or a new session.
  */
-export function SubmittedProjectCard({ submission }: { submission: Submission }) {
+export function SubmittedProjectCard({
+  submission,
+}: {
+  submission: Submission;
+}) {
   const panel = STATUS_PANEL[submission.status] ?? STATUS_PANEL.PENDING;
   const stageStates = deriveStageStates(submission.status);
 
@@ -94,7 +106,9 @@ export function SubmittedProjectCard({ submission }: { submission: Submission })
           </div>
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-headline-md text-on-surface">{panel.title}</h2>
+              <h2 className="text-headline-md text-on-surface">
+                {panel.title}
+              </h2>
               <SubmissionStatusBadge status={submission.status} />
             </div>
             <p className="text-body-md text-on-surface-variant">
@@ -129,7 +143,11 @@ export function SubmittedProjectCard({ submission }: { submission: Submission })
                         className="material-symbols-outlined text-[14px]"
                         aria-hidden="true"
                       >
-                        {state === "complete" ? "done" : state === "active" ? "check" : "more_horiz"}
+                        {state === "complete"
+                          ? "done"
+                          : state === "active"
+                            ? "check"
+                            : "more_horiz"}
                       </span>
                     </div>
                     <span
@@ -185,7 +203,7 @@ export function SubmittedProjectCard({ submission }: { submission: Submission })
           <h3 className="text-headline-lg text-on-surface tracking-tight">
             {submission.projectName}
           </h3>
-          <p className="text-body-lg text-on-surface-variant leading-relaxed">
+          <p className="text-body-md text-on-surface-variant leading-relaxed">
             {submission.description}
           </p>
         </div>
@@ -295,7 +313,11 @@ function ExternalLinkCard({
 }
 
 /** Snapshot of the identifiers and timestamps belonging to the submission. */
-export function SubmissionSnapshotCard({ submission }: { submission: Submission }) {
+export function SubmissionSnapshotCard({
+  submission,
+}: {
+  submission: Submission;
+}) {
   const meta = getSubmissionStatusMeta(submission.status);
 
   const rows: Array<{ label: string; value: string }> = [
@@ -305,7 +327,10 @@ export function SubmissionSnapshotCard({ submission }: { submission: Submission 
   ];
 
   if (submission.reviewedAt) {
-    rows.push({ label: "Reviewed", value: formatUtcDateTime(submission.reviewedAt) });
+    rows.push({
+      label: "Reviewed",
+      value: formatUtcDateTime(submission.reviewedAt),
+    });
   }
 
   return (
@@ -315,9 +340,14 @@ export function SubmissionSnapshotCard({ submission }: { submission: Submission 
       </h3>
       <dl className="flex flex-col gap-3 text-label-md">
         {rows.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-4">
+          <div
+            key={row.label}
+            className="flex items-center justify-between gap-4"
+          >
             <dt className="text-on-surface-variant">{row.label}</dt>
-            <dd className="text-code-sm text-on-surface text-right">{row.value}</dd>
+            <dd className="text-code-sm text-on-surface text-right">
+              {row.value}
+            </dd>
           </div>
         ))}
       </dl>

@@ -67,7 +67,7 @@ export function StudentSubmissionForm() {
   function handleError(error: unknown) {
     if (!(error instanceof ApiRequestError)) {
       setServerError(
-        "We could not submit your project right now. Please try again."
+        "We could not submit your project right now. Please try again.",
       );
       return;
     }
@@ -76,7 +76,7 @@ export function StudentSubmissionForm() {
       case 400: {
         // Surface structured field errors on the matching inputs.
         const mapped = error.fieldErrors.filter((fieldError) =>
-          (SUBMISSION_FIELDS as readonly string[]).includes(fieldError.field)
+          (SUBMISSION_FIELDS as readonly string[]).includes(fieldError.field),
         );
 
         mapped.forEach((fieldError) => {
@@ -89,7 +89,7 @@ export function StudentSubmissionForm() {
         setServerError(
           mapped.length > 0
             ? "Some details could not be accepted. Please review the highlighted fields."
-            : error.message
+            : error.message,
         );
         break;
       }
@@ -105,17 +105,15 @@ export function StudentSubmissionForm() {
         // The mine query is invalidated by the mutation, so the dashboard
         // re-syncs with the server and shows the existing submission.
         setServerError(
-          "You have already submitted a project. Loading your submission…"
+          "You have already submitted a project. Loading your submission…",
         );
         break;
       case 429:
-        setServerError(
-          "Too many submission attempts. Please try again later."
-        );
+        setServerError("Too many submission attempts. Please try again later.");
         break;
       default:
         setServerError(
-          "Something went wrong on our side. Please try again in a moment."
+          "Something went wrong on our side. Please try again in a moment.",
         );
     }
   }
@@ -161,7 +159,10 @@ export function StudentSubmissionForm() {
 
       {/* Server error feedback */}
       {serverError && (
-        <Alert variant="destructive" className="bg-error-container text-on-error-container border-error-container">
+        <Alert
+          variant="destructive"
+          className="bg-error-container text-on-error-container border-error-container"
+        >
           <AlertTitle className="text-headline-sm">
             Submission could not be completed
           </AlertTitle>
@@ -183,7 +184,7 @@ export function StudentSubmissionForm() {
           </FieldLabel>
           <Input
             id="projectName"
-            className="pl-3.5"
+            className="pl-3.5 border-surface-container-high border"
             placeholder="e.g. Distributed Task Orchestrator &amp; CLI"
             maxLength={PROJECT_NAME_MAX_LENGTH}
             isError={!!errors.projectName}
@@ -195,8 +196,8 @@ export function StudentSubmissionForm() {
             {...form.register("projectName")}
           />
           <FieldDescription>
-            Up to {PROJECT_NAME_MAX_LENGTH} characters. This is the title mentors
-            will see.
+            Up to {PROJECT_NAME_MAX_LENGTH} characters. This is the title
+            mentors will see.
           </FieldDescription>
           <FieldError id="projectName-error" errors={[errors.projectName]} />
         </Field>
@@ -213,14 +214,17 @@ export function StudentSubmissionForm() {
             id="repoUrl"
             type="url"
             inputMode="url"
-            className="pl-9"
+            className="pl-9 border-surface-container-high border"
             placeholder="https://github.com/username/project-name"
             isError={!!errors.repoUrl}
             aria-invalid={!!errors.repoUrl}
             aria-describedby={errors.repoUrl ? "repoUrl-error" : undefined}
             disabled={isDisabled}
             leadingIcon={
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-[18px]"
+                aria-hidden="true"
+              >
                 code
               </span>
             }
@@ -245,14 +249,17 @@ export function StudentSubmissionForm() {
             id="liveUrl"
             type="url"
             inputMode="url"
-            className="pl-9"
+            className="pl-9 border-surface-container-high border"
             placeholder="https://orchestrator-app.vercel.app"
             isError={!!errors.liveUrl}
             aria-invalid={!!errors.liveUrl}
             aria-describedby={errors.liveUrl ? "liveUrl-error" : undefined}
             disabled={isDisabled}
             leadingIcon={
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-[18px]"
+                aria-hidden="true"
+              >
                 rocket_launch
               </span>
             }
@@ -323,7 +330,7 @@ export function StudentSubmissionForm() {
                 </span>
                 {hook}
               </span>
-            )
+            ),
           )}
         </div>
       </div>
@@ -338,8 +345,8 @@ export function StudentSubmissionForm() {
             lock
           </span>
           <span className="text-body-sm">
-            Your submission cannot be edited after it is submitted. Mentor review
-            locks immediately.
+            Your submission cannot be edited after it is submitted. Mentor
+            review locks immediately.
           </span>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">

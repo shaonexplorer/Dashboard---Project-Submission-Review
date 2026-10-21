@@ -30,7 +30,7 @@ function isPathMatch(pathname: string, routes: readonly string[]): boolean {
  */
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
 
@@ -46,7 +46,9 @@ function getRequiredRole(pathname: string): "STUDENT" | "MENTOR" | null {
 /**
  * Verify authentication token with backend and get user data
  */
-async function verifyAuth(token: string): Promise<{ user: { role: string; id: string } } | null> {
+async function verifyAuth(
+  token: string,
+): Promise<{ user: { role: string; id: string } } | null> {
   try {
     const response = await fetch(`${API_URL}/auth/me`, {
       method: "GET",
@@ -57,6 +59,8 @@ async function verifyAuth(token: string): Promise<{ user: { role: string; id: st
       // Don't cache auth verification
       cache: "no-store",
     });
+
+    console.log("Auth verification response status:", response);
 
     if (!response.ok) {
       return null;
@@ -117,7 +121,8 @@ export async function middleware(request: NextRequest) {
   // Check role-based access
   if (userRole !== requiredRole) {
     // Wrong role - redirect to appropriate dashboard
-    const redirectPath = userRole === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard";
+    const redirectPath =
+      userRole === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard";
     return NextResponse.redirect(new URL(redirectPath, request.url));
   }
 
