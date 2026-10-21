@@ -283,3 +283,68 @@ export const getSubmissionsService = async (query: SubmissionListQuery) => {
     },
   };
 };
+
+/**
+ * The aggregate counts rendered by the mentor dashboard's statistics cards.
+ */
+export type SubmissionStats = {
+  /** Every submission in the table. */
+  total: number;
+  /** Submissions still waiting for a review decision. */
+  pending: number;
+  /** Submissions a mentor has approved. */
+  approved: number;
+  /** Submissions a mentor has rejected. */
+  rejected: number;
+};
+
+/**
+ * Aggregates submission counts by status.
+ *
+ * Both readings come from the database and are issued together, so the
+ * endpoint waits for one round of database work rather than two sequential
+ * ones. The total is read with its own count query instead of being summed
+ * from the status groups, so the figure the dashboard shows as "Total
+ * submissions" is an independent reading of the table.
+ *
+ * The counts describe the whole table. They are never derived from a
+ * paginated result, which would describe one slice of rows rather than the
+ * submissions themselves.
+ *
+ * Authorization is enforced by the `authorize("MENTOR")` middleware on the
+ * route, before this service is reached.
+ *
+ * @returns The total count and the per-status breakdown
+ */
+export const getSubmissionStatsService = async (): Promise<SubmissionStats> => {
+  const [total, groups] = await Promise.all([
+    prisma.submission.count(),
+    prisma.submission.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }),
+  ]);
+
+  // Every count starts at zero: a status with no rows is simply absent from
+  // the grouping, and must still be reported as 0 rather than left undefined.
+  const stats: SubmissionStats = {
+    total,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  };
+
+  for (const group of groups) {
+    const count = group._count._all;
+
+    if (group.status === "PENDING") {
+      stats.pending = count;
+    } else if (group.status === "APPROVED") {
+      stats.approved = count;
+    } else if (group.status === "REJECTED") {
+      stats.rejected = count;
+    }
+  }
+
+  return stats;
+};

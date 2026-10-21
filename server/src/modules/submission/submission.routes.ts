@@ -8,6 +8,7 @@ import {
   createSubmissionController,
   getMySubmissionController,
   getSubmissionsController,
+  getSubmissionStatsController,
 } from "./submission.controller";
 
 const router = express.Router();
@@ -65,6 +66,34 @@ router.get(
   authenticate,
   authorize("STUDENT"),
   getMySubmissionController
+);
+
+/**
+ * GET /api/submissions/stats
+ *
+ * Returns the aggregate submission counts for the mentor dashboard's
+ * statistics cards: the total number of submissions and the per-status
+ * breakdown. The counts are produced by database aggregation and always
+ * describe the whole table — the endpoint takes no query parameters.
+ *
+ * Middleware chain:
+ * 1. authenticate - Verifies JWT token from cookie
+ * 2. authorize("MENTOR") - Ensures user has MENTOR role
+ *
+ * Responses:
+ * - 200 OK: The total and per-status counts
+ * - 401 Unauthorized: Missing or invalid token
+ * - 403 Forbidden: User is not a MENTOR
+ * - 500 Internal Server Error: Unexpected error
+ *
+ * Note: this route must stay registered before any dynamic `/:id` route, so
+ * that "stats" is never interpreted as a submission identifier.
+ */
+router.get(
+  "/stats",
+  authenticate,
+  authorize("MENTOR"),
+  getSubmissionStatsController
 );
 
 /**

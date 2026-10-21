@@ -5,6 +5,7 @@ import {
   createSubmissionService,
   getStudentSubmissionService,
   getSubmissionsService,
+  getSubmissionStatsService,
 } from "./submission.service";
 import type { SubmissionListQuery } from "./submission.validations";
 
@@ -86,5 +87,26 @@ export const getSubmissionsController = asyncHandler(
     const { data, pagination } = await getSubmissionsService(query);
 
     sendPaginatedResponse(res, 200, "Submissions retrieved", data, pagination);
+  }
+);
+
+/**
+ * Returns the aggregate submission counts for the mentor dashboard's
+ * statistics cards.
+ *
+ * Requires:
+ * - Authentication (handled by authenticate middleware)
+ * - MENTOR role (handled by authorize("MENTOR") middleware)
+ *
+ * The counting is done by the database — the controller only forwards the
+ * aggregated result.
+ *
+ * Returns 200 OK with the total and the per-status breakdown.
+ */
+export const getSubmissionStatsController = asyncHandler(
+  async (_req: Request, res: Response) => {
+    const stats = await getSubmissionStatsService();
+
+    sendResponse(res, 200, "Submission statistics retrieved", stats);
   }
 );

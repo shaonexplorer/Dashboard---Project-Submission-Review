@@ -72,6 +72,7 @@ export function LoginForm() {
         isError={!!emailError}
         disabled={isPending}
         required
+        className="border-surface-container-high border"
         leadingIcon={
           <span
             className="material-symbols-outlined text-[18px]"
@@ -91,6 +92,7 @@ export function LoginForm() {
         error={passwordError}
         isError={!!passwordError}
         disabled={isPending}
+        className="border-surface-container-high border"
         required
         {...form.register("password")}
       />

@@ -106,6 +106,15 @@ export function SignupForm() {
         isError={!!fullNameError}
         disabled={isPending}
         required
+        leadingIcon={
+          <span
+            className="material-symbols-outlined text-[18px]"
+            aria-hidden="true"
+          >
+            person
+          </span>
+        }
+        className="border-surface-container-high border"
         {...form.register("fullName")}
       />
 
@@ -119,7 +128,16 @@ export function SignupForm() {
         error={emailError}
         isError={!!emailError}
         disabled={isPending}
+        className="border-surface-container-high border"
         required
+        leadingIcon={
+          <span
+            className="material-symbols-outlined text-[18px]"
+            aria-hidden="true"
+          >
+            alternate_email
+          </span>
+        }
         {...form.register("email")}
       />
 
@@ -132,6 +150,7 @@ export function SignupForm() {
           error={passwordError}
           isError={!!passwordError}
           disabled={isPending}
+          className="border-surface-container-high border"
           required
           {...form.register("password")}
         />
@@ -156,6 +175,7 @@ export function SignupForm() {
         error={confirmPasswordError}
         isError={!!confirmPasswordError}
         disabled={isPending}
+        className="border-surface-container-high border"
         required
         {...form.register("confirmPassword")}
       />
