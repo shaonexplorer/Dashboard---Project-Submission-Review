@@ -144,7 +144,7 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
           <Button
             type="button"
             variant="secondary"
-            className="px-4 text-label-md shadow-sm"
+            className="px-4 text-label-md shadow-sm text-white"
           />
         }
       >
@@ -171,8 +171,8 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
               Resubmit {submission.projectName}
             </DialogTitle>
             <DialogDescription className="text-body-sm text-on-surface-variant">
-              Your changes replace the previous deliverable on this project.
-              The attempt number goes up and the submission goes back into the
+              Your changes replace the previous deliverable on this project. The
+              attempt number goes up and the submission goes back into the
               review queue.
             </DialogDescription>
           </div>
@@ -227,7 +227,10 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
             <Field data-invalid={!!errors.repoUrl}>
               <FieldLabel htmlFor="resubmit-repoUrl">
                 GitHub Repository
-                <span className="text-error font-sans font-bold" aria-hidden="true">
+                <span
+                  className="text-error font-sans font-bold"
+                  aria-hidden="true"
+                >
                   *
                 </span>
               </FieldLabel>
@@ -239,7 +242,9 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
                 placeholder="https://github.com/username/project-name"
                 isError={!!errors.repoUrl}
                 aria-invalid={!!errors.repoUrl}
-                aria-describedby={errors.repoUrl ? "resubmit-repoUrl-error" : undefined}
+                aria-describedby={
+                  errors.repoUrl ? "resubmit-repoUrl-error" : undefined
+                }
                 disabled={isPending}
                 leadingIcon={
                   <span
@@ -263,7 +268,10 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
             <Field data-invalid={!!errors.liveUrl}>
               <FieldLabel htmlFor="resubmit-liveUrl">
                 Live Project
-                <span className="text-error font-sans font-bold" aria-hidden="true">
+                <span
+                  className="text-error font-sans font-bold"
+                  aria-hidden="true"
+                >
                   *
                 </span>
               </FieldLabel>
@@ -275,7 +283,9 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
                 placeholder="https://orchestrator-app.vercel.app"
                 isError={!!errors.liveUrl}
                 aria-invalid={!!errors.liveUrl}
-                aria-describedby={errors.liveUrl ? "resubmit-liveUrl-error" : undefined}
+                aria-describedby={
+                  errors.liveUrl ? "resubmit-liveUrl-error" : undefined
+                }
                 disabled={isPending}
                 leadingIcon={
                   <span
@@ -299,7 +309,10 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
             <Field data-invalid={!!errors.description}>
               <FieldLabel htmlFor="resubmit-description">
                 Description
-                <span className="text-error font-sans font-bold" aria-hidden="true">
+                <span
+                  className="text-error font-sans font-bold"
+                  aria-hidden="true"
+                >
                   *
                 </span>
               </FieldLabel>
@@ -317,7 +330,8 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
                 {...form.register("description")}
               />
               <FieldDescription>
-                Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is supported.
+                Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is
+                supported.
               </FieldDescription>
               <FieldError
                 id="resubmit-description-error"
@@ -335,7 +349,11 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending} className="px-4 text-label-md">
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="px-4 text-label-md text-white"
+            >
               {isPending ? (
                 <>
                   <Spinner data-icon="inline-start" />
