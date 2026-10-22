@@ -219,18 +219,18 @@ export default function StudentSubmissionPage() {
               value={stats?.total ?? 0}
               subtitle="/ 3 active"
               icon="timeline"
-              indicatorColor="primary"
+              indicatorColor="emerald"
               trendLabel="3 active"
-              trendColor="primary"
+              trendColor="emerald"
             />
             <MetricCard
               label="Completed / Approved"
               value={stats?.approved ?? 0}
               subtitle={`94/100 Avg`}
               icon="check_circle"
-              indicatorColor="emerald"
+              indicatorColor="primary"
               trendLabel="94/100 Avg"
-              trendColor="emerald"
+              trendColor="primary"
             />
             <MetricCard
               label="Under Evaluation"

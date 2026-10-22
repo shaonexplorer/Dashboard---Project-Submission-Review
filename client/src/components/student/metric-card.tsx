@@ -45,7 +45,7 @@ export function MetricCard({
     emerald: "text-emerald-800 bg-emerald-50",
     amber: "text-amber-800 bg-amber-50",
     secondary: "text-on-surface-variant",
-    primary: "text-primary bg-primary-container",
+    primary: "text-primary bg-primary-container/50",
   };
 
   return (

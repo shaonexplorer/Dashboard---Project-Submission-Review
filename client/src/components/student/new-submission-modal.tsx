@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -35,18 +41,21 @@ const submissionSchema = z.object({
           return false;
         }
       },
-      { message: "Must use HTTP or HTTPS protocol" }
+      { message: "Must use HTTP or HTTPS protocol" },
     )
     .refine(
       (url) => {
         try {
           const parsed = new URL(url);
-          return parsed.hostname === "github.com" || parsed.hostname === "www.github.com";
+          return (
+            parsed.hostname === "github.com" ||
+            parsed.hostname === "www.github.com"
+          );
         } catch {
           return false;
         }
       },
-      { message: "Must be a GitHub URL (github.com)" }
+      { message: "Must be a GitHub URL (github.com)" },
     ),
   branch: z.string().min(1, "Branch is required"),
   commitSha: z.string().optional(),
@@ -54,8 +63,18 @@ const submissionSchema = z.object({
     .string()
     .optional()
     .refine(
-      (url) => !url || url === "" || (() => { try { const u = new URL(url); return u.protocol === "http:" || u.protocol === "https:"; } catch { return false; } })(),
-      { message: "Must be a valid URL" }
+      (url) =>
+        !url ||
+        url === "" ||
+        (() => {
+          try {
+            const u = new URL(url);
+            return u.protocol === "http:" || u.protocol === "https:";
+          } catch {
+            return false;
+          }
+        })(),
+      { message: "Must be a valid URL" },
     ),
 });
 
@@ -114,8 +133,11 @@ export function NewSubmissionModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
-        <DialogHeader className="flex-row items-center gap-3 space-y-0 bg-surface-container-low px-6 py-4">
-          <span className="material-symbols-outlined text-primary text-[20px]" aria-hidden="true">
+        <DialogHeader className="my-2 flex-row items-center gap-3 space-y-0 bg-surface-container-low px-2 py-4">
+          <span
+            className="material-symbols-outlined text-primary text-[20px]"
+            aria-hidden="true"
+          >
             upload_file
           </span>
           <div>
@@ -125,7 +147,10 @@ export function NewSubmissionModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="p-6 flex flex-col gap-4">
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className=" flex flex-col gap-4"
+        >
           {/* Target Milestone */}
           <Field>
             <FieldLabel htmlFor="projectId">Target Milestone</FieldLabel>
@@ -153,32 +178,93 @@ export function NewSubmissionModal({
           <Field>
             <FieldLabel htmlFor="repoUrl">
               Git Repository URL
-              <span className="text-error font-sans font-bold" aria-hidden="true">*</span>
-            </FieldLabel>
-            <div className="flex items-center bg-surface-container-low rounded-lg px-3 shadow-sm focus-within:ring-2 focus-within:ring-primary/20">
-              <span className="material-symbols-outlined text-secondary text-[18px] mr-2" aria-hidden="true">
-                source
+              <span
+                className="text-error font-sans font-bold"
+                aria-hidden="true"
+              >
+                *
               </span>
-              <Input
+            </FieldLabel>
+
+            {/* <Input
                 id="repoUrl"
                 type="url"
                 placeholder="https://github.com/username/project-name"
                 className="w-full h-10 bg-transparent text-on-surface font-code-sm text-code-sm focus:outline-none"
                 {...form.register("repoUrl")}
-              />
-            </div>
+              /> */}
+            <Input
+              id="repoUrl"
+              type="url"
+              inputMode="url"
+              className="pl-9 border-surface-container-high border"
+              placeholder="https://github.com/username/project-name"
+              leadingIcon={
+                <span
+                  className="material-symbols-outlined text-[18px]"
+                  aria-hidden="true"
+                >
+                  code
+                </span>
+              }
+              {...form.register("repoUrl")}
+            />
+
             <FieldDescription>
-              Provide the public GitHub repository containing your project source code.
+              Provide the public GitHub repository containing your project
+              source code.
             </FieldDescription>
             <FieldError errors={[form.formState.errors.repoUrl]} />
           </Field>
 
+          {/* <Field data-invalid={!!errors.repoUrl}>
+            <FieldLabel htmlFor="repoUrl">
+              GitHub Repository
+              <span
+                className="text-error font-sans font-bold"
+                aria-hidden="true"
+              >
+                *
+              </span>
+            </FieldLabel>
+            <Input
+              id="repoUrl"
+              type="url"
+              inputMode="url"
+              className="pl-9 border-surface-container-high border"
+              placeholder="https://github.com/username/project-name"
+              isError={!!errors.repoUrl}
+              aria-invalid={!!errors.repoUrl}
+              aria-describedby={errors.repoUrl ? "repoUrl-error" : undefined}
+              disabled={isDisabled}
+              leadingIcon={
+                <span
+                  className="material-symbols-outlined text-[18px]"
+                  aria-hidden="true"
+                >
+                  code
+                </span>
+              }
+              {...form.register("repoUrl")}
+            />
+            <FieldDescription>
+              Provide the public GitHub repository containing your project
+              source code.
+            </FieldDescription>
+            <FieldError id="repoUrl-error" errors={[errors.repoUrl]} />
+          </Field> */}
+
           {/* Git Branch & Commit SHA */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-2 gap-4">
             <Field>
               <FieldLabel htmlFor="branch">
                 Git Branch
-                <span className="text-error font-sans font-bold" aria-hidden="true">*</span>
+                <span
+                  className="text-error font-sans font-bold"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
               </FieldLabel>
               <Input
                 id="branch"
@@ -198,13 +284,17 @@ export function NewSubmissionModal({
                 className="w-full h-10 px-3 bg-surface-container-lowest text-on-surface font-code-sm text-code-sm rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                 {...form.register("commitSha")}
               />
-              <FieldDescription>Optional: specific commit to submit</FieldDescription>
+              <FieldDescription>
+                Optional: specific commit to submit
+              </FieldDescription>
             </Field>
-          </div>
+          </div> */}
 
           {/* Staging / Deployed URL */}
           <Field>
-            <FieldLabel htmlFor="liveUrl">Staging / Deployed URL (Optional)</FieldLabel>
+            <FieldLabel htmlFor="liveUrl">
+              Staging / Deployed URL (Optional)
+            </FieldLabel>
             <Input
               id="liveUrl"
               type="url"
@@ -213,14 +303,18 @@ export function NewSubmissionModal({
               {...form.register("liveUrl")}
             />
             <FieldDescription>
-              Provide the deployed, publicly accessible version of your application.
+              Provide the deployed, publicly accessible version of your
+              application.
             </FieldDescription>
             <FieldError errors={[form.formState.errors.liveUrl]} />
           </Field>
 
           {/* Certification */}
           <div className="p-3 rounded-lg bg-surface-container flex items-start gap-3">
-            <span className="material-symbols-outlined text-secondary text-[18px] mt-0.5" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-secondary text-[18px] mt-0.5"
+              aria-hidden="true"
+            >
               verified_user
             </span>
             <p className="font-body-sm text-body-sm text-secondary">
@@ -252,7 +346,10 @@ export function NewSubmissionModal({
               ) : (
                 <>
                   Confirm & Queue Checks
-                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-[18px]"
+                    aria-hidden="true"
+                  >
                     arrow_forward
                   </span>
                 </>
