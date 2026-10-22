@@ -263,7 +263,7 @@ export function ProjectPicker({
         </DialogTrigger>
 
         <DialogContent className="max-w-xl gap-0 p-0">
-          <DialogHeader className="flex-row items-start gap-3 space-y-0 bg-surface-container-low px-6 py-4">
+          <DialogHeader className="flex-row items-start gap-3 space-y-0 bg-surface-container-low px-6 py-4 text-left">
             <span
               className="material-symbols-outlined text-primary text-[20px]"
               aria-hidden="true"
@@ -442,7 +442,11 @@ function ProjectOptionButton({
       className={cn(
         "h-auto w-full items-start justify-start gap-3 px-3.5 py-3",
         "border-surface-container-high bg-surface-container-lowest",
-        "text-left font-normal",
+        // The button base sets `whitespace-nowrap` for short labels, and it is
+        // inherited. Here the description and the state text are sentences, so
+        // they have to wrap: without this they stay on one line and are cut
+        // off at the edge of the dialog.
+        "whitespace-normal text-left font-normal",
         isSelected && "border-primary bg-primary-container/20",
         isUnavailable &&
           "opacity-70 cursor-not-allowed hover:bg-surface-container-lowest",

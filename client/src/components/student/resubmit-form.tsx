@@ -159,7 +159,7 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
       </DialogTrigger>
 
       <DialogContent className="max-w-xl gap-0 p-0">
-        <DialogHeader className="flex-row items-start gap-3 space-y-0 bg-surface-container-low px-6 py-4">
+        <DialogHeader className="flex-row items-start gap-3 space-y-0 bg-surface-container-low px-6 py-4 text-left">
           <span
             className="material-symbols-outlined text-primary text-[20px]"
             aria-hidden="true"

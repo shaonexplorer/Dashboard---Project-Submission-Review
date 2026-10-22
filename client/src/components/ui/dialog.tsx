@@ -33,16 +33,23 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <DialogPrimitive.Dialog.Portal>
     <DialogOverlay />
-    <DialogPrimitive.Dialog.Viewport
-      className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center",
-        className
-      )}
-    >
+    {/*
+      The viewport is the positioning container, so it spans the whole screen
+      and centres the popup. `className` belongs to the popup — the prop is
+      typed against `Dialog.Popup` — and must not reach the viewport: a
+      `max-w-*` here would cap the container at the popup's width and pin it to
+      the left edge, which centres the popup inside a left-hand column instead
+      of the screen.
+
+      The popup centres itself with auto margins rather than `items-center`,
+      so a dialog taller than the screen starts at the top and stays
+      reachable through the viewport's scroll instead of overflowing past it.
+    */}
+    <DialogPrimitive.Dialog.Viewport className="fixed inset-0 z-50 flex overflow-y-auto p-4">
       <DialogPrimitive.Dialog.Popup
         ref={ref}
         className={cn(
-          "w-full max-w-lg rounded-xl border border-input bg-background p-6 shadow-lg transition-[opacity,scale] duration-200 ease-out data-starting-style:opacity-0 data-ending-style:opacity-0 data-starting-style:scale-95 data-ending-style:scale-95 sm:rounded-lg",
+          "relative m-auto w-full max-w-lg overflow-hidden rounded-xl border border-input bg-background p-6 shadow-lg transition-[opacity,scale] duration-200 ease-out data-starting-style:opacity-0 data-ending-style:opacity-0 data-starting-style:scale-95 data-ending-style:scale-95 sm:rounded-lg",
           className
         )}
         {...props}
