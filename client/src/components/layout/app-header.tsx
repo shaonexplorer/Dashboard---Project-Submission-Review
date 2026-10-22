@@ -14,8 +14,7 @@ interface NavItem {
 const NAV_BY_ROLE: Record<string, NavItem[]> = {
   STUDENT: [
     { label: "Dashboard", href: "/student/dashboard" },
-    // { label: "My Projects" },
-    { label: "Submissions", href: "/student/submission" },
+    { label: "My Projects", href: "/student/my-projects" },
     { label: "Rubrics" },
   ],
   MENTOR: [

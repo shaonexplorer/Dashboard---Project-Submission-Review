@@ -56,4 +56,9 @@ export const queryKeys = {
    * The aggregate counts shown in the statistics cards.
    */
   mentorSubmissionStats: ["mentorDashboard", "submissionStats"] as const,
+  /**
+   * A single submission by ID for the detail page.
+   */
+  submissionById: (submissionId: string | undefined) =>
+    ["submission", "byId", submissionId] as const,
 } as const;

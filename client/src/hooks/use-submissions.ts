@@ -134,3 +134,25 @@ export function useMySubmissionStats() {
     retry: false,
   });
 }
+
+/**
+ * Fetches a single submission by ID.
+ *
+ * Uses the paginated API with a search filter for the specific ID,
+ * then returns the matching submission. This avoids needing a dedicated
+ * backend endpoint while still getting fresh data.
+ */
+export function useSubmissionById(submissionId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.submissionById(submissionId),
+    queryFn: async () => {
+      if (!submissionId) return null;
+      // Fetch all submissions and find the one with matching ID
+      const submissions = await getMySubmissionsApi();
+      return submissions.find((s) => s.id === submissionId) ?? null;
+    },
+    enabled: hasToken() && !!submissionId,
+    staleTime: 0,
+    retry: false,
+  });
+}
