@@ -37,6 +37,8 @@ for (const line of envText.split(/\r?\n/)) {
 
 const API = (env.API_URL || "http://localhost:5000/api").replace(/\/$/, "");
 const WEB = (env.WEB_URL || "http://localhost:3000").replace(/\/$/, "");
+/** The origin the API allows, which is also the origin the page is served from. */
+const CLIENT_URL = env.CLIENT_URL || WEB;
 const PASSWORD = env.SEED_MENTOR_PASSWORD;
 const DATABASE_URL = env.DATABASE_URL;
 const CHROME_PATH =
@@ -182,6 +184,21 @@ const pending = new Map();
 const loadWaiters = [];
 /** Requests held open by the request interception, released afterwards. */
 const heldRequests = [];
+/**
+ * Replaces the response of the next request it matches.
+ *
+ * `null` means "this request is not the one under test", which lets it
+ * through so the page keeps working while a failure is in place.
+ */
+let responder = null;
+/**
+ * True while the intercepted requests are meant to stay open.
+ *
+ * The catalog state is only observable while the catalog request is in flight,
+ * so that request is held rather than answered. Every other intercepted
+ * request is let through.
+ */
+let holdRequests = false;
 
 socket.addEventListener("message", (event) => {
   const message = JSON.parse(event.data);
@@ -192,8 +209,43 @@ socket.addEventListener("message", (event) => {
   }
 
   if (message.method === "Fetch.requestPaused") {
+    const { requestId, request } = message.params;
+    const answer = responder ? responder(request) : null;
+
+    if (answer) {
+      responder = null;
+      send(
+        "Fetch.fulfillRequest",
+        {
+          requestId,
+          responseCode: answer.status,
+          responseHeaders: [
+            { name: "Content-Type", value: "application/json" },
+            // The API is a different origin than the page, so the browser
+            // checks the answer against the CORS rules. Without these headers
+            // the request is blocked and the page sees a network failure
+            // rather than the answer that was put in place.
+            { name: "Access-Control-Allow-Origin", value: CLIENT_URL },
+            { name: "Access-Control-Allow-Credentials", value: "true" },
+          ],
+          body: Buffer.from(JSON.stringify(answer.payload)).toString("base64"),
+        },
+        sessionId,
+      ).catch(() => {});
+      // The interception has served its purpose, so it is turned off again
+      // and the requests that follow are left alone.
+      send("Fetch.disable", {}, sessionId).catch(() => {});
+      return;
+    }
+
+    if (!holdRequests) {
+      // This request is not held open, so it is let through.
+      send("Fetch.continueRequest", { requestId }, sessionId).catch(() => {});
+      return;
+    }
+
     // The request is held open, so the catalog stays in its loading state.
-    heldRequests.push(message.params.requestId);
+    heldRequests.push(requestId);
     return;
   }
 
@@ -310,6 +362,125 @@ async function signIn(email) {
   }
 }
 
+/**
+ * Makes the next matching request answer with the given response.
+ *
+ * Only the first request the matcher accepts is replaced. Every other
+ * request is let through, so the page stays usable while the failure is in
+ * place — a dashboard that stops loading is not what is under test here.
+ */
+async function interceptOnce(urlPattern, matches, response) {
+  await send("Fetch.disable", {}, sessionId).catch(() => {});
+  holdRequests = false;
+  await send(
+    "Fetch.enable",
+    { patterns: [{ urlPattern, requestStage: "Request" }] },
+    sessionId,
+  );
+  responder = (request) => (matches(request) ? response : null);
+}
+
+/** Stops intercepting and lets any held request through. */
+async function stopIntercepting() {
+  responder = null;
+  holdRequests = false;
+  for (const requestId of heldRequests.splice(0)) {
+    await send("Fetch.continueRequest", { requestId }, sessionId).catch(() => {});
+  }
+  await send("Fetch.disable", {}, sessionId).catch(() => {});
+}
+
+/**
+ * Types a value into a form field.
+ *
+ * React Hook Form ignores a plain `element.value =` — the value has to go
+ * through the native setter and a bubbling `input` event, which is what the
+ * change handler listens to.
+ */
+async function setFieldValue(id, value) {
+  return evaluate(`
+    (() => {
+      const field = document.getElementById(${JSON.stringify(id)});
+      if (!field) return false;
+      const prototype = field instanceof HTMLTextAreaElement
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype;
+      const setter = Object.getOwnPropertyDescriptor(prototype, "value").set;
+      setter.call(field, ${JSON.stringify(value)});
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      return true;
+    })()
+  `);
+}
+
+/** Fills the fields of a form. The prefix is "" for the form, "resubmit-" for the dialog. */
+async function fillForm(prefix, values) {
+  for (const [field, value] of Object.entries(values)) {
+    const filled = await setFieldValue(`${prefix}${field}`, value);
+    if (!filled) {
+      throw new Error(`the field ${prefix}${field} was not found`);
+    }
+  }
+}
+
+/**
+ * Picks a project from the catalog.
+ *
+ * The picker is a dialog, so the trigger is opened first and the option is
+ * chosen from the list. The code is matched against the rendered text, so it
+ * is compared in upper case — the design system upper cases the code chip.
+ */
+async function pickProject(catalogId) {
+  await evaluate(`document.getElementById("projectId").click()`);
+  await waitFor(`document.querySelector("[role=dialog]")`, "the picker to open");
+
+  // The list is only rendered once the catalog has arrived, so the option is
+  // waited for rather than looked for straight away.
+  await waitFor(
+    `[...document.querySelectorAll("[role=dialog] button")].some((button) =>
+      button.innerText.toUpperCase().includes(${JSON.stringify(
+        catalogId.toUpperCase(),
+      )}),
+    )`,
+    `the project ${catalogId} to be offered`,
+  );
+
+  const picked = await evaluate(`
+    (() => {
+      const dialog = document.querySelector("[role=dialog]");
+      const option = [...dialog.querySelectorAll("button")].find((button) =>
+        button.innerText.toUpperCase().includes(${JSON.stringify(
+          catalogId.toUpperCase(),
+        )}),
+      );
+      if (!option) return false;
+      option.click();
+      return true;
+    })()
+  `);
+
+  if (!picked) {
+    throw new Error(`the project ${catalogId} was not offered in the picker`);
+  }
+
+  await sleep(400);
+}
+
+/** Clicks a button whose text contains the given words. */
+async function clickButton(words, scope) {
+  return evaluate(`
+    (() => {
+      const root = ${scope ? scope : "document"};
+      const button = [...root.querySelectorAll("button")].find((element) =>
+        element.textContent.includes(${JSON.stringify(words)}),
+      );
+      if (!button) return false;
+      button.click();
+      return true;
+    })()
+  `);
+}
+
 /* ------------------------------------------------------------------ */
 /* Fixtures                                                           */
 /* ------------------------------------------------------------------ */
@@ -330,7 +501,14 @@ const catalog = await api(mentor, "GET", "/projects");
 const projects = (catalog.payload?.data?.projects ?? []).filter(
   (project) => project.id !== "legacy-01",
 );
-const [A, B, C] = projects;
+const [A, B, C, D, E] = projects;
+
+check(
+  "Fixtures",
+  "the catalog holds enough projects for the checks",
+  projects.length >= 5,
+  `${projects.length} projects`,
+);
 
 // A first attempt, waiting for a mentor.
 const first = await makeStudent("first");
@@ -404,8 +582,12 @@ section("Dashboard");
 
 await signIn(first.email);
 await open(`${WEB}/student/dashboard`);
+// The code chip is uppercased by CSS, and `innerText` reflects the rendered
+// text, so the comparison is made case-insensitively.
 await waitFor(
-  `document.body.innerText.includes(${JSON.stringify(A.id)})`,
+  `document.body.innerText.toLowerCase().includes(${JSON.stringify(
+    A.id.toLowerCase(),
+  )})`,
   "the first submission to appear",
 );
 
@@ -602,6 +784,7 @@ section("The catalog state");
 
 // The catalog request is held open, so the catalog stays in its loading state
 // while the picker is open.
+holdRequests = true;
 await send(
   "Fetch.enable",
   {
@@ -670,6 +853,7 @@ check(
 for (const requestId of heldRequests.splice(0)) {
   await send("Fetch.continueRequest", { requestId }, sessionId).catch(() => {});
 }
+holdRequests = false;
 await send("Fetch.disable", {}, sessionId);
 
 /* ------------------------------------------------------------------ */
@@ -688,10 +872,18 @@ await waitFor(
 const retainedState = await evaluate(
   `(() => {
     const text = document.body.innerText;
+    // The label is uppercased by CSS, and innerText reflects the rendered
+    // text, so the label is read from textContent, which does not.
+    const label = [...document.querySelectorAll("span")].find((element) =>
+      element.textContent.includes("Previous attempt"),
+    );
+
     return {
       notes: text.includes("The first pass was missing tests."),
-      previous: text.includes("Previous attempt"),
-      previousAttempt: text.includes("attempt 1"),
+      previous: Boolean(label),
+      previousAttempt: label
+        ? label.textContent.replace(/\\s+/g, " ").trim()
+        : null,
       assessment: text.includes("Assessment of attempt 1"),
       verified: text.includes("Verified assessment record"),
       attempt: text.includes("Attempt 2"),
@@ -707,7 +899,9 @@ check(
 check(
   "VAL-44",
   "the review is labelled as the previous attempt",
-  retainedState.previous && retainedState.previousAttempt,
+  retainedState.previous &&
+    (retainedState.previousAttempt ?? "").includes("attempt 1"),
+  retainedState.previousAttempt ?? "no label",
 );
 check(
   "VAL-44",
@@ -737,10 +931,11 @@ await waitFor(
 const reviewedState = await evaluate(
   `(() => {
     const text = document.body.innerText;
+    const source = document.body.textContent;
     return {
       notes: text.includes("The second pass was missing types."),
-      previous: text.includes("Previous attempt"),
-      assessmentOfPrevious: text.includes("Assessment of attempt"),
+      previous: source.includes("Previous attempt"),
+      assessmentOfPrevious: source.includes("Assessment of attempt"),
       verified: text.includes("Verified assessment record"),
       stale: text.includes("The first pass was missing tests."),
       attempt: text.includes("Attempt 2"),
@@ -762,6 +957,21 @@ check(
 check("VAL-38", "the replaced review is gone", !reviewedState.stale);
 check("VAL-45", "the attempt number is shown", reviewedState.attempt);
 
+const attemptBadges = await evaluate(
+  `(() => {
+    const badges = [...document.querySelectorAll("span")]
+      .map((element) => element.textContent.replace(/\\s+/g, " ").trim())
+      .filter((text) => /^Attempt \\d+$/.test(text));
+    return { badges, readable: badges.includes("Attempt 2") };
+  })()`,
+);
+check(
+  "VAL-54",
+  "the attempt badge carries readable text",
+  attemptBadges.readable,
+  JSON.stringify(attemptBadges.badges),
+);
+
 /* ------------------------------------------------------------------ */
 /* Handing in another project                                         */
 /* ------------------------------------------------------------------ */
@@ -775,6 +985,14 @@ await waitFor(`document.getElementById("projectId")`, "the submission form");
 
 await evaluate(`document.getElementById("projectId").click()`);
 await waitFor(`document.querySelector("[role=dialog]")`, "the picker to open");
+
+// The list is only rendered once the catalog has arrived.
+await waitFor(
+  `[...document.querySelectorAll("[role=dialog] button")].some((button) =>
+    button.innerText.includes("Available to submit"),
+  )`,
+  "the catalog options to be listed",
+);
 
 await evaluate(
   `(() => {
@@ -856,10 +1074,505 @@ check(
 );
 
 /* ------------------------------------------------------------------ */
+/* The empty state                                                    */
+/* ------------------------------------------------------------------ */
+
+section("The empty state");
+
+const empty = await makeStudent("empty");
+await signIn(empty.email);
+await open(`${WEB}/student/dashboard`);
+await waitFor(`document.getElementById("projectId")`, "the submission form");
+
+const emptyState = await evaluate(
+  `(() => {
+    const text = document.body.innerText;
+    return {
+      empty: text.includes("No submissions yet"),
+      hint: text.includes("Pick a project from the catalog below"),
+      form: Boolean(document.getElementById("projectId")),
+      submit: Boolean(document.querySelector('button[type="submit"]')),
+      failures: [...document.querySelectorAll('[role="alert"]')].filter((element) =>
+        /could not|failed|error/i.test(element.textContent),
+      ).length,
+    };
+  })()`,
+);
+
+check(
+  "VAL-46",
+  "the dashboard renders an empty state",
+  emptyState.empty && emptyState.hint,
+  JSON.stringify(emptyState),
+);
+check(
+  "VAL-46",
+  "the submission form is available",
+  emptyState.form && emptyState.submit,
+  JSON.stringify(emptyState),
+);
+check(
+  "VAL-46",
+  "no error is shown for a student without submissions",
+  emptyState.failures === 0,
+  `${emptyState.failures} error regions`,
+);
+
+/* ------------------------------------------------------------------ */
+/* The duplicate feedback                                             */
+/* ------------------------------------------------------------------ */
+
+section("The duplicate feedback");
+
+// The server is asked for a duplicate and answers with the code that decides
+// what the interface does. The message is deliberately the wrong one: an
+// interface that read the message would offer the resubmission path for a
+// project that is still waiting for a mentor.
+await interceptOnce(
+  "*localhost:5000/api/submissions",
+  (request) => request.method === "POST",
+  {
+    status: 409,
+    payload: {
+      success: false,
+      message:
+        "This project was rejected, so it has to be resubmitted rather than submitted again.",
+      code: "DUPLICATE_SUBMISSION",
+    },
+  },
+);
+
+await pickProject(D.id);
+await fillForm("", {
+  repoUrl: "https://github.com/student/phase-00-ui-duplicate",
+  liveUrl: "https://phase-00-ui-duplicate.vercel.app",
+  description: "A project that is already waiting for a mentor.",
+});
+await sleep(300);
+await evaluate(`document.querySelector('button[type="submit"]').click()`);
+
+await waitFor(
+  `document.body.innerText.includes("Submission could not be completed")`,
+  "the duplicate to be reported",
+);
+
+const duplicateState = await evaluate(
+  `(() => {
+    const banner = [...document.querySelectorAll('[role="alert"]')].find(
+      (element) =>
+        element.textContent.includes("Submission could not be completed"),
+    );
+    const text = banner ? banner.textContent : "";
+    return {
+      announced: Boolean(banner),
+      waiting: text.includes("already submitted and waiting for a mentor"),
+      misleading: text.includes("has to be resubmitted"),
+      resubmit: [...document.querySelectorAll("button")].some((button) =>
+        button.textContent.includes("Resubmit"),
+      ),
+    };
+  })()`,
+);
+
+check(
+  "VAL-47",
+  "a duplicate submission is reported",
+  duplicateState.announced,
+  JSON.stringify(duplicateState),
+);
+check(
+  "VAL-47",
+  "the project is described as waiting for a mentor",
+  duplicateState.waiting,
+  JSON.stringify(duplicateState),
+);
+check(
+  "VAL-47",
+  "the decision comes from the code, not from the message",
+  !duplicateState.misleading,
+  JSON.stringify(duplicateState),
+);
+check(
+  "VAL-47",
+  "no resubmission is offered for a project in review",
+  !duplicateState.resubmit,
+  JSON.stringify(duplicateState),
+);
+
+// The opposite case: the project was rejected, so the interface has to point
+// at the resubmission path. The message is misleading in the other
+// direction, and the code is what tells the two apart.
+const rejected = await makeStudent("rejected");
+const rejectedCreate = await api(
+  rejected.session,
+  "POST",
+  "/submissions",
+  body(E.id),
+);
+await api(
+  mentor,
+  "PATCH",
+  `/submissions/${rejectedCreate.payload.data.submission.id}/status`,
+  { status: "REJECTED", feedback: "Add the missing tests." },
+);
+
+await signIn(rejected.email);
+await open(`${WEB}/student/dashboard`);
+await waitFor(
+  `document.body.innerText.includes("Add the missing tests.")`,
+  "the rejected submission to appear",
+);
+
+await interceptOnce(
+  "*localhost:5000/api/submissions",
+  (request) => request.method === "POST",
+  {
+    status: 409,
+    payload: {
+      success: false,
+      message:
+        "This project is already submitted and waiting for a mentor. It cannot be submitted again.",
+      code: "RESUBMIT_REQUIRED",
+    },
+  },
+);
+
+await pickProject(E.id);
+await fillForm("", {
+  repoUrl: "https://github.com/student/phase-00-ui-conflict",
+  liveUrl: "https://phase-00-ui-conflict.vercel.app",
+  description: "A project that came back rejected.",
+});
+await sleep(300);
+await evaluate(`document.querySelector('button[type="submit"]').click()`);
+
+await waitFor(
+  `document.body.innerText.includes("Submission could not be completed")`,
+  "the conflict to be reported",
+);
+
+const conflictState = await evaluate(
+  `(() => {
+    const banner = [...document.querySelectorAll('[role="alert"]')].find(
+      (element) =>
+        element.textContent.includes("Submission could not be completed"),
+    );
+    const text = banner ? banner.textContent : "";
+    return {
+      announced: Boolean(banner),
+      rejected: text.includes("has to be resubmitted rather than submitted again"),
+      misleading: text.includes("already submitted and waiting for a mentor"),
+      resubmit: banner
+        ? [...banner.querySelectorAll("button")].some((button) =>
+            button.textContent.includes("Resubmit"),
+          )
+        : false,
+    };
+  })()`,
+);
+
+check(
+  "VAL-47",
+  "a rejected project is pointed at the resubmission path",
+  conflictState.rejected,
+  JSON.stringify(conflictState),
+);
+check(
+  "VAL-47",
+  "the decision comes from the code, not from the message",
+  !conflictState.misleading,
+  JSON.stringify(conflictState),
+);
+check(
+  "VAL-47",
+  "the resubmission action is offered",
+  conflictState.resubmit,
+  JSON.stringify(conflictState),
+);
+
+/* ------------------------------------------------------------------ */
+/* Error handling                                                     */
+/* ------------------------------------------------------------------ */
+
+section("Error handling");
+
+// The catalog cannot be loaded.
+await interceptOnce("*localhost:5000/api/projects", () => true, {
+  status: 500,
+  payload: { success: false, message: "The catalog could not be read." },
+});
+
+await signIn(empty.email);
+await open(`${WEB}/student/dashboard`);
+await waitFor(
+  `document.body.innerText.includes("The project catalog could not be loaded")`,
+  "the catalog failure to be reported",
+);
+
+const catalogFailure = await evaluate(
+  `(() => {
+    const banner = [...document.querySelectorAll('[role="alert"]')].find(
+      (element) =>
+        element.textContent.includes("The project catalog could not be loaded"),
+    );
+    const submit = document.querySelector('button[type="submit"]');
+    return {
+      announced: Boolean(banner),
+      retry: banner
+        ? [...banner.querySelectorAll("button")].some((button) =>
+            button.textContent.includes("Try again"),
+          )
+        : false,
+      blocked: submit ? submit.disabled : null,
+      form: Boolean(document.getElementById("projectId")),
+    };
+  })()`,
+);
+
+check(
+  "VAL-48",
+  "a failed catalog request is reported",
+  catalogFailure.announced,
+  JSON.stringify(catalogFailure),
+);
+check(
+  "VAL-48",
+  "a retry is offered for the catalog",
+  catalogFailure.retry,
+  JSON.stringify(catalogFailure),
+);
+check(
+  "VAL-48",
+  "no submission can be made without a catalog",
+  catalogFailure.blocked === true,
+  JSON.stringify(catalogFailure),
+);
+check(
+  "VAL-48",
+  "the dashboard still renders after a catalog failure",
+  catalogFailure.form,
+  JSON.stringify(catalogFailure),
+);
+
+// The submission cannot be created.
+await stopIntercepting();
+await signIn(empty.email);
+await open(`${WEB}/student/dashboard`);
+await waitFor(`document.getElementById("projectId")`, "the submission form");
+
+await interceptOnce(
+  "*localhost:5000/api/submissions",
+  (request) => request.method === "POST",
+  {
+    status: 500,
+    payload: { success: false, message: "The submission could not be stored." },
+  },
+);
+
+await pickProject(D.id);
+await fillForm("", {
+  repoUrl: "https://github.com/student/phase-00-ui-failed",
+  liveUrl: "https://phase-00-ui-failed.vercel.app",
+  description: "A deliverable the server refuses to store.",
+});
+await sleep(300);
+await evaluate(`document.querySelector('button[type="submit"]').click()`);
+
+await waitFor(
+  `document.body.innerText.includes("Submission could not be completed")`,
+  "the failed submission to be reported",
+);
+
+const createFailure = await evaluate(
+  `(() => {
+    const banner = [...document.querySelectorAll('[role="alert"]')].find(
+      (element) =>
+        element.textContent.includes("Submission could not be completed"),
+    );
+    const text = document.body.innerText;
+    return {
+      announced: Boolean(banner),
+      message: banner ? banner.textContent : "",
+      repoUrl: document.getElementById("repoUrl").value,
+      submitted: text.includes("Awaiting mentor review"),
+      empty: text.includes("No submissions yet"),
+    };
+  })()`,
+);
+
+check(
+  "VAL-48",
+  "a failed create request is reported",
+  createFailure.announced,
+  JSON.stringify(createFailure),
+);
+check(
+  "VAL-48",
+  "the failed submission is not shown as submitted",
+  !createFailure.submitted && createFailure.empty,
+  JSON.stringify(createFailure),
+);
+check(
+  "VAL-48",
+  "the form keeps what the student typed",
+  createFailure.repoUrl === "https://github.com/student/phase-00-ui-failed",
+  createFailure.repoUrl,
+);
+check(
+  "VAL-55",
+  "the failure is announced through an alert",
+  createFailure.announced,
+  JSON.stringify(createFailure),
+);
+
+// The server answers with a success it did not deliver.
+await interceptOnce(
+  "*localhost:5000/api/submissions",
+  (request) => request.method === "POST",
+  {
+    status: 200,
+    payload: { success: true, message: "Created" },
+  },
+);
+
+await evaluate(`document.querySelector('button[type="submit"]').click()`);
+await waitFor(
+  `document.body.innerText.includes("Submission could not be completed")`,
+  "the incomplete answer to be reported",
+);
+
+const partialState = await evaluate(
+  `(() => {
+    const banner = [...document.querySelectorAll('[role="alert"]')].find(
+      (element) =>
+        element.textContent.includes("Submission could not be completed"),
+    );
+    const text = document.body.innerText;
+    return {
+      announced: Boolean(banner),
+      submitted: text.includes("Awaiting mentor review"),
+      empty: text.includes("No submissions yet"),
+    };
+  })()`,
+);
+
+check(
+  "VAL-48",
+  "an incomplete answer is not rendered as a submission",
+  partialState.announced &&
+    !partialState.submitted &&
+    partialState.empty,
+  JSON.stringify(partialState),
+);
+
+// The resubmission cannot be stored.
+await stopIntercepting();
+await signIn(rejected.email);
+await open(`${WEB}/student/dashboard`);
+await waitFor(
+  `document.body.innerText.includes("Add the missing tests.")`,
+  "the rejected submission to appear",
+);
+
+const opened = await clickButton("Resubmit");
+if (!opened) {
+  throw new Error("the resubmission dialog could not be opened");
+}
+await waitFor(
+  `document.querySelector("[role=dialog]")`,
+  "the resubmission dialog to open",
+);
+
+await interceptOnce(
+  "*localhost:5000/api/submissions/*/resubmit",
+  (request) => request.method === "PUT",
+  {
+    status: 500,
+    payload: { success: false, message: "The resubmission could not be stored." },
+  },
+);
+
+await fillForm("resubmit-", {
+  repoUrl: "https://github.com/student/phase-00-ui-resubmitted",
+  liveUrl: "https://phase-00-ui-resubmitted.vercel.app",
+  description: "The second pass, with the tests that were asked for.",
+});
+await sleep(300);
+await evaluate(
+  `(() => {
+    const dialog = document.querySelector("[role=dialog]");
+    dialog.querySelector('button[type="submit"]').click();
+    return true;
+  })()`,
+);
+
+await waitFor(
+  `document.body.innerText.includes("Resubmission could not be completed")`,
+  "the failed resubmission to be reported",
+);
+
+const resubmitFailure = await evaluate(
+  `(() => {
+    const dialog = document.querySelector("[role=dialog]");
+    const banner = dialog
+      ? [...dialog.querySelectorAll('[role="alert"]')].find((element) =>
+          element.textContent.includes("Resubmission could not be completed"),
+        )
+      : null;
+    const main = document.querySelector("main");
+    const attempts = main
+      ? [...main.querySelectorAll("span")]
+          .map((element) => element.textContent.replace(/\\s+/g, " ").trim())
+          .filter((text) => /^Attempt \\d+$/.test(text))
+      : [];
+    return {
+      announced: Boolean(banner),
+      open: Boolean(dialog),
+      attempts,
+      stillRejected: document.body.innerText.includes("Changes required"),
+    };
+  })()`,
+);
+
+check(
+  "VAL-48",
+  "a failed resubmission is reported",
+  resubmitFailure.announced,
+  JSON.stringify(resubmitFailure),
+);
+check(
+  "VAL-48",
+  "a failed resubmission does not leave the submission resubmitted",
+  resubmitFailure.attempts.length > 0 &&
+    resubmitFailure.attempts.every((text) => text === "Attempt 1"),
+  JSON.stringify(resubmitFailure),
+);
+check(
+  "VAL-48",
+  "the submission keeps its rejected state",
+  resubmitFailure.stillRejected,
+  JSON.stringify(resubmitFailure),
+);
+check(
+  "VAL-55",
+  "the resubmission failure is announced through an alert",
+  resubmitFailure.announced,
+  JSON.stringify(resubmitFailure),
+);
+
+/* ------------------------------------------------------------------ */
 /* Cleanup                                                            */
 /* ------------------------------------------------------------------ */
 
 section("Cleanup");
+
+// A run that was aborted before it reached the cleanup leaves its accounts
+// behind, and those would otherwise be counted as leftovers of every later
+// run. They are swept first, then the accounts of this run are removed.
+await query(
+  `DELETE FROM "Submission" WHERE "studentId" IN (SELECT id FROM "User" WHERE email LIKE 'phase00-ui-%')`,
+);
+await query(`DELETE FROM "User" WHERE email LIKE 'phase00-ui-%'`);
 
 if (createdUserIds.length > 0) {
   await query(`DELETE FROM "Submission" WHERE "studentId" = ANY($1::text[])`, [
@@ -880,11 +1593,6 @@ check(
   `${leftovers.rows[0].count} accounts left`,
 );
 
-await pool.end();
-socket.close();
-chrome.kill();
-rmSync(userDataDir, { recursive: true, force: true });
-
 const failed = results.filter((result) => !result.ok);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
 
@@ -893,6 +1601,27 @@ if (failed.length > 0) {
   for (const result of failed) {
     console.log(`  ${result.val}  ${result.label}`);
   }
+}
+
+// The teardown runs after the summary has been printed, so a locked
+// temporary directory cannot hide the result of the run.
+try {
+  await pool.end();
+  socket.close();
+  chrome.kill();
+
+  // Chrome holds on to its profile directory for a moment after it is
+  // killed, so the removal is retried before it is given up on.
+  await sleep(500);
+  rmSync(userDataDir, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 200,
+  });
+} catch {
+  // The temporary profile is left behind; the operating system clears the
+  // temporary directory eventually.
 }
 
 process.exit(failed.length > 0 ? 1 : 0);

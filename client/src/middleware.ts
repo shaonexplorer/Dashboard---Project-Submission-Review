@@ -60,8 +60,6 @@ async function verifyAuth(
       cache: "no-store",
     });
 
-    console.log("Auth verification response status:", response);
-
     if (!response.ok) {
       return null;
     }
