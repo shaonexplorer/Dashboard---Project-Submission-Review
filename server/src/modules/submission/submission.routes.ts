@@ -7,12 +7,16 @@ import {
   resubmitSchema,
   submissionIdParamSchema,
   submissionListQuerySchema,
+  studentSubmissionListQuerySchema,
+  studentSubmissionStatsQuerySchema,
   submissionSchema,
   submissionStatusUpdateSchema,
 } from "./submission.validations";
 import {
   createSubmissionController,
   getMySubmissionController,
+  getMySubmissionsPaginatedController,
+  getMySubmissionStatsController,
   getSubmissionsController,
   getSubmissionStatsController,
   resubmitSubmissionController,
@@ -77,6 +81,70 @@ router.get(
   authenticate,
   authorize("STUDENT"),
   getMySubmissionController
+);
+
+/**
+ * GET /api/submissions/me
+ *
+ * Retrieves the authenticated student's own submissions with server-side
+ * pagination, status filtering, search and sorting. All table operations are
+ * driven by query parameters.
+ *
+ * Middleware chain:
+ * 1. authenticate - Verifies JWT token from cookie
+ * 2. authorize("STUDENT") - Ensures user has STUDENT role
+ * 3. validate(studentSubmissionListQuerySchema, "query") - Validates and
+ *    normalizes the query parameters
+ *
+ * Query parameters:
+ * - page: positive integer, defaults to 1
+ * - limit: positive integer, at most 100, defaults to 10
+ * - status: PENDING | APPROVED | REJECTED
+ * - search: matched against project name, project code, repo URL, live URL, description
+ * - sortBy: createdAt | projectName | status, defaults to createdAt
+ * - sortOrder: asc | desc, defaults to desc
+ *
+ * Responses:
+ * - 200 OK: Paginated list of submissions with pagination metadata
+ * - 400 Bad Request: Invalid query parameters
+ * - 401 Unauthorized: Missing or invalid token
+ * - 403 Forbidden: User is not a STUDENT
+ * - 500 Internal Server Error: Unexpected error
+ *
+ * Note: this route must stay registered before any dynamic `/:id` route, so
+ * that "me" is never interpreted as a submission identifier.
+ */
+router.get(
+  "/me",
+  authenticate,
+  authorize("STUDENT"),
+  validate(studentSubmissionListQuerySchema, "query"),
+  getMySubmissionsPaginatedController
+);
+
+/**
+ * GET /api/submissions/me/stats
+ *
+ * Retrieves aggregate submission counts for the authenticated student.
+ *
+ * Middleware chain:
+ * 1. authenticate - Verifies JWT token from cookie
+ * 2. authorize("STUDENT") - Ensures user has STUDENT role
+ *
+ * Responses:
+ * - 200 OK: The total and per-status counts for the student
+ * - 401 Unauthorized: Missing or invalid token
+ * - 403 Forbidden: User is not a STUDENT
+ * - 500 Internal Server Error: Unexpected error
+ *
+ * Note: this route must stay registered before any dynamic `/:id` route, so
+ * that "stats" is never interpreted as a submission identifier.
+ */
+router.get(
+  "/me/stats",
+  authenticate,
+  authorize("STUDENT"),
+  getMySubmissionStatsController
 );
 
 /**

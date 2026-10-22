@@ -118,6 +118,14 @@ export const SUBMISSION_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
  */
 export const SUBMISSION_SORT_FIELDS = ["createdAt", "projectName", "status"] as const;
 
+/**
+ * Fields the student submission table may be sorted by.
+ *
+ * Students can sort by the same fields as mentors, but the list is separate
+ * so the student API contract can evolve independently.
+ */
+export const STUDENT_SUBMISSION_SORT_FIELDS = ["createdAt", "projectName", "status"] as const;
+
 /** Supported sort directions. */
 export const SORT_ORDERS = ["asc", "desc"] as const;
 
@@ -166,12 +174,57 @@ export const submissionListQuerySchema = z.object({
 });
 
 /**
+ * Query schema for the student's own submission list.
+ *
+ * Mirrors the mentor list query but without the projectId filter (a student
+ * only sees their own submissions, so project filtering is implicit).
+ */
+export const studentSubmissionListQuerySchema = z.object({
+  page: z.coerce
+    .number({ invalid_type_error: "Page must be a number" })
+    .int("Page must be a whole number")
+    .positive("Page must be greater than 0")
+    .default(1),
+  limit: z.coerce
+    .number({ invalid_type_error: "Limit must be a number" })
+    .int("Limit must be a whole number")
+    .positive("Limit must be greater than 0")
+    .max(MAX_SUBMISSION_LIST_LIMIT, `Limit must be at most ${MAX_SUBMISSION_LIST_LIMIT}`)
+    .default(DEFAULT_SUBMISSION_LIST_LIMIT),
+  status: z.enum(SUBMISSION_STATUSES).optional(),
+  search: z
+    .string()
+    .trim()
+    .max(MAX_SUBMISSION_SEARCH_LENGTH, `Search term must be at most ${MAX_SUBMISSION_SEARCH_LENGTH} characters`)
+    .optional(),
+  sortBy: z.enum(STUDENT_SUBMISSION_SORT_FIELDS).default("createdAt"),
+  sortOrder: z.enum(SORT_ORDERS).default("desc"),
+});
+
+/**
+ * Query schema for student submission stats.
+ *
+ * No parameters — the stats are always for the authenticated student.
+ */
+export const studentSubmissionStatsQuerySchema = z.object({});
+
+/**
  * The normalized list query.
  *
  * This is the single shape the controller passes to the service, so raw query
  * strings are parsed exactly once — in the validation middleware.
  */
 export type SubmissionListQuery = z.infer<typeof submissionListQuerySchema>;
+
+/**
+ * The normalized student submission list query.
+ */
+export type StudentSubmissionListQuery = z.infer<typeof studentSubmissionListQuerySchema>;
+
+/**
+ * The normalized student submission stats query (empty).
+ */
+export type StudentSubmissionStatsQuery = z.infer<typeof studentSubmissionStatsQuerySchema>;
 
 /**
  * Review decisions a mentor may record.

@@ -4,6 +4,8 @@ import { sendPaginatedResponse, sendResponse } from "../../utils/api-response";
 import {
   createSubmissionService,
   getStudentSubmissionsService,
+  getStudentSubmissionsPaginatedService,
+  getStudentSubmissionStatsService,
   getSubmissionsService,
   getSubmissionStatsService,
   resubmitSubmissionService,
@@ -13,6 +15,8 @@ import type {
   ResubmitInput,
   SubmissionIdParams,
   SubmissionListQuery,
+  StudentSubmissionListQuery,
+  StudentSubmissionStatsQuery,
   SubmissionStatusUpdateInput,
 } from "./submission.validations";
 
@@ -69,6 +73,54 @@ export const getMySubmissionController = asyncHandler(
     const submissions = await getStudentSubmissionsService(studentId);
 
     sendResponse(res, 200, "Submissions retrieved", { submissions });
+  }
+);
+
+/**
+ * Retrieves the authenticated student's own submissions with pagination,
+ * filtering, searching and sorting.
+ *
+ * Requires:
+ * - Authentication (handled by authenticate middleware)
+ * - STUDENT role (handled by authorize("STUDENT") middleware)
+ * - Valid query parameters (handled by validate(studentSubmissionListQuerySchema) middleware)
+ *
+ * The query has already been parsed and normalized by the validation
+ * middleware, so the controller only forwards it to the service.
+ *
+ * Returns 200 OK with the requested page of submissions and its pagination
+ * metadata.
+ */
+export const getMySubmissionsPaginatedController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const studentId = req.user!.id;
+    const query = req.query as unknown as StudentSubmissionListQuery;
+
+    const { data, pagination } = await getStudentSubmissionsPaginatedService(
+      studentId,
+      query
+    );
+
+    sendPaginatedResponse(res, 200, "Submissions retrieved", data, pagination);
+  }
+);
+
+/**
+ * Retrieves aggregate submission counts for the authenticated student.
+ *
+ * Requires:
+ * - Authentication (handled by authenticate middleware)
+ * - STUDENT role (handled by authorize("STUDENT") middleware)
+ *
+ * Returns 200 OK with the total and per-status breakdown.
+ */
+export const getMySubmissionStatsController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const studentId = req.user!.id;
+
+    const stats = await getStudentSubmissionStatsService(studentId);
+
+    sendResponse(res, 200, "Submission statistics retrieved", stats);
   }
 );
 

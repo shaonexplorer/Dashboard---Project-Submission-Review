@@ -2,7 +2,7 @@ import { UserRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import type { Prisma, SubmissionStatus } from "../../generated/prisma/client";
 import { ApiError } from "../../utils/api-error";
-import type { ResubmitInput, SubmissionListQuery } from "./submission.validations";
+import type { ResubmitInput, SubmissionListQuery, StudentSubmissionListQuery } from "./submission.validations";
 
 /**
  * Machine-readable discriminators returned alongside a conflicting request.
@@ -234,9 +234,145 @@ export const getStudentSubmissionsService = async (studentId: string) => {
   const submissions = await prisma.submission.findMany({
     where: { studentId },
     orderBy: { createdAt: "desc" },
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          isActive: true,
+        },
+      },
+    },
   });
 
-  return submissions.map(getSafeSubmission);
+  return submissions.map((submission) => ({
+    ...getSafeSubmission(submission),
+    project: {
+      id: submission.project.id,
+      name: submission.project.name,
+      description: submission.project.description,
+      isActive: submission.project.isActive,
+    },
+  }));
+};
+
+/**
+ * Builds the Prisma `where` clause for a student submission list request.
+ *
+ * Status and search combine with AND semantics. A blank search is dropped
+ * rather than turned into a filter that matches nothing.
+ */
+const buildStudentSubmissionWhere = (
+  studentId: string,
+  query: StudentSubmissionListQuery
+): Prisma.SubmissionWhereInput => {
+  const where: Prisma.SubmissionWhereInput = { studentId };
+
+  if (query.status) {
+    where.status = query.status;
+  }
+
+  const search = query.search?.trim();
+  if (search) {
+    where.OR = [
+      { projectName: { contains: search, mode: "insensitive" } },
+      { projectId: { contains: search, mode: "insensitive" } },
+      { repoUrl: { contains: search, mode: "insensitive" } },
+      { liveUrl: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  return where;
+};
+
+/**
+ * Builds the Prisma `orderBy` clause for a student submission list request.
+ *
+ * The field is picked explicitly rather than spread from the client value,
+ * so only whitelisted columns can ever be sorted on.
+ */
+const buildStudentSubmissionOrderBy = (
+  sortBy: StudentSubmissionListQuery["sortBy"],
+  sortOrder: StudentSubmissionListQuery["sortOrder"]
+): Prisma.SubmissionOrderByWithRelationInput => {
+  if (sortBy === "projectName") {
+    return { projectName: sortOrder };
+  }
+
+  if (sortBy === "status") {
+    return { status: sortOrder };
+  }
+
+  return { createdAt: sortOrder };
+};
+
+/**
+ * Lists submissions for the student's own table.
+ *
+ * Every table operation — pagination, filtering, searching and sorting — is
+ * performed by the database. The rows are never fetched in full and filtered
+ * in application memory.
+ *
+ * Authorization is enforced by the `authorize("STUDENT")` middleware on the
+ * route, before this service is reached.
+ *
+ * @param studentId - ID of the authenticated student
+ * @param query - The normalized list query (already validated)
+ * @returns The requested page of submissions plus its pagination metadata
+ */
+export const getStudentSubmissionsPaginatedService = async (
+  studentId: string,
+  query: StudentSubmissionListQuery
+) => {
+  const { page, limit, sortBy, sortOrder } = query;
+
+  const where = buildStudentSubmissionWhere(studentId, query);
+  const orderBy = buildStudentSubmissionOrderBy(sortBy, sortOrder);
+  const skip = (page - 1) * limit;
+
+  // The list and the count share one `where` clause, so the pagination
+  // metadata always describes the same data set the rows came from.
+  const [submissions, total] = await Promise.all([
+    prisma.submission.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            isActive: true,
+          },
+        },
+      },
+    }),
+    prisma.submission.count({ where }),
+  ]);
+
+  const data = submissions.map((submission) => ({
+    ...getSafeSubmission(submission),
+    project: {
+      id: submission.project.id,
+      name: submission.project.name,
+      description: submission.project.description,
+      isActive: submission.project.isActive,
+    },
+  }));
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 /**
@@ -482,7 +618,28 @@ export type SubmissionStats = {
 };
 
 /**
- * Aggregates submission counts by status.
+ * The aggregate counts for a student's own submissions.
+ *
+ * Includes "active" (pending/in-review) and "archived" (approved + rejected)
+ * to match the UI status filter tabs.
+ */
+export type StudentSubmissionStats = {
+  /** Every submission the student has made. */
+  total: number;
+  /** Submissions currently under review (PENDING). */
+  pending: number;
+  /** Alias for pending — shown as "Active / In Progress" in UI. */
+  active: number;
+  /** Submissions that have been approved. */
+  approved: number;
+  /** Submissions that have been rejected (changes required). */
+  rejected: number;
+  /** Alias for approved + rejected — shown as "Archived" in UI. */
+  archived: number;
+};
+
+/**
+ * Aggregates submission counts by status for the mentor dashboard.
  *
  * Both readings come from the database and are issued together, so the
  * endpoint waits for one round of database work rather than two sequential
@@ -526,6 +683,54 @@ export const getSubmissionStatsService = async (): Promise<SubmissionStats> => {
       stats.approved = count;
     } else if (group.status === "REJECTED") {
       stats.rejected = count;
+    }
+  }
+
+  return stats;
+};
+
+/**
+ * Aggregates submission counts for the authenticated student.
+ *
+ * Performs a single grouped count query filtered by studentId, then derives
+ * the UI-friendly counts (active = pending, archived = approved + rejected).
+ *
+ * @param studentId - ID of the authenticated student
+ * @returns The total and per-status breakdown for the student
+ */
+export const getStudentSubmissionStatsService = async (
+  studentId: string
+): Promise<StudentSubmissionStats> => {
+  const [total, groups] = await Promise.all([
+    prisma.submission.count({ where: { studentId } }),
+    prisma.submission.groupBy({
+      by: ["status"],
+      where: { studentId },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const stats: StudentSubmissionStats = {
+    total,
+    pending: 0,
+    active: 0,
+    approved: 0,
+    rejected: 0,
+    archived: 0,
+  };
+
+  for (const group of groups) {
+    const count = group._count._all;
+
+    if (group.status === "PENDING") {
+      stats.pending = count;
+      stats.active = count; // Active = pending for student view
+    } else if (group.status === "APPROVED") {
+      stats.approved = count;
+      stats.archived += count;
+    } else if (group.status === "REJECTED") {
+      stats.rejected = count;
+      stats.archived += count;
     }
   }
 

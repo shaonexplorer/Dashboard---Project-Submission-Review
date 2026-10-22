@@ -1,11 +1,16 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createSubmissionApi,
   getMySubmissionsApi,
+  getMySubmissionsPaginatedApi,
+  getMySubmissionStatsApi,
   resubmitSubmissionApi,
   type Submission,
+  type StudentSubmissionListQuery,
+  type StudentSubmissionStats,
+  type PaginatedSubmissionsResponse,
 } from "@/lib/api/submissions";
 import { ApiRequestError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/query-keys";
@@ -29,6 +34,31 @@ export function useMySubmissions() {
     // query should never be served from a stale cache after a navigation.
     staleTime: 0,
     // A 401/403 will not succeed on retry — surface the error immediately.
+    retry: false,
+  });
+}
+
+/**
+ * Loads one page of the student's own submission table with server-side
+ * pagination, filtering, searching and sorting.
+ *
+ * The query key carries the whole table state, so changing the page, the
+ * status filter, the search term or the sorting produces a different key and
+ * therefore a new server request. The rows of the previous page stay on screen
+ * while the next one is loading, which keeps the layout stable without ever
+ * showing stale rows as if they were the new result.
+ */
+export function useMySubmissionsPaginated(query: StudentSubmissionListQuery) {
+  return useQuery<PaginatedSubmissionsResponse>({
+    queryKey: queryKeys.mySubmissionsPaginated(query),
+    queryFn: () => getMySubmissionsPaginatedApi(query),
+    enabled: hasToken(),
+    // Keep the previous page visible while the next one loads, instead of
+    // collapsing the table into a skeleton on every interaction.
+    placeholderData: keepPreviousData,
+    // The server is the source of truth for the queue, so the table is
+    // re-read whenever the dashboard is opened.
+    staleTime: 0,
     retry: false,
   });
 }
@@ -87,5 +117,20 @@ export function useResubmitSubmission() {
       );
       void queryClient.invalidateQueries({ queryKey: queryKeys.mySubmissions });
     },
+  });
+}
+
+/**
+ * Fetches aggregate submission counts for the authenticated student.
+ *
+ * Used for the metric cards and status filter tab counts.
+ */
+export function useMySubmissionStats() {
+  return useQuery<StudentSubmissionStats>({
+    queryKey: queryKeys.mySubmissionsStats,
+    queryFn: getMySubmissionStatsApi,
+    enabled: hasToken(),
+    staleTime: 30 * 1000, // 30 seconds - stats don't change often
+    retry: false,
   });
 }

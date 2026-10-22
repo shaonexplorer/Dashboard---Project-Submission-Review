@@ -15,6 +15,19 @@ export const queryKeys = {
    */
   mySubmissions: ["mySubmissions"] as const,
   /**
+   * Cache entry for the student's submission statistics.
+   */
+  mySubmissionsStats: ["mySubmissions", "stats"] as const,
+  /**
+   * A single page of the student's own submission table.
+   *
+   * The whole query state is part of the key — page, limit, search, status,
+   * sort field and sort direction — so every change of server-controlled state
+   * produces a different cache entry and therefore a new server request.
+   */
+  mySubmissionsPaginated: <T extends object>(query: T) =>
+    ["mySubmissions", "paginated", query] as const,
+  /**
    * The project catalog.
    *
    * The catalog is read-only and effectively static, so it lives under its

@@ -52,5 +52,5 @@ coverage/
 .claude
 .windsurf
 
-specs/
-screens/
+# specs/
+# screens/
