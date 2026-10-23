@@ -34,8 +34,11 @@ yarn-error.log*
 Thumbs.db
 
 # Prisma
-prisma/migrations/dev/
-migrations/
+# The migration history under server/prisma/migrations is tracked on purpose:
+# it is the only record of the schema, and the data backfill that moves
+# existing submissions onto the legacy catalog entry. Only Prisma's local
+# scratch folder is ignored.
+**/migrations/dev/
 
 # TypeScript
 *.tsbuildinfo
@@ -49,5 +52,5 @@ coverage/
 .claude
 .windsurf
 
-specs/
-screens/
+# specs/
+# screens/

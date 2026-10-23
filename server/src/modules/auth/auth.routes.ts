@@ -2,6 +2,7 @@ import express from "express";
 
 import { validate } from "../../middleware/validate.middleware";
 import { authenticate } from "./auth.middleware";
+import { authRateLimiter } from "../../middleware/authRateLimiter.middleware";
 import {
   loginController,
   meController,
@@ -13,11 +14,12 @@ const router = express.Router();
 
 router.post(
   "/signup",
+  authRateLimiter,
   validate(signupSchema, "body"),
   signupController
 );
 
-router.post("/login", validate(loginSchema, "body"), loginController);
+router.post("/login", authRateLimiter, validate(loginSchema, "body"), loginController);
 
 router.get("/me", authenticate, meController);
 

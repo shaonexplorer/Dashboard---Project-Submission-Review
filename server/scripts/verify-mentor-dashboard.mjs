@@ -123,7 +123,9 @@ const signup = await call("POST", "/auth/signup", {
   password: PASSWORD,
 });
 
-if (signup.status === 409) {
+// The signup endpoint answers `400` for an address that is already taken, so
+// a repeat run signs the existing probe in instead of creating it again.
+if (signup.status === 400 || signup.status === 409) {
   const studentLogin = await call("POST", "/auth/login", {
     email: probeEmail,
     password: PASSWORD,

@@ -2,7 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import type { MentorSubmission, ReviewDecision } from "@/lib/api/mentor-submissions";
+import type {
+  MentorSubmission,
+  ReviewDecision,
+} from "@/lib/api/mentor-submissions";
 
 export interface SubmissionActionsProps {
   /** The row the actions belong to. */
@@ -19,10 +22,7 @@ export interface SubmissionActionsProps {
   /** Opens the review drawer for this submission. */
   onReview: (submission: MentorSubmission) => void;
   /** Records a decision for this submission. */
-  onDecision: (
-    submission: MentorSubmission,
-    decision: ReviewDecision,
-  ) => void;
+  onDecision: (submission: MentorSubmission, decision: ReviewDecision) => void;
 }
 
 /**
@@ -44,7 +44,7 @@ export function SubmissionActions({
 
   return (
     <div className="flex items-center justify-end gap-1.5">
-      {isPending ? (
+      {/* {isPending ? (
         <>
           <Button
             size="sm"
@@ -85,7 +85,7 @@ export function SubmissionActions({
             Reject
           </Button>
         </>
-      ) : null}
+      ) : null} */}
 
       <Button
         size="sm"

@@ -1,6 +1,7 @@
 import express from "express";
 
 import authRoutes from "../modules/auth/auth.routes";
+import projectRoutes from "../modules/project/project.routes";
 import submissionRoutes from "../modules/submission/submission.routes";
 
 const router = express.Router();
@@ -21,6 +22,9 @@ router.use("/auth", authRoutes);
 
 // Submission routes
 router.use("/submissions", submissionRoutes);
+
+// Project catalog routes
+router.use("/projects", projectRoutes);
 
 
 export default router;

@@ -1,21 +1,37 @@
 import { z } from "zod";
+import { projectIdSchema } from "../project/project.validations";
+
+/**
+ * Longest repository or live URL the API accepts.
+ *
+ * Both URLs are bounded: a submission row should hold a link a human can read
+ * and copy, not an arbitrarily long string that no browser renders usefully.
+ */
+export const MAX_SUBMISSION_URL_LENGTH = 150;
 
 /**
  * Input validation schema for project submission.
  *
- * All four fields are required and must be valid URLs where applicable.
+ * The project is no longer a free-text field: the client names a catalog
+ * entry by its code and the server writes the display name itself. The three
+ * deliverable fields are required and must be valid URLs where applicable.
  * Strings are trimmed to reject whitespace-only input.
+ *
+ * Unknown keys are stripped rather than rejected, so a stale client that
+ * still sends `projectName` is simply ignored on that key — but because
+ * `projectId` is required, such a request still fails with a field error
+ * pointing at `projectId`.
  */
 export const submissionSchema = z.object({
-  projectName: z
-    .string()
-    .trim()
-    .min(1, "Project name is required")
-    .max(150, "Project name must be at most 150 characters"),
+  projectId: projectIdSchema,
   repoUrl: z
     .string()
     .trim()
     .min(1, "Repository URL is required")
+    .max(
+      MAX_SUBMISSION_URL_LENGTH,
+      `Repository URL must be at most ${MAX_SUBMISSION_URL_LENGTH} characters`
+    )
     .url("Repository URL must be a valid URL")
     .refine(
       (url) => {
@@ -43,6 +59,10 @@ export const submissionSchema = z.object({
     .string()
     .trim()
     .min(1, "Live URL is required")
+    .max(
+      MAX_SUBMISSION_URL_LENGTH,
+      `Live URL must be at most ${MAX_SUBMISSION_URL_LENGTH} characters`
+    )
     .url("Live URL must be a valid URL")
     .refine(
       (url) => {
@@ -65,6 +85,24 @@ export const submissionSchema = z.object({
 export type SubmissionInput = z.infer<typeof submissionSchema>;
 
 /**
+ * Body schema for resubmitting an already-rejected submission.
+ *
+ * A resubmission replaces the deliverable of an existing row. The project is
+ * not part of it: a resubmission always stays on the project it was made
+ * for, so the catalog code cannot be swapped here.
+ */
+export const resubmitSchema = z.object({
+  repoUrl: submissionSchema.shape.repoUrl,
+  liveUrl: submissionSchema.shape.liveUrl,
+  description: submissionSchema.shape.description,
+});
+
+/**
+ * The normalized resubmission payload.
+ */
+export type ResubmitInput = z.infer<typeof resubmitSchema>;
+
+/**
  * Statuses a mentor can filter the submission list by.
  *
  * Mirrors the Prisma `SubmissionStatus` enum.
@@ -79,6 +117,14 @@ export const SUBMISSION_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
  * database.
  */
 export const SUBMISSION_SORT_FIELDS = ["createdAt", "projectName", "status"] as const;
+
+/**
+ * Fields the student submission table may be sorted by.
+ *
+ * Students can sort by the same fields as mentors, but the list is separate
+ * so the student API contract can evolve independently.
+ */
+export const STUDENT_SUBMISSION_SORT_FIELDS = ["createdAt", "projectName", "status"] as const;
 
 /** Supported sort directions. */
 export const SORT_ORDERS = ["asc", "desc"] as const;
@@ -117,6 +163,7 @@ export const submissionListQuerySchema = z.object({
     .max(MAX_SUBMISSION_LIST_LIMIT, `Limit must be at most ${MAX_SUBMISSION_LIST_LIMIT}`)
     .default(DEFAULT_SUBMISSION_LIST_LIMIT),
   status: z.enum(SUBMISSION_STATUSES).optional(),
+  projectId: projectIdSchema.optional(),
   search: z
     .string()
     .trim()
@@ -127,12 +174,57 @@ export const submissionListQuerySchema = z.object({
 });
 
 /**
+ * Query schema for the student's own submission list.
+ *
+ * Mirrors the mentor list query but without the projectId filter (a student
+ * only sees their own submissions, so project filtering is implicit).
+ */
+export const studentSubmissionListQuerySchema = z.object({
+  page: z.coerce
+    .number({ invalid_type_error: "Page must be a number" })
+    .int("Page must be a whole number")
+    .positive("Page must be greater than 0")
+    .default(1),
+  limit: z.coerce
+    .number({ invalid_type_error: "Limit must be a number" })
+    .int("Limit must be a whole number")
+    .positive("Limit must be greater than 0")
+    .max(MAX_SUBMISSION_LIST_LIMIT, `Limit must be at most ${MAX_SUBMISSION_LIST_LIMIT}`)
+    .default(DEFAULT_SUBMISSION_LIST_LIMIT),
+  status: z.enum(SUBMISSION_STATUSES).optional(),
+  search: z
+    .string()
+    .trim()
+    .max(MAX_SUBMISSION_SEARCH_LENGTH, `Search term must be at most ${MAX_SUBMISSION_SEARCH_LENGTH} characters`)
+    .optional(),
+  sortBy: z.enum(STUDENT_SUBMISSION_SORT_FIELDS).default("createdAt"),
+  sortOrder: z.enum(SORT_ORDERS).default("desc"),
+});
+
+/**
+ * Query schema for student submission stats.
+ *
+ * No parameters — the stats are always for the authenticated student.
+ */
+export const studentSubmissionStatsQuerySchema = z.object({});
+
+/**
  * The normalized list query.
  *
  * This is the single shape the controller passes to the service, so raw query
  * strings are parsed exactly once — in the validation middleware.
  */
 export type SubmissionListQuery = z.infer<typeof submissionListQuerySchema>;
+
+/**
+ * The normalized student submission list query.
+ */
+export type StudentSubmissionListQuery = z.infer<typeof studentSubmissionListQuerySchema>;
+
+/**
+ * The normalized student submission stats query (empty).
+ */
+export type StudentSubmissionStatsQuery = z.infer<typeof studentSubmissionStatsQuerySchema>;
 
 /**
  * Review decisions a mentor may record.

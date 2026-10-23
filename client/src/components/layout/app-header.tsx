@@ -14,13 +14,12 @@ interface NavItem {
 const NAV_BY_ROLE: Record<string, NavItem[]> = {
   STUDENT: [
     { label: "Dashboard", href: "/student/dashboard" },
-    { label: "My Projects" },
-    { label: "Submissions", href: "/student/submission" },
-    { label: "Rubrics" },
+    { label: "My Projects", href: "/student/my-projects" },
+    // { label: "Rubrics" },
   ],
   MENTOR: [
     { label: "Dashboard", href: "/mentor/dashboard" },
-    { label: "Review Queue" },
+    // { label: "Review Queue" },
     { label: "Rubrics" },
   ],
 };
@@ -45,7 +44,11 @@ export function AppHeader() {
       <div className="h-16 max-w-[1440px] mx-auto px-8 flex items-center justify-between gap-6">
         <div className="flex items-center gap-8">
           <Link
-            href={user?.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard"}
+            href={
+              user?.role === "MENTOR"
+                ? "/mentor/dashboard"
+                : "/student/dashboard"
+            }
             className="flex items-center gap-2"
           >
             <div className="size-8 rounded-lg bg-primary flex items-center justify-center">
@@ -87,7 +90,7 @@ export function AppHeader() {
                     "px-4 py-1 rounded-lg text-label-md transition-colors",
                     isActive
                       ? "bg-surface-container-high text-on-surface font-medium"
-                      : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
+                      : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface",
                   )}
                 >
                   {item.label}

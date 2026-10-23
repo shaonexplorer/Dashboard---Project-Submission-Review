@@ -1,6 +1,14 @@
 import { z } from "zod";
 
 /**
+ * Longest repository or live URL the API accepts.
+ *
+ * Mirrors `MAX_SUBMISSION_URL_LENGTH` in
+ * `server/src/modules/submission/submission.validations.ts`.
+ */
+export const MAX_SUBMISSION_URL_LENGTH = 150;
+
+/**
  * Client-side submission schema.
  *
  * This mirrors `server/src/modules/submission/submission.validations.ts` exactly
@@ -10,15 +18,25 @@ import { z } from "zod";
  * The backend remains authoritative — this schema exists for fast UX feedback.
  */
 export const submissionSchema = z.object({
-  projectName: z
+  /**
+   * The catalog code of the project being submitted.
+   *
+   * The project is no longer typed in by hand: the student picks an entry
+   * from the catalog and the server writes the display name itself.
+   */
+  projectId: z
     .string()
     .trim()
-    .min(1, "Project name is required")
-    .max(150, "Project name must be at most 150 characters"),
+    .min(1, "Project is required")
+    .max(50, "Project code must be at most 50 characters"),
   repoUrl: z
     .string()
     .trim()
     .min(1, "Repository URL is required")
+    .max(
+      MAX_SUBMISSION_URL_LENGTH,
+      `Repository URL must be at most ${MAX_SUBMISSION_URL_LENGTH} characters`
+    )
     .url("Repository URL must be a valid URL")
     .refine(
       (url) => {
@@ -46,6 +64,10 @@ export const submissionSchema = z.object({
     .string()
     .trim()
     .min(1, "Live URL is required")
+    .max(
+      MAX_SUBMISSION_URL_LENGTH,
+      `Live URL must be at most ${MAX_SUBMISSION_URL_LENGTH} characters`
+    )
     .url("Live URL must be a valid URL")
     .refine(
       (url) => {
@@ -67,8 +89,22 @@ export const submissionSchema = z.object({
 
 export type SubmissionFormValues = z.infer<typeof submissionSchema>;
 
-/** Maximum length of the project name, used for the field hint. */
-export const PROJECT_NAME_MAX_LENGTH = 150;
+/**
+ * Client-side resubmission schema.
+ *
+ * The same three deliverable rules as the create form, without the project:
+ * a resubmission always stays on the project the submission was made for.
+ */
+export const resubmitSchema = z.object({
+  repoUrl: submissionSchema.shape.repoUrl,
+  liveUrl: submissionSchema.shape.liveUrl,
+  description: submissionSchema.shape.description,
+});
+
+export type ResubmitFormValues = z.infer<typeof resubmitSchema>;
+
+/** Maximum length of the project code, used for the field hint. */
+export const PROJECT_ID_MAX_LENGTH = 50;
 
 /** Maximum length of the description, used for the character counter. */
 export const DESCRIPTION_MAX_LENGTH = 5000;

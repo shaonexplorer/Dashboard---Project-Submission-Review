@@ -4,14 +4,12 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/use-auth";
-import { useMySubmission } from "@/hooks/use-submissions";
+import { useMySubmissions } from "@/hooks/use-submissions";
 import { AppFooter, AppHeader } from "@/components/layout";
 import {
   EvaluationRubricCard,
   PreflightCriteriaCard,
   StudentSubmissionForm,
-  SubmittedProjectCard,
-  SubmissionLoadError,
   SubmissionSnapshotCard,
 } from "@/components/student";
 import { Button } from "@/components/ui/button";
@@ -26,13 +24,9 @@ export default function StudentDashboardPage() {
   // so the two always produce the same markup.
   const { user, isResolving: isUserResolving } = useCurrentUser();
   const {
-    data: submission,
-    isPending: isSubmissionPending,
-    isError: isSubmissionError,
+    data: submissions = [],
     error: submissionError,
-    refetch: refetchSubmission,
-    isFetching: isRefetching,
-  } = useMySubmission();
+  } = useMySubmissions();
 
   // An expired session is handled by the authentication flow, not by the page.
   useEffect(() => {
@@ -107,9 +101,9 @@ export default function StudentDashboardPage() {
 
       <main className="flex-1 w-full pt-16">
         <div className="max-w-[1440px] w-full mx-auto px-6 py-10 flex flex-col gap-6">
-          <PageHeader submission={submission} />
+          <PageHeader submissions={submissions} />
 
-          {/* One-time submission policy */}
+          {/* Submission policy */}
           <div className="p-4 rounded-lg bg-surface-container-lowest border border-surface-container-high/80 flex items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <span
@@ -120,10 +114,10 @@ export default function StudentDashboardPage() {
               </span>
               <p className="text-body-sm text-on-surface-variant">
                 <strong className="text-on-surface font-medium">
-                  One-time Submission Policy:
+                  One Submission per Project:
                 </strong>{" "}
-                You can submit only one project. Once submitted, the repository
-                link locks and rubric assessment starts.
+                You may hand in any project from the catalog, once per project.
+                If a project comes back rejected, you can resubmit it.
               </p>
             </div>
           </div>
@@ -131,24 +125,12 @@ export default function StudentDashboardPage() {
           {/* Main content grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-8">
             <div className="lg:col-span-7 flex flex-col gap-6 min-w-0">
-              {isSubmissionPending ? (
-                <FormSkeleton />
-              ) : isSubmissionError ? (
-                <SubmissionLoadError
-                  error={submissionError}
-                  onRetry={() => void refetchSubmission()}
-                  isRetrying={isRefetching}
-                />
-              ) : submission ? (
-                <SubmittedProjectCard submission={submission} />
-              ) : (
-                <StudentSubmissionForm />
-              )}
+              <StudentSubmissionForm />
             </div>
 
             <aside className="lg:col-span-5 flex flex-col gap-6">
-              {submission ? (
-                <SubmissionSnapshotCard submission={submission} />
+              {submissions.length > 0 ? (
+                <SubmissionSnapshotCard submissions={submissions} />
               ) : (
                 <PreflightCriteriaCard />
               )}
@@ -177,8 +159,9 @@ export default function StudentDashboardPage() {
  * Every value shown here comes from the server — no cohort, deadline or mentor
  * assignment is invented.
  */
-function PageHeader({ submission }: { submission?: Submission | null }) {
-  const hasSubmission = Boolean(submission);
+function PageHeader({ submissions }: { submissions: Submission[] }) {
+  const hasSubmission = submissions.length > 0;
+  const latest = submissions[0];
 
   return (
     <header className="pb-8 border-b border-surface-container-high/60">
@@ -188,7 +171,9 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
           <span className="text-outline" aria-hidden="true">
             /
           </span>
-          <span className="text-on-surface font-medium">Project Submission</span>
+          <span className="text-on-surface font-medium">
+            Project Submission
+          </span>
         </div>
         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-surface-container-low border border-surface-container-high/60 font-code-sm text-code-sm text-secondary uppercase tracking-wider">
           <span
@@ -211,15 +196,17 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
                 }`}
                 aria-hidden="true"
               />
-              {hasSubmission ? "Submitted" : "Unsubmitted"}
+              {hasSubmission
+                ? `${submissions.length} submitted`
+                : "Unsubmitted"}
             </span>
-            {submission ? (
+            {latest ? (
               <>
                 <span className="text-outline font-code-sm text-code-sm" aria-hidden="true">
                   ·
                 </span>
                 <span className="font-code-sm text-code-sm text-secondary">
-                  Submitted {formatUtcDateTime(submission.submittedAt)}
+                  Latest {formatUtcDateTime(latest.submittedAt)}
                 </span>
               </>
             ) : null}
@@ -231,17 +218,17 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
           <p className="text-body-md text-on-surface-variant mt-1.5">
             {hasSubmission ? (
               <>
-                Your project has been handed in.{" "}
+                Your projects have been handed in.{" "}
                 <Link
                   href="/student/submission"
                   className="text-primary font-medium hover:underline"
                 >
-                  View the full submission
+                  View the full submissions
                 </Link>
                 .
               </>
             ) : (
-              "You haven't submitted a project yet. Hand it in below and track its evaluation status here."
+              "You haven't submitted a project yet. Pick one from the catalog below and hand it in."
             )}
           </p>
         </div>
@@ -249,19 +236,19 @@ function PageHeader({ submission }: { submission?: Submission | null }) {
         <div className="hidden lg:flex items-center gap-6 px-4 py-3 rounded-lg bg-surface-container-lowest border border-surface-container-high/60">
           <div className="flex flex-col">
             <span className="font-code-sm text-code-sm text-secondary">
-              {hasSubmission ? "SUBMISSION STATUS" : "SUBMISSION LIMIT"}
+              PROJECTS SUBMITTED
             </span>
             <span className="font-label-md text-label-md text-on-surface font-semibold">
-              {hasSubmission ? (submission?.status ?? "—") : "1 project"}
+              {submissions.length}
             </span>
           </div>
           <div className="w-px h-8 bg-surface-container-high/60" aria-hidden="true" />
           <div className="flex flex-col">
             <span className="font-code-sm text-code-sm text-secondary">
-              {hasSubmission ? "SUBMITTED AT" : "REVIEW CYCLE"}
+              {hasSubmission ? "LATEST STATUS" : "REVIEW CYCLE"}
             </span>
             <span className="font-label-md text-label-md text-primary font-medium">
-              {submission ? formatUtcDateTime(submission.submittedAt) : "Standard"}
+              {latest ? latest.status : "Standard"}
             </span>
           </div>
         </div>

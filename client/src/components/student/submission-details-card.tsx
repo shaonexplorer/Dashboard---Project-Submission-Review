@@ -7,7 +7,8 @@ import { SubmissionStatusBadge } from "./submission-status-badge";
  * Read-only view of the submitted project.
  *
  * Everything shown here comes from the API response — the project name, the
- * description, both links, the status and the moment the project was handed in.
+ * catalog code, the description, both links, the status and the moment the
+ * project was handed in.
  */
 export function SubmissionDetailsCard({ submission }: { submission: Submission }) {
   return (
@@ -24,9 +25,19 @@ export function SubmissionDetailsCard({ submission }: { submission: Submission }
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className="text-headline-lg text-on-surface tracking-tight">
-          {submission.projectName}
-        </h3>
+        {/*
+          The catalog code is the project's identity in every other view — it
+          is what the mentor table shows and what the student and the mentor
+          quote to each other — so it is shown here too, next to the name.
+        */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="px-2 py-0.5 rounded bg-surface-container font-code-sm text-code-sm uppercase font-semibold text-secondary">
+            {submission.projectId}
+          </span>
+          <h3 className="text-headline-lg text-on-surface tracking-tight">
+            {submission.projectName}
+          </h3>
+        </div>
         <p className="text-body-md text-on-surface-variant leading-relaxed">
           {submission.description}
         </p>

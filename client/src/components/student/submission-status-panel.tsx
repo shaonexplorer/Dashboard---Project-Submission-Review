@@ -44,19 +44,27 @@ const STATUS_PANEL: Record<SubmissionStatus, StatusPanel> = {
 /**
  * Status banner for the submission.
  *
- * Combines the headline for the current status, the lifecycle stepper and the
- * read-only notice. The status itself always comes from the API — the banner
- * only describes it.
+ * Combines the headline for the current status, the lifecycle stepper and
+ * the read-only notice. The status itself always comes from the API — the
+ * banner only describes it.
+ *
+ * A rejected submission is the one state in which the deliverable can be
+ * replaced, so the read-only notice is swapped for an explanation of how to
+ * resubmit.
  */
 export function SubmissionStatusPanel({
   status,
   hasFeedback,
+  attempt = 1,
 }: {
   status: SubmissionStatus;
   /** Whether mentor feedback is available, used to refine the copy. */
   hasFeedback?: boolean;
+  /** Which attempt this is, used to name the next one. */
+  attempt?: number;
 }) {
   const panel = STATUS_PANEL[status] ?? STATUS_PANEL.PENDING;
+  const isRejected = status === "REJECTED";
 
   return (
     <div
@@ -82,6 +90,9 @@ export function SubmissionStatusPanel({
           <div className="flex items-center gap-3 flex-wrap">
             <h2 className="text-headline-md text-on-surface">{panel.title}</h2>
             <SubmissionStatusBadge status={status} />
+            <span className="px-2 py-0.5 rounded bg-surface-container-lowest/70 text-on-surface font-code-sm text-code-sm">
+              Attempt {attempt}
+            </span>
           </div>
           <p className="text-body-md text-on-surface-variant">
             {panel.body}
@@ -92,17 +103,20 @@ export function SubmissionStatusPanel({
 
       <LifecycleStepper status={status} />
 
-      {/* Read-only lock notice */}
+      {/* A rejected submission can be replaced; every other state is sealed. */}
       <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-high/60 text-on-surface">
         <span
           className="material-symbols-outlined text-secondary text-[16px]"
           aria-hidden="true"
         >
-          lock
+          {isRejected ? "sync" : "lock"}
         </span>
         <span className="text-body-sm text-on-surface-variant">
-          Projects cannot be edited after submission. Your record is sealed once
-          a mentor completes the review.
+          {isRejected
+            ? `This deliverable can be replaced. Sending changes starts attempt ${
+                attempt + 1
+              } and puts the project back in the review queue.`
+            : "Projects cannot be edited after submission. Your record is sealed once a mentor completes the review."}
         </span>
       </div>
     </div>

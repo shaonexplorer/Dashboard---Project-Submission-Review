@@ -15,3 +15,22 @@ export {
 } from "./submission-status-badge";
 export { PreflightCriteriaCard } from "./preflight-criteria-card";
 export { EvaluationRubricCard } from "./evaluation-rubric-card";
+export {
+  ProjectPicker,
+  buildProjectOptions,
+  getProjectOptionState,
+  type ProjectOptionState,
+  type ProjectPickerOption,
+} from "./project-picker";
+export { ResubmitForm } from "./resubmit-form";
+export { MetricCard } from "./metric-card";
+export { StatusFilterTabs } from "./status-filter-tabs";
+export { SearchFilterBar } from "./search-filter-bar";
+export { StudentProjectsTable } from "./student-projects-table";
+export { TablePagination } from "./table-pagination";
+export { KeyboardShortcutsStrip } from "./keyboard-shortcuts-strip";
+export { AcademicIntegrityCard } from "./academic-integrity-card";
+export { NewSubmissionModal } from "./new-submission-modal";
+export { SubmissionDetailHeader } from "./submission-detail-header";
+export { SubmissionIntegrityChecks } from "./submission-integrity-checks";
+export { SubmissionRubricBreakdown } from "./submission-rubric-breakdown";

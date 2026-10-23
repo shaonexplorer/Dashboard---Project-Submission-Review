@@ -39,6 +39,7 @@ export function formatUtcDateTime(
   }).format(date);
 
   return `${day}, ${time} UTC`;
+  // return `${day}`;
 }
 
 /**

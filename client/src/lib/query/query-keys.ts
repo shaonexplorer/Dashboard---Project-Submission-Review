@@ -7,13 +7,34 @@
 export const queryKeys = {
   currentUser: ["currentUser"] as const,
   /**
-   * Canonical cache entry for the authenticated student's own submission.
+   * Canonical cache entry for the authenticated student's own submissions.
    *
    * The key is part of the submission contract: the query that loads the
-   * submission and every mutation that changes it must target this exact key,
-   * otherwise the UI can drift away from the backend.
+   * submissions and every mutation that changes them must target this exact
+   * key, otherwise the UI can drift away from the backend.
    */
-  mySubmission: ["mySubmission"] as const,
+  mySubmissions: ["mySubmissions"] as const,
+  /**
+   * Cache entry for the student's submission statistics.
+   */
+  mySubmissionsStats: ["mySubmissions", "stats"] as const,
+  /**
+   * A single page of the student's own submission table.
+   *
+   * The whole query state is part of the key — page, limit, search, status,
+   * sort field and sort direction — so every change of server-controlled state
+   * produces a different cache entry and therefore a new server request.
+   */
+  mySubmissionsPaginated: <T extends object>(query: T) =>
+    ["mySubmissions", "paginated", query] as const,
+  /**
+   * The project catalog.
+   *
+   * The catalog is read-only and effectively static, so it lives under its
+   * own key: invalidating the student's submissions must not force the picker
+   * to refetch the catalog.
+   */
+  projects: ["projects"] as const,
   /**
    * Root key of the mentor dashboard data.
    *
@@ -35,4 +56,9 @@ export const queryKeys = {
    * The aggregate counts shown in the statistics cards.
    */
   mentorSubmissionStats: ["mentorDashboard", "submissionStats"] as const,
+  /**
+   * A single submission by ID for the detail page.
+   */
+  submissionById: (submissionId: string | undefined) =>
+    ["submission", "byId", submissionId] as const,
 } as const;

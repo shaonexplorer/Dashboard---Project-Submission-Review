@@ -12,12 +12,36 @@ import { formatUtcDateTime } from "@/lib/format";
  * Only data the API returns is shown: the review timestamp comes from
  * `reviewedAt`, and the notes come from `feedback`. No reviewer identity or
  * score is displayed, because the student-facing contract does not expose one.
+ *
+ * A resubmission keeps the previous review on the row, so the notes describe
+ * an attempt that is no longer the current one. When that is the case the
+ * notes are labelled as belonging to the previous attempt rather than being
+ * presented as if they were the current verdict.
  */
 export function MentorFeedbackCard({ submission }: { submission: Submission }) {
   const isRejected = submission.status === "REJECTED";
   const notes = submission.feedback?.trim() ?? "";
   const hasNotes = notes.length > 0;
   const hasReviewDate = Boolean(submission.reviewedAt);
+  /**
+   * The retained notes belong to an earlier attempt only while the review
+   * recorded on the row predates the latest hand-in.
+   *
+   * A resubmission keeps the previous review on the row, so between the
+   * resubmission and the next review the notes are the old ones. Once a
+   * mentor reviews the new attempt, `reviewedAt` moves past `resubmittedAt`
+   * and the notes belong to the attempt that is on screen — the attempt
+   * counter alone cannot tell the two apart, because it stays at the same
+   * value across both.
+   */
+  const isFromPreviousAttempt =
+    submission.attempt > 1 &&
+    submission.resubmittedAt !== null &&
+    submission.reviewedAt !== null &&
+    new Date(submission.reviewedAt).getTime() <
+      new Date(submission.resubmittedAt).getTime();
+  /** The attempt the retained notes were written for. */
+  const notesAttempt = isFromPreviousAttempt ? submission.attempt - 1 : submission.attempt;
 
   return (
     <div className="rounded-xl bg-surface-container-lowest p-6 md:p-8 shadow-sm flex flex-col gap-6">
@@ -40,16 +64,22 @@ export function MentorFeedbackCard({ submission }: { submission: Submission }) {
           <div>
             <h3 className="text-headline-sm text-on-surface">Mentor Feedback</h3>
             <p className="text-label-sm text-secondary">
-              {hasReviewDate
-                ? "Verified assessment record"
-                : "Awaiting a mentor assessment"}
+              {isFromPreviousAttempt
+                ? `Assessment of attempt ${notesAttempt}`
+                : hasReviewDate
+                  ? "Verified assessment record"
+                  : "Awaiting a mentor assessment"}
             </p>
           </div>
         </div>
 
         <span className="text-code-sm text-secondary">
           {hasReviewDate
-            ? `Reviewed ${formatUtcDateTime(submission.reviewedAt)}`
+            ? `${
+                isFromPreviousAttempt
+                  ? `Attempt ${notesAttempt} reviewed`
+                  : "Reviewed"
+              } ${formatUtcDateTime(submission.reviewedAt)}`
             : "Not reviewed yet"}
         </span>
       </div>
@@ -62,6 +92,11 @@ export function MentorFeedbackCard({ submission }: { submission: Submission }) {
             }`}
             aria-hidden="true"
           />
+          {isFromPreviousAttempt ? (
+            <span className="font-code-sm text-code-sm uppercase tracking-wider text-secondary">
+              Previous attempt · attempt {notesAttempt}
+            </span>
+          ) : null}
           <p className="text-body-md text-on-surface italic leading-relaxed whitespace-pre-line">
             {notes}
           </p>

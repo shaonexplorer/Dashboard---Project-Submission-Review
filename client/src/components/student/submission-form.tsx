@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,18 +18,22 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useCreateSubmission } from "@/hooks/use-submissions";
+import { useCreateSubmission, useMySubmissions } from "@/hooks/use-submissions";
+import { useProjects } from "@/hooks/use-projects";
+import { queryKeys } from "@/lib/query/query-keys";
 import { ApiRequestError } from "@/lib/api/client";
+import { SUBMISSION_ERROR_CODES, type Submission } from "@/lib/api/submissions";
 import {
   DESCRIPTION_MAX_LENGTH,
-  PROJECT_NAME_MAX_LENGTH,
   submissionSchema,
   type SubmissionFormValues,
 } from "@/lib/validations/submission";
+import { buildProjectOptions, ProjectPicker } from "./project-picker";
+import { ResubmitForm } from "./resubmit-form";
 
 /** Field names the server may report validation errors for. */
 const SUBMISSION_FIELDS = [
-  "projectName",
+  "projectId",
   "repoUrl",
   "liveUrl",
   "description",
@@ -42,17 +47,42 @@ type SubmissionField = (typeof SUBMISSION_FIELDS)[number];
  * React Hook Form owns the field state, Zod validates it and TanStack Query
  * owns the request. The server remains the source of truth: a successful
  * response is what replaces this form with the submitted-project view.
+ *
+ * The project is picked from the server-provided catalog rather than typed
+ * in, so the name the mentor sees is always the one the catalog holds.
  */
 export function StudentSubmissionForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isForbidden, setIsForbidden] = useState(false);
+  /**
+   * The student's own submission for the project they just tried to hand in
+   * again. It is only set when the server answers `RESUBMIT_REQUIRED`, and it
+   * is what lets the error offer the resubmission path instead of a dead end.
+   */
+  const [conflictingSubmission, setConflictingSubmission] =
+    useState<Submission | null>(null);
   const { mutate: createSubmission, isPending } = useCreateSubmission();
+
+  const {
+    data: projects = [],
+    isPending: isCatalogPending,
+    isError: isCatalogError,
+    refetch: refetchCatalog,
+  } = useProjects();
+  const { data: submissions = [], refetch: refetchSubmissions } =
+    useMySubmissions();
+
+  const options = useMemo(
+    () => buildProjectOptions(projects, submissions),
+    [projects, submissions],
+  );
 
   const form = useForm<SubmissionFormValues>({
     resolver: zodResolver(submissionSchema),
     defaultValues: {
-      projectName: "",
+      projectId: "",
       repoUrl: "",
       liveUrl: "",
       description: "",
@@ -61,10 +91,27 @@ export function StudentSubmissionForm() {
 
   const { errors } = form.formState;
   const description = useWatch({ control: form.control, name: "description" });
+  const projectId = useWatch({ control: form.control, name: "projectId" });
   const descriptionLength = description?.length ?? 0;
   const isDisabled = isPending || isForbidden;
+  /**
+   * A submission cannot be made without a project, and a project cannot be
+   * picked without a catalog. While the catalog is unavailable the submit
+   * button is blocked and the picker offers a retry, so the student is never
+   * met with "Project is required" for a failure they can actually fix.
+   */
+  const isCatalogUnavailable = isCatalogError;
 
-  function handleError(error: unknown) {
+  function handleProjectChange(nextProjectId: string) {
+    form.setValue("projectId", nextProjectId, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    setServerError(null);
+    setConflictingSubmission(null);
+  }
+
+  async function handleError(error: unknown) {
     if (!(error instanceof ApiRequestError)) {
       setServerError(
         "We could not submit your project right now. Please try again.",
@@ -102,11 +149,7 @@ export function StudentSubmissionForm() {
         setServerError("Only student accounts can submit a project.");
         break;
       case 409:
-        // The mine query is invalidated by the mutation, so the dashboard
-        // re-syncs with the server and shows the existing submission.
-        setServerError(
-          "You have already submitted a project. Loading your submission…",
-        );
+        await handleConflict(error);
         break;
       case 429:
         setServerError("Too many submission attempts. Please try again later.");
@@ -118,12 +161,59 @@ export function StudentSubmissionForm() {
     }
   }
 
+  /**
+   * A conflicting submission is told apart by the server's `code`, never by
+   * the message: a project that is already in review gets no resubmission
+   * action, while a rejected one is pointed at the resubmission path.
+   */
+  async function handleConflict(error: ApiRequestError) {
+    const selectedProjectId = form.getValues("projectId");
+    // The cache is read at the moment the conflict arrives rather than from
+    // the render closure, so the submission that caused it is found even when
+    // the list was refreshed in between.
+    const cached = queryClient.getQueryData<Submission[]>(
+      queryKeys.mySubmissions,
+    );
+    let existing = (cached ?? submissions).find(
+      (submission) => submission.projectId === selectedProjectId,
+    );
+
+    if (error.code === SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED && !existing) {
+      // The rejected submission is not in the list yet — the cache is cold,
+      // or it was written by another tab. The list is fetched once more
+      // before the conflict is reported, because the resubmission path can
+      // only be offered when the rejected submission is actually in hand.
+      const refreshed = await refetchSubmissions();
+      existing = (refreshed.data ?? []).find(
+        (submission) => submission.projectId === selectedProjectId,
+      );
+    }
+
+    if (error.code === SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED && existing) {
+      setConflictingSubmission(existing);
+      setServerError(
+        "This project was rejected, so it has to be resubmitted rather than submitted again.",
+      );
+      return;
+    }
+
+    setConflictingSubmission(null);
+    setServerError(
+      "This project is already submitted and waiting for a mentor. It cannot be submitted again.",
+    );
+  }
+
   function onSubmit(values: SubmissionFormValues) {
     setServerError(null);
-    setIsForbidden(false);
+    setConflictingSubmission(null);
 
     createSubmission(values, {
       onSuccess: () => {
+        // The form is cleared, because the student may hand in another
+        // project from the catalog right away — the deliverable that was
+        // just accepted belongs to the project it was written for.
+        form.reset();
+        form.clearErrors();
         toast.success("Project submitted successfully", {
           description: "Your submission is now queued for mentor review.",
         });
@@ -166,41 +256,33 @@ export function StudentSubmissionForm() {
           <AlertTitle className="text-headline-sm">
             Submission could not be completed
           </AlertTitle>
-          <AlertDescription className="text-body-sm text-on-error-container">
-            {serverError}
+          <AlertDescription className="text-body-sm text-on-error-container flex flex-col gap-3">
+            <span>{serverError}</span>
+            {conflictingSubmission ? (
+              <ResubmitForm submission={conflictingSubmission} />
+            ) : null}
           </AlertDescription>
         </Alert>
       )}
 
       {/* Form Fields */}
       <FieldGroup>
-        {/* 1. Project Name */}
-        <Field data-invalid={!!errors.projectName}>
-          <FieldLabel htmlFor="projectName">
-            Project Name
-            <span className="text-error font-sans font-bold" aria-hidden="true">
-              *
-            </span>
-          </FieldLabel>
-          <Input
-            id="projectName"
-            className="pl-3.5 border-surface-container-high border"
-            placeholder="e.g. Distributed Task Orchestrator &amp; CLI"
-            maxLength={PROJECT_NAME_MAX_LENGTH}
-            isError={!!errors.projectName}
-            aria-invalid={!!errors.projectName}
-            aria-describedby={
-              errors.projectName ? "projectName-error" : undefined
-            }
-            disabled={isDisabled}
-            {...form.register("projectName")}
-          />
-          <FieldDescription>
-            Up to {PROJECT_NAME_MAX_LENGTH} characters. This is the title
-            mentors will see.
-          </FieldDescription>
-          <FieldError id="projectName-error" errors={[errors.projectName]} />
-        </Field>
+        {/* 1. Project — picked from the server-provided catalog */}
+        <ProjectPicker
+          id="projectId"
+          value={projectId ?? ""}
+          onChange={handleProjectChange}
+          options={options}
+          isLoading={isCatalogPending}
+          loadError={
+            isCatalogError
+              ? "The project catalog could not be loaded. Try again before submitting."
+              : null
+          }
+          onRetry={() => void refetchCatalog()}
+          error={errors.projectId?.message}
+          disabled={isDisabled}
+        />
 
         {/* 2. GitHub Repository */}
         <Field data-invalid={!!errors.repoUrl}>
@@ -345,16 +427,16 @@ export function StudentSubmissionForm() {
             lock
           </span>
           <span className="text-body-sm">
-            Your submission cannot be edited after it is submitted. Mentor
-            review locks immediately.
+            One submission per project. A project that comes back rejected can
+            be resubmitted.
           </span>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
           <Button
             type="submit"
             size="lg"
-            disabled={isDisabled}
-            className="px-4 text-label-md shadow-sm"
+            disabled={isDisabled || isCatalogUnavailable}
+            className="px-4 text-label-md shadow-sm text-white"
           >
             {isPending ? (
               <>
