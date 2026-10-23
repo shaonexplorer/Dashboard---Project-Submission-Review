@@ -35,7 +35,7 @@ export function AuthForms() {
           ]}
           value={activeTab}
           onValueChange={handleTabChange}
-          className="w-full sm:min-w-[350px]"
+          className="w-full min-w-[280px] sm:min-w-[350px]"
           maxWidth="max-w-[400px]"
         />
 

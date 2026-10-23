@@ -23,10 +23,7 @@ export default function StudentDashboardPage() {
   // `isResolving` covers both the server render and the first client render,
   // so the two always produce the same markup.
   const { user, isResolving: isUserResolving } = useCurrentUser();
-  const {
-    data: submissions = [],
-    error: submissionError,
-  } = useMySubmissions();
+  const { data: submissions = [], error: submissionError } = useMySubmissions();
 
   // An expired session is handled by the authentication flow, not by the page.
   useEffect(() => {
@@ -202,7 +199,10 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
             </span>
             {latest ? (
               <>
-                <span className="text-outline font-code-sm text-code-sm" aria-hidden="true">
+                <span
+                  className="text-outline font-code-sm text-code-sm"
+                  aria-hidden="true"
+                >
                   ·
                 </span>
                 <span className="font-code-sm text-code-sm text-secondary">
@@ -233,7 +233,7 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
           </p>
         </div>
 
-        <div className="hidden lg:flex items-center gap-6 px-4 py-3 rounded-lg bg-surface-container-lowest border border-surface-container-high/60">
+        <div className="grid grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-4 px-4 py-3 rounded-lg bg-surface-container-lowest border border-surface-container-high/60">
           <div className="flex flex-col">
             <span className="font-code-sm text-code-sm text-secondary">
               PROJECTS SUBMITTED
@@ -242,13 +242,22 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
               {submissions.length}
             </span>
           </div>
-          <div className="w-px h-8 bg-surface-container-high/60" aria-hidden="true" />
-          <div className="flex flex-col">
+          <div className="flex flex-col items-center lg:items-start">
             <span className="font-code-sm text-code-sm text-secondary">
               {hasSubmission ? "LATEST STATUS" : "REVIEW CYCLE"}
             </span>
             <span className="font-label-md text-label-md text-primary font-medium">
               {latest ? latest.status : "Standard"}
+            </span>
+          </div>
+          <div className="flex flex-col items-center lg:items-start lg:col-span-1">
+            <span className="font-code-sm text-code-sm text-secondary">
+              {hasSubmission ? "LATEST SUBMITTED" : "NEXT DEADLINE"}
+            </span>
+            <span className="font-label-md text-label-md text-on-surface font-medium">
+              {latest
+                ? formatUtcDateTime(latest.submittedAt).split(",")[0]
+                : "Dec 18, 2026"}
             </span>
           </div>
         </div>

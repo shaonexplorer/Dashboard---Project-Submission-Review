@@ -1,6 +1,7 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
+import * as React from "react"
 
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -39,18 +40,63 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * Check if a React node contains only icon content (no text).
+ * Used to warn about icon-only buttons missing accessible names.
+ */
+function isIconOnly(children: React.ReactNode): boolean {
+  if (!children) return true
+  if (typeof children === "string" || typeof children === "number") {
+    return children.toString().trim() === ""
+  }
+  if (React.isValidElement(children)) {
+    // If it's a single element with no text children, it's likely icon-only
+    const childChildren = children.props.children
+    if (!childChildren) return true
+    if (typeof childChildren === "string") {
+      return childChildren.trim() === ""
+    }
+    if (Array.isArray(childChildren)) {
+      return childChildren.every((c) => typeof c === "object" && c !== null && React.isValidElement(c))
+    }
+    return isIconOnly(childChildren)
+  }
+  if (Array.isArray(children)) {
+    return children.every((c) => isIconOnly(c))
+  }
+  return false
+}
+
 function Button({
   className,
   variant = "default",
   size = "default",
+  children,
+  "aria-label": ariaLabel,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // Development warning for icon-only buttons without accessible name
+  if (process.env.NODE_ENV !== "production") {
+    const isIconSize = ["icon", "icon-xs", "icon-sm", "icon-lg"].includes(size)
+    const hasNoText = isIconOnly(children)
+    const hasNoAriaLabel = !ariaLabel && !props["aria-labelledby"]
+
+    if (isIconSize && hasNoText && hasNoAriaLabel) {
+      console.warn(
+        `[Accessibility] Button with size="${size}" appears to be icon-only but lacks an aria-label or aria-labelledby. ` +
+          `Add aria-label="..." to provide an accessible name for screen readers.`
+      )
+    }
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      {children}
+    </ButtonPrimitive>
   )
 }
 

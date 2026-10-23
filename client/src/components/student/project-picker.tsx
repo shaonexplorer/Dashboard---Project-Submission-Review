@@ -282,6 +282,9 @@ export function ProjectPicker({
           </DialogHeader>
 
           <div className="flex flex-col gap-4 p-6">
+            <label htmlFor={`${id}-search`} className="sr-only">
+              Search the project catalog
+            </label>
             <Input
               id={`${id}-search`}
               type="search"

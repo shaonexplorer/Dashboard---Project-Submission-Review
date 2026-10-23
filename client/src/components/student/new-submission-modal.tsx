@@ -97,7 +97,7 @@ export function NewSubmissionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-full sm:max-w-xl p-4 sm:p-6">
         <DialogHeader className="my-2 flex-row items-center gap-3 space-y-0 bg-surface-container-low px-2 py-4">
           <span
             className="material-symbols-outlined text-primary text-[20px]"
@@ -243,10 +243,16 @@ export function NewSubmissionModal({
                 aria-describedby={
                   errors.description ? "description-error" : undefined
                 }
+                hint="Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is supported."
+                hintId="description-hint"
                 disabled={isDisabled}
                 {...form.register("description")}
               />
-              <div className="flex items-center justify-between px-0.5">
+              <div
+                className="flex items-center justify-between px-0.5"
+                id="description-hint"
+                aria-hidden="true"
+              >
                 <span className="text-body-sm text-secondary">
                   Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is
                   supported.
@@ -283,10 +289,12 @@ export function NewSubmissionModal({
               variant="secondary"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              size={"lg"}
             >
               Cancel
             </Button>
             <Button
+              size={"lg"}
               type="submit"
               disabled={isSubmitting}
               className="px-6 py-2 rounded-lg font-label-md text-label-md bg-primary-container text-on-primary hover:bg-primary transition-colors shadow-sm flex items-center gap-2"

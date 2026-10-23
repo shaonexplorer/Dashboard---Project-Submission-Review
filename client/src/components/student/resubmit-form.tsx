@@ -67,6 +67,7 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
 
   const { errors } = form.formState;
   const previousNotes = submission.feedback?.trim() ?? "";
+  const descriptionLength = form.watch("description")?.length ?? 0;
 
   function handleError(error: unknown) {
     if (!(error instanceof ApiRequestError)) {
@@ -326,13 +327,20 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
                 aria-describedby={
                   errors.description ? "resubmit-description-error" : undefined
                 }
+                hint="Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is supported."
+                hintId="resubmit-description-hint"
                 disabled={isPending}
                 {...form.register("description")}
               />
-              <FieldDescription>
-                Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is
-                supported.
-              </FieldDescription>
+              <div className="flex items-center justify-between px-0.5" id="resubmit-description-hint" aria-hidden="true">
+                <span className="text-body-sm text-secondary">
+                  Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is
+                  supported.
+                </span>
+                <span className="text-code-sm text-secondary font-medium">
+                  {descriptionLength} / {DESCRIPTION_MAX_LENGTH}
+                </span>
+              </div>
               <FieldError
                 id="resubmit-description-error"
                 errors={[errors.description]}

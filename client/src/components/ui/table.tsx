@@ -75,10 +75,16 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
  * Headers are styled as small uppercase labels, matching the density of the
  * surrounding design system.
  */
-function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+function TableHead({
+  className,
+  "aria-sort": ariaSort,
+  ...props
+}: React.ComponentProps<"th"> & { "aria-sort"?: "ascending" | "descending" | "none" }) {
   return (
     <th
       data-slot="table-head"
+      scope="col"
+      aria-sort={ariaSort}
       className={cn(
         "px-4 py-2.5 text-left align-middle font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold whitespace-nowrap",
         className,

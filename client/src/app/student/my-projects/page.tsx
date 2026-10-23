@@ -217,7 +217,7 @@ export default function StudentMyProjectsPage() {
           </div>
 
           {/* Metric Strip */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <MetricCard
               label="Milestones Tracked"
               value={stats?.total ?? 0}

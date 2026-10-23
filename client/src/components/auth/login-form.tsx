@@ -99,8 +99,9 @@ export function LoginForm() {
 
       {/* Remember Me & Security Meta */}
       <div className="flex items-center justify-between pt-1">
-        <label className="flex items-center gap-2 cursor-pointer select-none">
+        <label htmlFor="remember-me" className="flex items-center gap-2 cursor-pointer select-none">
           <input
+            id="remember-me"
             type="checkbox"
             className="w-4 h-4 rounded text-primary focus:ring-0 bg-surface-container-lowest"
             defaultChecked
