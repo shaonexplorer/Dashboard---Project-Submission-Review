@@ -18,13 +18,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
+
 import { formatUrlLabel, formatUtcDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { StudentProjectRow } from "@/lib/api/submissions";
-import { SubmissionStatusBadge } from "@/components/submissions";
 
 const columnHelper = createColumnHelper<StudentProjectRow>();
 
@@ -383,19 +382,6 @@ export function StudentProjectsTable({
                       arrow_forward
                     </span>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-1 text-secondary hover:text-on-surface rounded-lg hover:bg-surface-container-low transition-colors"
-                    aria-label="More options"
-                  >
-                    <span
-                      className="material-symbols-outlined text-[18px]"
-                      aria-hidden="true"
-                    >
-                      more_vert
-                    </span>
-                  </Button>
                 </div>
               );
             }
@@ -419,19 +405,6 @@ export function StudentProjectsTable({
                       <span>View Feedback</span>
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-1 text-secondary hover:text-on-surface rounded-lg hover:bg-surface-container-low transition-colors"
-                    aria-label="More options"
-                  >
-                    <span
-                      className="material-symbols-outlined text-[18px]"
-                      aria-hidden="true"
-                    >
-                      more_vert
-                    </span>
-                  </Button>
                 </div>
               );
             }
@@ -456,19 +429,6 @@ export function StudentProjectsTable({
                       <span>Track Status</span>
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-1 text-secondary hover:text-on-surface rounded-lg hover:bg-surface-container-low transition-colors"
-                    aria-label="More options"
-                  >
-                    <span
-                      className="material-symbols-outlined text-[18px]"
-                      aria-hidden="true"
-                    >
-                      more_vert
-                    </span>
-                  </Button>
                 </div>
               );
             }
@@ -492,19 +452,6 @@ export function StudentProjectsTable({
                       <span>Review Comments</span>
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-1 text-secondary hover:text-on-surface rounded-lg hover:bg-surface-container-low transition-colors"
-                    aria-label="More options"
-                  >
-                    <span
-                      className="material-symbols-outlined text-[18px]"
-                      aria-hidden="true"
-                    >
-                      more_vert
-                    </span>
-                  </Button>
                 </div>
               );
             }

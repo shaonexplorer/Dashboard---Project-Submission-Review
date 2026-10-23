@@ -60,35 +60,13 @@ router.post(
 /**
  * GET /api/submissions/me
  *
- * Retrieves every submission the authenticated student has made.
- *
- * Middleware chain:
- * 1. authenticate - Verifies JWT token from cookie
- * 2. authorize("STUDENT") - Ensures user has STUDENT role
- *
- * Responses:
- * - 200 OK: The student's submissions, most recent first. A student who has
- *   not submitted anything gets an empty list, never a 404.
- * - 401 Unauthorized: Missing or invalid token
- * - 403 Forbidden: User is not a STUDENT
- * - 500 Internal Server Error: Unexpected error
- *
- * Note: this route must stay registered before any dynamic `/:id` route, so
- * that "me" is never interpreted as a submission identifier.
- */
-router.get(
-  "/me",
-  authenticate,
-  authorize("STUDENT"),
-  getMySubmissionController
-);
-
-/**
- * GET /api/submissions/me
- *
  * Retrieves the authenticated student's own submissions with server-side
  * pagination, status filtering, search and sorting. All table operations are
  * driven by query parameters.
+ *
+ * This single route replaces the non-paginated endpoint — the query schema
+ * provides defaults so a request without parameters returns page 1 (10 items,
+ * newest first), which is the same result the old endpoint produced.
  *
  * Middleware chain:
  * 1. authenticate - Verifies JWT token from cookie

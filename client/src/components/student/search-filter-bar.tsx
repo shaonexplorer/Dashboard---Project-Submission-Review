@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import { Kbd } from "@/components/ui/kbd";
 import { Button } from "@/components/ui/button";
 import { StatusFilterTabs } from "./status-filter-tabs";
-import { useMemo, useState } from "react";
-import { StudentSubmissionListQuery } from "@/lib/api/submissions";
+import { useMemo } from "react";
+import { SubmissionStatus } from "@/lib/api/submissions";
 import { useMySubmissionStats } from "@/hooks/use-submissions";
 
 export interface SearchFilterBarProps {
@@ -13,18 +13,10 @@ export interface SearchFilterBarProps {
   search: string;
   /** Callback when search term changes */
   onSearchChange: (value: string) => void;
-  /** Current cohort filter */
-  cohort: string;
-  /** Callback when cohort changes */
-  onCohortChange: (value: string) => void;
-  /** Current tech stack filter */
-  techStack: string;
-  /** Callback when tech stack changes */
-  onTechStackChange: (value: string) => void;
-  /** Current sort option */
-  sortBy: string;
-  /** Callback when sort changes */
-  onSortChange: (value: string) => void;
+  /** Current status filter */
+  status: SubmissionStatus | undefined;
+  /** Callback when status filter changes */
+  onStatusChange: (status: SubmissionStatus | undefined) => void;
   /** Callback when Submit Deliverable button is clicked */
   onSubmitClick: () => void;
   /** Whether a search is in progress */
@@ -34,49 +26,20 @@ export interface SearchFilterBarProps {
 /**
  * Search and filter bar for the student projects table.
  *
- * Combines a search input with Cmd+K hint, three dropdown filters
- * (Cohort, Tech Stack, Sort), and a primary action button.
+ * Combines a search input with Cmd+K hint, status filter tabs,
+ * and a primary action button.
  */
 export function SearchFilterBar({
   search,
   onSearchChange,
-  cohort,
-  onCohortChange,
-  techStack,
-  onTechStackChange,
-  sortBy,
-  onSortChange,
+  status,
+  onStatusChange,
   onSubmitClick,
   isSearching,
 }: SearchFilterBarProps) {
-  const cohortOptions = [
-    "Cohort 24-B",
-    "Cohort 24-A (Archived)",
-    "All Cohorts",
-  ];
-
-  const techStackOptions = [
-    "All Tech Stacks",
-    "TypeScript / React",
-    "Go / Distributed",
-    "Kafka / Rust",
-    "C / Linux",
-  ];
-
-  const sortOptions = [
-    "Sort by: Due Date / Urgency",
-    "Sort by: Status",
-    "Sort by: Milestone ID",
-    "Sort by: Grade (High to Low)",
-  ];
-
-  const [statusFilter, setStatusFilter] =
-    useState<StudentSubmissionListQuery["status"]>(undefined);
-
-  const [page, setPage] = useState(1);
   const { data: stats } = useMySubmissionStats();
 
-  // Map status filter for display (moved before early returns)
+  // Map status filter for display
   const statusCounts = useMemo(
     () => ({
       all: stats?.total ?? 0,
@@ -90,22 +53,21 @@ export function SearchFilterBar({
   );
 
   function handleStatusChange(
-    status:
-      | StudentSubmissionListQuery["status"]
+    statusValue:
+      | SubmissionStatus
       | "all"
       | "active"
       | "archived",
   ) {
-    if (status === "all") {
-      setStatusFilter(undefined);
-    } else if (status === "active") {
-      setStatusFilter("PENDING");
-    } else if (status === "archived") {
-      setStatusFilter(undefined);
+    if (statusValue === "all") {
+      onStatusChange(undefined);
+    } else if (statusValue === "active") {
+      onStatusChange("PENDING");
+    } else if (statusValue === "archived") {
+      onStatusChange(undefined);
     } else {
-      setStatusFilter(status);
+      onStatusChange(statusValue);
     }
-    setPage(1);
   }
 
   return (
@@ -176,11 +138,11 @@ export function SearchFilterBar({
 
       <StatusFilterTabs
         activeStatus={
-          statusFilter === undefined
+          status === undefined
             ? "all"
-            : statusFilter === "PENDING"
+            : status === "PENDING"
               ? "active"
-              : statusFilter
+              : status
         }
         onStatusChange={handleStatusChange}
         counts={statusCounts}

@@ -162,12 +162,6 @@ export interface ResubmitSubmissionPayload {
   description: string;
 }
 
-interface SubmissionsResponse {
-  success: boolean;
-  message: string;
-  data?: { submissions?: Submission[] };
-}
-
 interface SubmissionResponse {
   success: boolean;
   message: string;
@@ -177,14 +171,20 @@ interface SubmissionResponse {
 /**
  * Fetches every submission the authenticated student owns.
  *
- * The list is empty when the student has not submitted anything yet — that is
- * a normal state, not a failure, so the endpoint answers `200` with an empty
- * array rather than a `404`. The response is therefore never treated as a
- * failure here: only a real request failure is.
+ * Uses the paginated endpoint with a large page size to retrieve all results
+ * in one request. The list is empty when the student has not submitted anything
+ * yet — that is a normal state, not a failure.
  */
 export async function getMySubmissionsApi(): Promise<Submission[]> {
-  const response = await apiRequest<SubmissionsResponse>("/submissions/me");
-  return response.data?.submissions ?? [];
+  // Use the paginated endpoint with max limit to get all submissions
+  const response = await apiRequest<{
+    success: boolean;
+    message: string;
+    data?: (Submission & { project: Submission["project"] })[];
+    pagination?: PaginationMeta;
+  }>("/submissions/me?limit=100");
+
+  return response.data ?? [];
 }
 
 /**
@@ -341,13 +341,15 @@ export async function getMySubmissionsPaginatedApi(
   const response = await apiRequest<{
     success: boolean;
     message: string;
-    data?: { submissions: (Submission & { project: Submission["project"] })[]; pagination: PaginationMeta };
+    data?: (Submission & { project: Submission["project"] })[];
+    pagination?: PaginationMeta;
   }>(`/submissions/me?${params.toString()}`);
 
-  const rawData = response.data ?? { submissions: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } };
+  const submissions = response.data ?? [];
+  const pagination = response.pagination ?? { page: 1, limit: 10, total: 0, totalPages: 0 };
 
   return {
-    submissions: rawData.submissions.map(transformToStudentProjectRow),
-    pagination: rawData.pagination,
+    submissions: submissions.map(transformToStudentProjectRow),
+    pagination,
   };
 }

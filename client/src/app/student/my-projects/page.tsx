@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/use-auth";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   useMySubmissionsPaginated,
   useMySubmissionStats,
@@ -27,6 +28,7 @@ import type {
   StudentSubmissionListQuery,
   Submission,
 } from "@/lib/api/submissions";
+import type { SortingState } from "@tanstack/react-table";
 
 /**
  * The student's own submissions with full table UI.
@@ -44,10 +46,11 @@ export default function StudentMyProjectsPage() {
   const { user, isResolving: isUserResolving } = useCurrentUser();
 
   // Table state
-  const [search, setSearch] = useState("");
-  const [cohort, setCohort] = useState("Cohort 24-B");
-  const [techStack, setTechStack] = useState("All Tech Stacks");
-  const [sortBy, setSortBy] = useState("Sort by: Due Date / Urgency");
+  const [searchInput, setSearchInput] = useState("");
+  const [cohort] = useState("Cohort 24-B");
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "createdAt", desc: true },
+  ]);
   const [statusFilter, setStatusFilter] =
     useState<StudentSubmissionListQuery["status"]>(undefined);
   const [page, setPage] = useState(1);
@@ -56,6 +59,23 @@ export default function StudentMyProjectsPage() {
   const [preSelectedProject, setPreSelectedProject] =
     useState<StudentProjectRow | null>(null);
 
+  // Debounce search input to avoid firing a request on every keystroke
+  const search = useDebouncedValue(searchInput, 400);
+
+  // Derive API sortBy and sortOrder from TanStack Table sorting state
+  const apiSortBy = useMemo((): StudentSubmissionListQuery["sortBy"] => {
+    const sort = sorting[0];
+    if (!sort) return "createdAt";
+    if (sort.id === "project") return "projectName";
+    if (sort.id === "status") return "status";
+    return "createdAt";
+  }, [sorting]);
+
+  const apiSortOrder = useMemo((): StudentSubmissionListQuery["sortOrder"] => {
+    const sort = sorting[0];
+    return sort?.desc ? "desc" : "asc";
+  }, [sorting]);
+
   // Build query for paginated API
   const query = useMemo<StudentSubmissionListQuery>(
     () => ({
@@ -63,10 +83,10 @@ export default function StudentMyProjectsPage() {
       limit,
       search: search || undefined,
       status: statusFilter,
-      sortBy: mapSortBy(sortBy),
-      sortOrder: "desc",
+      sortBy: apiSortBy,
+      sortOrder: apiSortOrder,
     }),
-    [page, limit, search, statusFilter, sortBy],
+    [page, limit, search, statusFilter, apiSortBy, apiSortOrder],
   );
 
   const {
@@ -81,19 +101,6 @@ export default function StudentMyProjectsPage() {
   const { data: stats } = useMySubmissionStats();
 
   const createSubmissionMutation = useCreateSubmission();
-
-  // Map status filter for display (moved before early returns)
-  const statusCounts = useMemo(
-    () => ({
-      all: stats?.total ?? 0,
-      active: stats?.active ?? 0,
-      approved: stats?.approved ?? 0,
-      pending: stats?.pending ?? 0,
-      rejected: stats?.rejected ?? 0,
-      archived: stats?.archived ?? 0,
-    }),
-    [stats],
-  );
 
   const projects = paginatedData?.submissions ?? [];
   const pagination = paginatedData?.pagination ?? {
@@ -113,10 +120,10 @@ export default function StudentMyProjectsPage() {
     }
   }, [submissionError, router]);
 
-  // Reset page when filters change
+  // Reset page when filters change (fixed sortBy -> sorting)
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, sortBy]);
+  }, [search, statusFilter, sorting]);
 
   // Loading skeleton state
   if (isUserResolving) {
@@ -238,7 +245,7 @@ export default function StudentMyProjectsPage() {
             />
             <MetricCard
               label="Pending Submission"
-              value={3 - (stats?.total ?? 0)}
+              value={stats?.total ?? 0}
               icon="schedule"
               indicatorColor="secondary"
               trendLabel="24d Remaining"
@@ -248,14 +255,10 @@ export default function StudentMyProjectsPage() {
 
           {/* Search & Filter Bar */}
           <SearchFilterBar
-            search={search}
-            onSearchChange={setSearch}
-            cohort={cohort}
-            onCohortChange={setCohort}
-            techStack={techStack}
-            onTechStackChange={setTechStack}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
+            search={searchInput}
+            onSearchChange={setSearchInput}
+            status={statusFilter}
+            onStatusChange={setStatusFilter}
             onSubmitClick={() => {
               setPreSelectedProject(null);
               setIsModalOpen(true);
@@ -280,8 +283,8 @@ export default function StudentMyProjectsPage() {
               ) : (
                 <StudentProjectsTable
                   projects={projects}
-                  sorting={[]}
-                  onSortingChange={() => {}}
+                  sorting={sorting}
+                  onSortingChange={setSorting}
                   busyProjectId={createSubmissionMutation.variables?.projectId}
                   isSubmitting={createSubmissionMutation.isPending}
                   onSubmitDeliverable={handleStartSubmission}
@@ -368,13 +371,6 @@ export default function StudentMyProjectsPage() {
       console.error("Submission failed:", error);
     }
   }
-}
-
-/** Maps UI sort option to API sortBy value */
-function mapSortBy(sortBy: string): StudentSubmissionListQuery["sortBy"] {
-  if (sortBy.includes("Status")) return "status";
-  if (sortBy.includes("Milestone")) return "projectName";
-  return "createdAt";
 }
 
 // Skeleton components
