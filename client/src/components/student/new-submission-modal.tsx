@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { useProjects } from "@/hooks/use-projects";
+import { useMySubmissions } from "@/hooks/use-submissions";
 import type { Project } from "@/lib/api/projects";
 import {
   DESCRIPTION_MAX_LENGTH,
@@ -56,6 +57,18 @@ export function NewSubmissionModal({
   defaultProjectId,
 }: NewSubmissionModalProps) {
   const { data: projects = [], isPending: isCatalogPending } = useProjects();
+  const { data: mySubmissions = [] } = useMySubmissions();
+
+  // Collect project IDs that already have a submission (PENDING or APPROVED).
+  // Rejected submissions are handled via the resubmit flow, so they remain
+  // available in the new-submission picker only if the student wants to start
+  // fresh — but the backend will reject a duplicate create, so we disable them
+  // here as well for a better UX.
+  const submittedProjectIds = new Set(
+    mySubmissions
+      .filter((s) => s.status !== "REJECTED")
+      .map((s) => s.projectId),
+  );
 
   const form = useForm<SubmissionFormValues>({
     resolver: zodResolver(submissionSchema),
@@ -119,8 +132,13 @@ export function NewSubmissionModal({
                   <option disabled>Loading catalog…</option>
                 ) : (
                   projects.map((project: Project) => (
-                    <option key={project.id} value={project.id}>
+                    <option
+                      key={project.id}
+                      value={project.id}
+                      disabled={submittedProjectIds.has(project.id)}
+                    >
                       {project.id}: {project.name}
+                      {submittedProjectIds.has(project.id) && " (Submitted)"}
                     </option>
                   ))
                 )}
@@ -237,7 +255,10 @@ export function NewSubmissionModal({
                   {descriptionLength} / {DESCRIPTION_MAX_LENGTH}
                 </span>
               </div>
-              <FieldError id="description-error" errors={[errors.description]} />
+              <FieldError
+                id="description-error"
+                errors={[errors.description]}
+              />
             </Field>
           </FieldGroup>
 
