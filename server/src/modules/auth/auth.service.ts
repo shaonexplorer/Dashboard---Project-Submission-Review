@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { UserRole } from "../../generated/prisma/client";
 import { compare, hash } from "bcryptjs";
 import { prisma } from "../../config/prisma";
 import { signToken } from "../../utils/jwt";
@@ -39,9 +39,11 @@ export interface AuthTokens {
  * - Password is hashed before storage.
  * - Account role is forced to STUDENT; the client cannot choose it.
  */
-export const signupService = async (
-  data: { fullName: string; email: string; password: string }
-): Promise<AuthTokens> => {
+export const signupService = async (data: {
+  fullName: string;
+  email: string;
+  password: string;
+}): Promise<AuthTokens> => {
   const email = normalizeEmail(data.email);
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -70,9 +72,10 @@ export const signupService = async (
  *
  * Does not reveal whether the email or the password caused the failure.
  */
-export const loginService = async (
-  data: { email: string; password: string }
-): Promise<AuthTokens> => {
+export const loginService = async (data: {
+  email: string;
+  password: string;
+}): Promise<AuthTokens> => {
   const email = normalizeEmail(data.email);
 
   const user = await prisma.user.findUnique({ where: { email } });
