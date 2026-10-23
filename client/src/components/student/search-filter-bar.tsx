@@ -140,7 +140,7 @@ export function SearchFilterBar({
               ? "active"
               : status
         }
-        onStatusChange={handleStatusChange}
+        onStatusChange={(status) => handleStatusChange(status ?? "all")}
         counts={statusCounts}
       />
     </div>
