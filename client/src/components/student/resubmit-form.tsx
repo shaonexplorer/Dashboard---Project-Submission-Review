@@ -131,7 +131,6 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
           toast.success("Resubmission received", {
             description: `Attempt ${submission.attempt + 1} is queued for mentor review.`,
           });
-          // invalidate concerned queries
         },
         onError: handleError,
       },

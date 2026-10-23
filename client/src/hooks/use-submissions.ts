@@ -116,6 +116,11 @@ export function useResubmitSubmission() {
           [submission],
       );
       void queryClient.invalidateQueries({ queryKey: queryKeys.mySubmissions });
+      // Also invalidate the single-submission query so the detail page
+      // (and any other consumer) picks up the updated attempt count and status.
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.submissionById(submission.id),
+      });
     },
   });
 }
