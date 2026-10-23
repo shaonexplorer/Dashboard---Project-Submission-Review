@@ -1,73 +1,86 @@
 "use client";
 
-import { useCurrentUser } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import Link from "next/link";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { AuthForms } from "@/components/auth/auth-forms";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import { BrandPanel } from "@/components/auth/brand-panel";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function HomePage() {
-  const { user, isResolving } = useCurrentUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isResolving && user) {
-      const redirectTo = user.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard";
-      router.push(redirectTo);
-    }
-  }, [user, isResolving, router]);
-
-  if (isResolving) {
-    return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </main>
-    );
-  }
-
+export default function LoginPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-muted/30">
-      <div className="w-full max-w-md text-center">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Project Submission & Review Dashboard</CardTitle>
-            <CardDescription>
-              A platform where students submit project work and mentors review submissions.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {user ? (
-              <>
-                <p className="text-lg">
-                  Welcome back, <span className="font-semibold">{user.fullName}</span>!
-                </p>
-                <p className="text-muted-foreground">
-                  Redirecting to your dashboard...
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-muted-foreground">
-                  Please sign in or create an account to continue.
-                </p>
-                <div className="flex flex-col space-y-2">
-                  <Button render={<Link href="/auth?tab=login" />} className="w-full">
-                    Sign in
-                  </Button>
-                  <Button
-                    render={<Link href="/auth?tab=signup" />}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Create account
-                  </Button>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+    <AuthLayout
+      brandPanel={
+        <BrandPanel
+          cohortText="WINTER 2025 EVALUATION CYCLE"
+          headline="Submit. Review. Ship."
+          description="A single, authenticated gateway for students submitting production-grade course repos and mentors evaluating live merge requests."
+          features={[
+            {
+              icon: (
+                <span className="material-symbols-outlined text-[20px]">
+                  verified
+                </span>
+              ),
+              title: "Synchronous Student & Mentor Workflows",
+              description:
+                "Dynamic role routing directs students to project submissions and faculty to rubric evaluation queues.",
+            },
+            {
+              icon: (
+                <span className="material-symbols-outlined text-[20px]">
+                  terminal
+                </span>
+              ),
+              title: "Git Metadata & Branch Attestation",
+              description:
+                "Automated validation of commit sign-offs, CI telemetry, and cohort repo branches.",
+            },
+          ]}
+          terminal={{
+            prompt: "hub auth status --verified",
+            lines: [
+              { text: "> session: academic_id_980242" },
+              { text: "> key_exchange: TLSv1.3 [AES-GCM-256]" },
+              {
+                text: "✓ ready for cohort assignment routing",
+                className: "text-primary",
+              },
+            ],
+          }}
+        />
+      }
+    >
+      <Suspense fallback={<AuthFormsFallback />}>
+        <AuthFormsWithKey />
+      </Suspense>
+    </AuthLayout>
+  );
+}
+
+/**
+ * Reads the requested tab from the URL.
+ *
+ * `useSearchParams` opts the component out of static rendering, so it has to
+ * live behind a Suspense boundary.
+ */
+function AuthFormsWithKey() {
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab") || "login";
+
+  return <AuthForms key={currentTab} />;
+}
+
+/** Placeholder shown while the URL parameters are resolved. */
+function AuthFormsFallback() {
+  return (
+    <div className="flex flex-col gap-5">
+      <Skeleton className="h-10 w-full sm:min-w-[350px]" />
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
-    </main>
+    </div>
   );
 }
