@@ -10,8 +10,6 @@ import {
   EvaluationRubricCard,
   PreflightCriteriaCard,
   StudentSubmissionForm,
-  SubmittedProjectCard,
-  SubmissionLoadError,
   SubmissionSnapshotCard,
 } from "@/components/student";
 import { Button } from "@/components/ui/button";
@@ -27,11 +25,7 @@ export default function StudentDashboardPage() {
   const { user, isResolving: isUserResolving } = useCurrentUser();
   const {
     data: submissions = [],
-    isPending: isSubmissionPending,
-    isError: isSubmissionError,
     error: submissionError,
-    refetch: refetchSubmissions,
-    isFetching: isRefetching,
   } = useMySubmissions();
 
   // An expired session is handled by the authentication flow, not by the page.
@@ -131,38 +125,7 @@ export default function StudentDashboardPage() {
           {/* Main content grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-8">
             <div className="lg:col-span-7 flex flex-col gap-6 min-w-0">
-              {isSubmissionPending ? (
-                <FormSkeleton />
-              ) : isSubmissionError ? (
-                <SubmissionLoadError
-                  error={submissionError}
-                  onRetry={() => void refetchSubmissions()}
-                  isRetrying={isRefetching}
-                />
-              ) : (
-                <>
-                  {submissions.length === 0 ? (
-                    <div className="rounded-xl bg-surface-container-lowest border border-surface-container-high/80 p-6 flex flex-col gap-2">
-                      <h2 className="text-headline-sm text-on-surface">
-                        No submissions yet
-                      </h2>
-                      <p className="text-body-sm text-on-surface-variant">
-                        Pick a project from the catalog below to hand in your
-                        first submission.
-                      </p>
-                    </div>
-                  ) : (
-                    submissions.map((submission) => (
-                      <SubmittedProjectCard
-                        key={submission.id}
-                        submission={submission}
-                      />
-                    ))
-                  )}
-
-                  <StudentSubmissionForm />
-                </>
-              )}
+              <StudentSubmissionForm />
             </div>
 
             <aside className="lg:col-span-5 flex flex-col gap-6">
@@ -208,7 +171,9 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
           <span className="text-outline" aria-hidden="true">
             /
           </span>
-          <span className="text-on-surface font-medium">Project Submission</span>
+          <span className="text-on-surface font-medium">
+            Project Submission
+          </span>
         </div>
         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-surface-container-low border border-surface-container-high/60 font-code-sm text-code-sm text-secondary uppercase tracking-wider">
           <span
