@@ -1,10 +1,9 @@
+import { Request } from "express";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { createHash } from "node:crypto";
-import type { NextFunction, Request, Response } from "express";
-
-import { ApiError } from "../utils/api-error";
 
 /**
- * The global rate limiter.
+ * The global rate limiter using express-rate-limit.
  *
  * Every API request passes through it, so a single client cannot flood the
  * server with reads. The submission endpoints carry their own, much tighter
@@ -15,6 +14,7 @@ import { ApiError } from "../utils/api-error";
  * - 100 requests per 15 minutes
  * - Returns 429 Too Many Requests when exceeded
  * - Uses the application's standard API error format
+ * - Standard rate-limit headers (RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset)
  *
  * The budget is keyed on the session rather than on the IP address. A cohort
  * regularly shares one public address — a classroom, a campus NAT — and a
@@ -27,25 +27,6 @@ import { ApiError } from "../utils/api-error";
  * The cookie is hashed before it becomes a key, so no session material is
  * kept in memory.
  */
-interface RateLimitEntry {
-  count: number;
-  resetTime: number;
-}
-
-const store = new Map<string, RateLimitEntry>();
-
-/**
- * Cleanup of expired entries, so the store does not grow without bound.
- * Runs every 5 minutes.
- */
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of store.entries()) {
-    if (entry.resetTime < now) {
-      store.delete(key);
-    }
-  }
-}, 5 * 60 * 1000).unref();
 
 /** Length of the rate-limiting window. */
 export const GLOBAL_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -68,31 +49,19 @@ function resolveRateLimitKey(req: Request): string {
     return `session:${fingerprint.slice(0, 32)}`;
   }
 
-  return `ip:${req.ip ?? "unknown"}`;
+  return `ip:${ipKeyGenerator(req.ip ?? "unknown")}`;
 }
 
-export const globalRateLimiter = (
-  req: Request,
-  _res: Response,
-  next: NextFunction
-): void => {
-  const key = resolveRateLimitKey(req);
-  const now = Date.now();
-
-  const entry = store.get(key);
-
-  if (!entry || entry.resetTime < now) {
-    // First request in this window.
-    store.set(key, { count: 1, resetTime: now + GLOBAL_RATE_LIMIT_WINDOW_MS });
-    return next();
-  }
-
-  if (entry.count >= GLOBAL_RATE_LIMIT_MAX_REQUESTS) {
-    return next(
-      new ApiError(429, "Too many requests. Please try again in a few minutes.")
-    );
-  }
-
-  entry.count += 1;
-  next();
-};
+export const globalRateLimiter = rateLimit({
+  windowMs: GLOBAL_RATE_LIMIT_WINDOW_MS,
+  max: GLOBAL_RATE_LIMIT_MAX_REQUESTS,
+  keyGenerator: resolveRateLimitKey,
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  handler: (_req, res) => {
+    res.status(429).json({
+      success: false,
+      message: "Too many requests. Please try again in a few minutes.",
+    });
+  },
+});
