@@ -38,8 +38,8 @@ export function formatUtcDateTime(
     timeZone: "UTC",
   }).format(date);
 
-  // return `${day}, ${time} UTC`;
-  return `${day}`;
+  return `${day}, ${time} UTC`;
+  // return `${day}`;
 }
 
 /**

@@ -15,11 +15,11 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
   STUDENT: [
     { label: "Dashboard", href: "/student/dashboard" },
     { label: "My Projects", href: "/student/my-projects" },
-    { label: "Rubrics" },
+    // { label: "Rubrics" },
   ],
   MENTOR: [
     { label: "Dashboard", href: "/mentor/dashboard" },
-    { label: "Review Queue" },
+    // { label: "Review Queue" },
     { label: "Rubrics" },
   ],
 };
