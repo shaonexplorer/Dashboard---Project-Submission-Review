@@ -372,10 +372,12 @@ export function StudentSubmissionForm() {
             aria-describedby={
               errors.description ? "description-error" : undefined
             }
+            hint="Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is supported."
+            hintId="description-hint"
             disabled={isDisabled}
             {...form.register("description")}
           />
-          <div className="flex items-center justify-between px-0.5">
+          <div className="flex items-center justify-between px-0.5" id="description-hint" aria-hidden="true">
             <span className="text-body-sm text-secondary">
               Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is supported.
             </span>

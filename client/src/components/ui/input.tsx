@@ -39,6 +39,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const errorId = error ? `${id}-error` : undefined;
     const hintId = hint ? `${id}-hint` : undefined;
+    // Always include hint in aria-describedby so screen readers can access it
+    // even when an error is present. The error takes priority via role="alert".
     const describedBy =
       [ariaDescribedBy, errorId, hintId].filter(Boolean).join(" ") || undefined;
 
@@ -108,7 +110,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </p>
         )}
 
-        {hint && !error && (
+        {hint && (
           <p id={hintId} className="text-label-sm text-on-surface-variant">
             {hint}
           </p>

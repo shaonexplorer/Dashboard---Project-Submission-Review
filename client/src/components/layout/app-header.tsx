@@ -1,9 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface NavItem {
   label: string;
@@ -34,10 +42,19 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
  */
 export function AppHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useCurrentUser();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
   const navItems = NAV_BY_ROLE[user?.role ?? "STUDENT"] ?? NAV_BY_ROLE.STUDENT;
+
+  function handleNavClick(href: string) {
+    router.push(href);
+  }
+
+  function handleLogout() {
+    logout();
+  }
 
   return (
     <header className="fixed top-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -124,7 +141,7 @@ export function AppHeader() {
 
           <button
             type="button"
-            onClick={() => logout()}
+            onClick={handleLogout}
             disabled={isLoggingOut}
             className="flex items-center gap-1 px-2 py-1 rounded-lg text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors disabled:opacity-50"
           >
@@ -140,6 +157,103 @@ export function AppHeader() {
           </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      <Sheet>
+        <SheetTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden p-2"
+              aria-label="Open main menu"
+            >
+              <span
+                className="material-symbols-outlined text-[24px] text-on-surface"
+                aria-hidden="true"
+              >
+                menu
+              </span>
+            </Button>
+          }
+        />
+        <SheetContent className="w-full sm:max-w-sm p-0" side="right">
+          <SheetHeader className="px-6 py-4 border-b border-surface-container">
+            <SheetTitle className="text-headline-sm text-on-surface">Menu</SheetTitle>
+          </SheetHeader>
+          <nav className="px-3 py-4 flex flex-col gap-2" aria-label="Mobile main navigation">
+            {navItems.map((item) => {
+              if (!item.href) {
+                return (
+                  <span
+                    key={item.label}
+                    aria-disabled="true"
+                    className="px-4 py-2.5 rounded-lg text-label-md text-on-surface-variant opacity-50 cursor-not-allowed"
+                  >
+                    {item.label}
+                  </span>
+                );
+              }
+
+              const isActive =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => handleNavClick(item.href!)}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "w-full px-4 py-2.5 rounded-lg text-label-md text-left transition-colors",
+                    isActive
+                      ? "bg-surface-container-high text-on-surface font-medium"
+                      : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface",
+                  )}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+
+            <div className="h-px bg-surface-container my-2" />
+
+            <div className="flex items-center gap-3 px-4 py-2.5">
+              <div className="size-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                <span
+                  className="material-symbols-outlined text-on-primary text-[20px]"
+                  aria-hidden="true"
+                >
+                  person
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-label-md text-on-surface leading-tight font-medium block truncate">
+                  {user?.fullName ?? "Student"}
+                </span>
+                <span className="text-label-sm text-on-surface-variant text-code-sm block truncate">
+                  {user ? accountSubLabel(user.role, user.id) : "Student Portal"}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="w-full px-4 py-2.5 rounded-lg text-label-md text-left text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors disabled:opacity-50 flex items-center gap-3"
+            >
+              <span
+                className="material-symbols-outlined text-[20px]"
+                aria-hidden="true"
+              >
+                logout
+              </span>
+              <span>{isLoggingOut ? "Signing out..." : "Logout"}</span>
+            </button>
+          </nav>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }

@@ -508,66 +508,85 @@ export function StudentProjectsTable({
   });
 
   return (
-    <div className="w-full overflow-x-auto">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-transparent">
-              {headerGroup.headers.map((header) => {
-                const canSort = header.column.getCanSort();
-                const sorted = header.column.getIsSorted();
+    <div className="w-full">
+      {/* Desktop Table - hidden on mobile */}
+      <div className="hidden lg:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort();
+                  const sorted = header.column.getIsSorted();
 
-                return (
-                  <TableHead
-                    key={header.id}
-                    aria-sort={
-                      sorted === "asc"
-                        ? "ascending"
-                        : sorted === "desc"
-                          ? "descending"
-                          : canSort
-                            ? "none"
-                            : undefined
-                    }
-                    style={{ width: header.column.getSize() }}
+                  return (
+                    <TableHead
+                      key={header.id}
+                      aria-sort={
+                        sorted === "asc"
+                          ? "ascending"
+                          : sorted === "desc"
+                            ? "descending"
+                            : canSort
+                              ? "none"
+                              : undefined
+                      }
+                      style={{ width: header.column.getSize() }}
+                    >
+                      {canSort ? (
+                        <SortableHeader column={header.column} />
+                      ) : (
+                        flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )
+                      )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                className={cn(
+                  "hover:bg-surface-container-low/40 transition-colors group",
+                  row.original.state === "in-review" &&
+                    "bg-surface-container-low/20",
+                )}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell
+                    key={cell.id}
+                    style={{ width: cell.column.getSize() }}
                   >
-                    {canSort ? (
-                      <SortableHeader column={header.column} />
-                    ) : (
-                      flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )
-                    )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              className={cn(
-                "hover:bg-surface-container-low/40 transition-colors group",
-                row.original.state === "in-review" &&
-                  "bg-surface-container-low/20",
-              )}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell
-                  key={cell.id}
-                  style={{ width: cell.column.getSize() }}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {/* Mobile Card Layout - visible on mobile, hidden on desktop */}
+      <div className="lg:hidden space-y-3 p-4">
+        {table.getRowModel().rows.map((row) => (
+          <MobileProjectCard
+            key={row.id}
+            project={row.original}
+            isBusy={busyProjectId === row.original.project.id}
+            isSubmitting={isSubmitting}
+            onSubmitDeliverable={onSubmitDeliverable}
+            onViewFeedback={onViewFeedback}
+            onTrackStatus={onTrackStatus}
+            onReviewComments={onReviewComments}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -605,5 +624,308 @@ function SortableHeader({
             : "unfold_more"}
       </span>
     </button>
+  );
+}
+
+/**
+ * Mobile card layout for a single project.
+ * Shown on screens smaller than lg (1024px).
+ */
+function MobileProjectCard({
+  project,
+  isBusy,
+  isSubmitting,
+  onSubmitDeliverable,
+  onViewFeedback,
+  onTrackStatus,
+  onReviewComments,
+}: {
+  project: StudentProjectRow;
+  isBusy: boolean;
+  isSubmitting: boolean;
+  onSubmitDeliverable: (project: StudentProjectRow) => void;
+  onViewFeedback?: (submission: StudentProjectRow["submission"]) => void;
+  onTrackStatus?: (submission: StudentProjectRow["submission"]) => void;
+  onReviewComments?: (submission: StudentProjectRow["submission"]) => void;
+}) {
+  const { project: proj, submission, state } = project;
+  const isCurrent = state === "in-review";
+
+  function getStatusBadge() {
+    if (!submission) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-secondary-container font-label-sm text-label-sm font-medium">
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-secondary"
+            aria-hidden="true"
+          />
+          <span>Draft · Due in 24d</span>
+        </span>
+      );
+    }
+
+    if (state === "approved") {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-label-sm text-label-sm font-medium">
+          <span
+            className="material-symbols-outlined text-[14px] text-emerald-600"
+            aria-hidden="true"
+          >
+            check_circle
+          </span>
+          <span>Approved · 94/100</span>
+        </span>
+      );
+    }
+
+    if (state === "rejected") {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-medium">
+          <span
+            className="material-symbols-outlined text-[14px]"
+            aria-hidden="true"
+          >
+            error
+          </span>
+          <span>Changes Required</span>
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 font-label-sm text-label-sm font-medium">
+        <span
+          className="w-2 h-2 rounded-full bg-amber-500 animate-ping"
+          aria-hidden="true"
+        />
+        <span>Under Review</span>
+      </span>
+    );
+  }
+
+  function getTimeline() {
+    if (!submission) {
+      return (
+        <div className="flex flex-col gap-0.5 min-w-[150px] whitespace-nowrap">
+          <span className="text-on-surface font-medium">Due Dec 18, 2026</span>
+          <span className="text-secondary font-code-sm text-code-sm">
+            23:59 UTC
+          </span>
+        </div>
+      );
+    }
+
+    if (state === "approved") {
+      return (
+        <div className="flex flex-col gap-0.5 min-w-[150px] whitespace-nowrap">
+          <span className="text-on-surface font-medium">Completed</span>
+          <span className="text-secondary font-code-sm text-code-sm">
+            {formatUtcDateTime(submission.reviewedAt || submission.submittedAt)}
+          </span>
+        </div>
+      );
+    }
+
+    if (state === "rejected") {
+      return (
+        <div className="flex flex-col gap-0.5 min-w-[150px] whitespace-nowrap">
+          <span className="text-on-surface font-medium">Evaluated</span>
+          <span className="text-secondary font-code-sm text-code-sm">
+            {formatUtcDateTime(submission.reviewedAt || submission.submittedAt)}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-0.5 min-w-[150px] whitespace-nowrap">
+        <span className="text-on-surface font-medium">Submitted Today</span>
+        <span className="text-secondary font-code-sm text-code-sm">
+          {formatUtcDateTime(submission.submittedAt).split(",")[1]?.trim() || "09:14 UTC"}
+        </span>
+      </div>
+    );
+  }
+
+  function getActionButtons() {
+    if (!submission) {
+      return (
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={() => onSubmitDeliverable(project)}
+            disabled={isSubmitting}
+            className="flex-1 h-10 px-4 rounded-lg border border-primary text-primary font-label-md text-label-md font-semibold hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            Start Submission
+            <span
+              className="material-symbols-outlined text-[15px] ml-1"
+              aria-hidden="true"
+            >
+              arrow_forward
+            </span>
+          </button>
+        </div>
+      );
+    }
+
+    if (state === "approved") {
+      return (
+        <div className="flex items-center justify-end gap-1">
+          {onViewFeedback && (
+            <button
+              type="button"
+              onClick={() => onViewFeedback!(submission)}
+              className="flex-1 h-10 px-4 rounded-lg border border-primary text-primary font-label-md text-label-md font-semibold hover:bg-primary/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <span
+                className="material-symbols-outlined text-[16px] mr-1"
+                aria-hidden="true"
+              >
+                fact_check
+              </span>
+              <span>View Feedback</span>
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (state === "in-review") {
+      return (
+        <div className="flex items-center justify-end gap-1">
+          {onTrackStatus && (
+            <button
+              type="button"
+              onClick={() => onTrackStatus!(submission)}
+              disabled={isBusy}
+              className="flex-1 h-10 px-4 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold shadow-sm hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <span
+                className="material-symbols-outlined text-[15px] mr-1"
+                aria-hidden="true"
+              >
+                hourglass_top
+              </span>
+              <span>Track Status</span>
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (state === "rejected") {
+      return (
+        <div className="flex items-center justify-end gap-1">
+          {onReviewComments && (
+            <button
+              type="button"
+              onClick={() => onReviewComments!(submission)}
+              className="flex-1 h-10 px-4 rounded-lg border border-secondary text-secondary font-label-md text-label-md font-semibold hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
+            >
+              <span
+                className="material-symbols-outlined text-[16px] mr-1"
+                aria-hidden="true"
+              >
+                rate_review
+              </span>
+              <span>Review Comments</span>
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-end gap-1">
+        <button
+          type="button"
+          className="h-10 w-10 rounded-lg text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="More options"
+        >
+          <span
+            className="material-symbols-outlined text-[18px]"
+            aria-hidden="true"
+          >
+            more_vert
+          </span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-surface-container-lowest border border-surface-container rounded-xl p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-code-sm text-code-sm uppercase font-semibold text-secondary flex-shrink-0">
+            {proj.id}
+          </span>
+          <span
+            className={cn(
+              "font-headline-sm text-headline-sm text-on-surface font-semibold truncate max-w-[200px]",
+              isCurrent && "text-primary",
+            )}
+          >
+            {proj.name}
+          </span>
+          {isCurrent && (
+            <span className="px-2 py-0.2 rounded bg-primary/10 text-primary font-code-sm text-code-sm font-medium uppercase flex-shrink-0">
+              Current
+            </span>
+          )}
+          {submission && submission.attempt > 1 && (
+            <span className="w-fit px-2 py-0.5 rounded bg-surface-container-low text-on-surface font-code-sm text-code-sm flex-shrink-0">
+              Attempt {submission.attempt}
+            </span>
+          )}
+        </div>
+        {getStatusBadge()}
+      </div>
+
+      {proj.description && (
+        <p className="text-body-sm text-secondary font-normal line-clamp-2 mb-3">
+          {proj.description}
+        </p>
+      )}
+
+      <div className="space-y-2 mb-3">
+        {submission ? (
+          <a
+            href={submission.repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-code-sm text-code-sm text-primary hover:underline flex items-center gap-1"
+          >
+            <span
+              className="material-symbols-outlined text-[16px] text-secondary"
+              aria-hidden="true"
+            >
+              code
+            </span>
+            <span className="truncate max-w-[170px]">
+              {formatUrlLabel(submission.repoUrl)}
+            </span>
+          </a>
+        ) : (
+          <div className="flex items-center gap-1 font-body-sm text-secondary italic">
+            <span
+              className="material-symbols-outlined text-[16px]"
+              aria-hidden="true"
+            >
+              link_off
+            </span>
+            <span>Not linked yet</span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        {getTimeline()}
+        <div className="flex-1 flex items-center justify-end">
+          {getActionButtons()}
+        </div>
+      </div>
+    </div>
   );
 }

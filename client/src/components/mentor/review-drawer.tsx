@@ -59,7 +59,7 @@ export function ReviewDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
+      <SheetContent className="max-w-full sm:max-w-2xl p-4 sm:p-6">
         <SheetHeader>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-label-sm uppercase tracking-wider text-on-surface-variant">

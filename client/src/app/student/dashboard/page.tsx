@@ -233,7 +233,7 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
           </p>
         </div>
 
-        <div className="hidden lg:flex items-center gap-6 px-4 py-3 rounded-lg bg-surface-container-lowest border border-surface-container-high/60">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-4 py-3 rounded-lg bg-surface-container-lowest border border-surface-container-high/60">
           <div className="flex flex-col">
             <span className="font-code-sm text-code-sm text-secondary">
               PROJECTS SUBMITTED
@@ -242,13 +242,22 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
               {submissions.length}
             </span>
           </div>
-          <div className="w-px h-8 bg-surface-container-high/60" aria-hidden="true" />
-          <div className="flex flex-col">
+          <div className="flex flex-col items-center lg:items-start">
             <span className="font-code-sm text-code-sm text-secondary">
               {hasSubmission ? "LATEST STATUS" : "REVIEW CYCLE"}
             </span>
             <span className="font-label-md text-label-md text-primary font-medium">
               {latest ? latest.status : "Standard"}
+            </span>
+          </div>
+          <div className="flex flex-col items-center lg:items-start lg:col-span-2">
+            <span className="font-code-sm text-code-sm text-secondary">
+              {hasSubmission ? "LATEST SUBMITTED" : "NEXT DEADLINE"}
+            </span>
+            <span className="font-label-md text-label-md text-on-surface font-medium">
+              {latest
+                ? formatUtcDateTime(latest.submittedAt).split(",")[0]
+                : "Dec 18, 2026"}
             </span>
           </div>
         </div>
