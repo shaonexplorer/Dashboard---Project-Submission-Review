@@ -3,8 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface PrimaryActionButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface PrimaryActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Button text */
   children: React.ReactNode;
   /** Loading state */
@@ -73,13 +72,19 @@ export function PrimaryActionButton({
       ) : (
         <>
           {iconPosition === "start" && icon && (
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-[18px] text-white"
+              aria-hidden="true"
+            >
               {icon}
             </span>
           )}
-          <span>{children}</span>
+          <span className="text-white">{children}</span>
           {iconPosition === "end" && icon && (
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-[18px] text-white"
+              aria-hidden="true"
+            >
               {icon}
             </span>
           )}
