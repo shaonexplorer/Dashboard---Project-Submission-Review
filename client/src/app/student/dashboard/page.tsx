@@ -23,10 +23,7 @@ export default function StudentDashboardPage() {
   // `isResolving` covers both the server render and the first client render,
   // so the two always produce the same markup.
   const { user, isResolving: isUserResolving } = useCurrentUser();
-  const {
-    data: submissions = [],
-    error: submissionError,
-  } = useMySubmissions();
+  const { data: submissions = [], error: submissionError } = useMySubmissions();
 
   // An expired session is handled by the authentication flow, not by the page.
   useEffect(() => {
@@ -202,7 +199,10 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
             </span>
             {latest ? (
               <>
-                <span className="text-outline font-code-sm text-code-sm" aria-hidden="true">
+                <span
+                  className="text-outline font-code-sm text-code-sm"
+                  aria-hidden="true"
+                >
                   ·
                 </span>
                 <span className="font-code-sm text-code-sm text-secondary">
@@ -233,7 +233,7 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-4 py-3 rounded-lg bg-surface-container-lowest border border-surface-container-high/60">
+        <div className="grid grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-4 px-4 py-3 rounded-lg bg-surface-container-lowest border border-surface-container-high/60">
           <div className="flex flex-col">
             <span className="font-code-sm text-code-sm text-secondary">
               PROJECTS SUBMITTED
@@ -250,7 +250,7 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
               {latest ? latest.status : "Standard"}
             </span>
           </div>
-          <div className="flex flex-col items-center lg:items-start lg:col-span-2">
+          <div className="flex flex-col items-center lg:items-start lg:col-span-1">
             <span className="font-code-sm text-code-sm text-secondary">
               {hasSubmission ? "LATEST SUBMITTED" : "NEXT DEADLINE"}
             </span>

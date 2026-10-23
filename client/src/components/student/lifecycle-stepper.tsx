@@ -40,7 +40,7 @@ export function LifecycleStepper({ status }: { status: SubmissionStatus }) {
       <div className="text-label-sm text-code-sm text-secondary uppercase tracking-wider mb-4">
         Verification &amp; Lifecycle Audit Trail
       </div>
-      <ol className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <ol className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {stages.map((stage, index) => {
           const state = states[index];
           const isDecision = index === stages.length - 1;
