@@ -1,15 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,68 +14,20 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
+  FieldGroup,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useProjects } from "@/hooks/use-projects";
 import type { Project } from "@/lib/api/projects";
-import { cn } from "@/lib/utils";
+import {
+  DESCRIPTION_MAX_LENGTH,
+  submissionSchema,
+  type SubmissionFormValues,
+} from "@/lib/validations/submission";
 
-/** Form validation schema */
-const submissionSchema = z.object({
-  projectId: z.string().min(1, "Please select a milestone"),
-  repoUrl: z
-    .string()
-    .min(1, "Repository URL is required")
-    .url("Must be a valid URL")
-    .refine(
-      (url) => {
-        try {
-          const parsed = new URL(url);
-          return parsed.protocol === "http:" || parsed.protocol === "https:";
-        } catch {
-          return false;
-        }
-      },
-      { message: "Must use HTTP or HTTPS protocol" },
-    )
-    .refine(
-      (url) => {
-        try {
-          const parsed = new URL(url);
-          return (
-            parsed.hostname === "github.com" ||
-            parsed.hostname === "www.github.com"
-          );
-        } catch {
-          return false;
-        }
-      },
-      { message: "Must be a GitHub URL (github.com)" },
-    ),
-  branch: z.string().min(1, "Branch is required"),
-  commitSha: z.string().optional(),
-  liveUrl: z
-    .string()
-    .optional()
-    .refine(
-      (url) =>
-        !url ||
-        url === "" ||
-        (() => {
-          try {
-            const u = new URL(url);
-            return u.protocol === "http:" || u.protocol === "https:";
-          } catch {
-            return false;
-          }
-        })(),
-      { message: "Must be a valid URL" },
-    ),
-});
-
-export type NewSubmissionFormValues = z.infer<typeof submissionSchema>;
+export type NewSubmissionFormValues = SubmissionFormValues;
 
 export interface NewSubmissionModalProps {
   /** Whether the modal is open */
@@ -86,7 +35,7 @@ export interface NewSubmissionModalProps {
   /** Callback when modal should close */
   onOpenChange: (open: boolean) => void;
   /** Callback when form is submitted */
-  onSubmit: (values: NewSubmissionFormValues) => void;
+  onSubmit: (values: SubmissionFormValues) => void;
   /** True while submission is in progress */
   isSubmitting?: boolean;
   /** Pre-selected project ID (optional) */
@@ -96,8 +45,8 @@ export interface NewSubmissionModalProps {
 /**
  * Modal dialog for creating a new submission.
  *
- * Includes form fields for milestone selection, repository URL,
- * branch, commit SHA, and optional live URL.
+ * Includes form fields for project selection, repository URL,
+ * live URL, and description.
  */
 export function NewSubmissionModal({
   open,
@@ -108,25 +57,28 @@ export function NewSubmissionModal({
 }: NewSubmissionModalProps) {
   const { data: projects = [], isPending: isCatalogPending } = useProjects();
 
-  const form = useForm<NewSubmissionFormValues>({
+  const form = useForm<SubmissionFormValues>({
     resolver: zodResolver(submissionSchema),
     defaultValues: {
       projectId: defaultProjectId || "",
       repoUrl: "",
-      branch: "main",
-      commitSha: "",
       liveUrl: "",
+      description: "",
     },
   });
 
-  const handleSubmit = (values: NewSubmissionFormValues) => {
+  const { errors } = form.formState;
+  const description = useWatch({ control: form.control, name: "description" });
+  const descriptionLength = description?.length ?? 0;
+  const isDisabled = isSubmitting;
+
+  const handleSubmit = (values: SubmissionFormValues) => {
     onSubmit(values);
     form.reset({
       projectId: defaultProjectId || "",
       repoUrl: "",
-      branch: "main",
-      commitSha: "",
       liveUrl: "",
+      description: "",
     });
   };
 
@@ -149,116 +101,37 @@ export function NewSubmissionModal({
 
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className=" flex flex-col gap-4"
+          noValidate
+          className="flex flex-col gap-4"
         >
-          {/* Target Milestone */}
-          <Field>
-            <FieldLabel htmlFor="projectId">Target Milestone</FieldLabel>
-            <select
-              id="projectId"
-              className="w-full h-10 px-3 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-              disabled={isCatalogPending}
-              {...form.register("projectId")}
-            >
-              <option value="">Select a milestone</option>
-              {isCatalogPending ? (
-                <option disabled>Loading catalog…</option>
-              ) : (
-                projects.map((project: Project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.id}: {project.name}
-                  </option>
-                ))
-              )}
-            </select>
-            <FieldError errors={[form.formState.errors.projectId]} />
-          </Field>
-
-          {/* Git Repository URL */}
-          <Field>
-            <FieldLabel htmlFor="repoUrl">
-              Git Repository URL
-              <span
-                className="text-error font-sans font-bold"
-                aria-hidden="true"
+          <FieldGroup>
+            {/* Target Milestone */}
+            <Field data-invalid={!!errors.projectId}>
+              <FieldLabel htmlFor="projectId">Target Milestone</FieldLabel>
+              <select
+                id="projectId"
+                className="w-full h-10 px-3 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                disabled={isCatalogPending || isDisabled}
+                {...form.register("projectId")}
               >
-                *
-              </span>
-            </FieldLabel>
+                <option value="">Select a milestone</option>
+                {isCatalogPending ? (
+                  <option disabled>Loading catalog…</option>
+                ) : (
+                  projects.map((project: Project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.id}: {project.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              <FieldError errors={[errors.projectId]} />
+            </Field>
 
-            {/* <Input
-                id="repoUrl"
-                type="url"
-                placeholder="https://github.com/username/project-name"
-                className="w-full h-10 bg-transparent text-on-surface font-code-sm text-code-sm focus:outline-none"
-                {...form.register("repoUrl")}
-              /> */}
-            <Input
-              id="repoUrl"
-              type="url"
-              inputMode="url"
-              className="pl-9 border-surface-container-high border"
-              placeholder="https://github.com/username/project-name"
-              leadingIcon={
-                <span
-                  className="material-symbols-outlined text-[18px]"
-                  aria-hidden="true"
-                >
-                  code
-                </span>
-              }
-              {...form.register("repoUrl")}
-            />
-
-            <FieldDescription>
-              Provide the public GitHub repository containing your project
-              source code.
-            </FieldDescription>
-            <FieldError errors={[form.formState.errors.repoUrl]} />
-          </Field>
-
-          {/* <Field data-invalid={!!errors.repoUrl}>
-            <FieldLabel htmlFor="repoUrl">
-              GitHub Repository
-              <span
-                className="text-error font-sans font-bold"
-                aria-hidden="true"
-              >
-                *
-              </span>
-            </FieldLabel>
-            <Input
-              id="repoUrl"
-              type="url"
-              inputMode="url"
-              className="pl-9 border-surface-container-high border"
-              placeholder="https://github.com/username/project-name"
-              isError={!!errors.repoUrl}
-              aria-invalid={!!errors.repoUrl}
-              aria-describedby={errors.repoUrl ? "repoUrl-error" : undefined}
-              disabled={isDisabled}
-              leadingIcon={
-                <span
-                  className="material-symbols-outlined text-[18px]"
-                  aria-hidden="true"
-                >
-                  code
-                </span>
-              }
-              {...form.register("repoUrl")}
-            />
-            <FieldDescription>
-              Provide the public GitHub repository containing your project
-              source code.
-            </FieldDescription>
-            <FieldError id="repoUrl-error" errors={[errors.repoUrl]} />
-          </Field> */}
-
-          {/* Git Branch & Commit SHA */}
-          {/* <div className="grid grid-cols-2 gap-4">
-            <Field>
-              <FieldLabel htmlFor="branch">
-                Git Branch
+            {/* Git Repository URL */}
+            <Field data-invalid={!!errors.repoUrl}>
+              <FieldLabel htmlFor="repoUrl">
+                GitHub Repository
                 <span
                   className="text-error font-sans font-bold"
                   aria-hidden="true"
@@ -267,47 +140,106 @@ export function NewSubmissionModal({
                 </span>
               </FieldLabel>
               <Input
-                id="branch"
-                type="text"
-                className="w-full h-10 px-3 bg-surface-container-lowest text-on-surface font-code-sm text-code-sm rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                {...form.register("branch")}
-              />
-              <FieldError errors={[form.formState.errors.branch]} />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="commitSha">Commit SHA</FieldLabel>
-              <Input
-                id="commitSha"
-                type="text"
-                placeholder="e.g. 7f81b32"
-                className="w-full h-10 px-3 bg-surface-container-lowest text-on-surface font-code-sm text-code-sm rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                {...form.register("commitSha")}
+                id="repoUrl"
+                type="url"
+                inputMode="url"
+                className="pl-9 border-surface-container-high border"
+                placeholder="https://github.com/username/project-name"
+                isError={!!errors.repoUrl}
+                aria-invalid={!!errors.repoUrl}
+                aria-describedby={errors.repoUrl ? "repoUrl-error" : undefined}
+                disabled={isDisabled}
+                leadingIcon={
+                  <span
+                    className="material-symbols-outlined text-[18px]"
+                    aria-hidden="true"
+                  >
+                    code
+                  </span>
+                }
+                {...form.register("repoUrl")}
               />
               <FieldDescription>
-                Optional: specific commit to submit
+                Provide the public GitHub repository containing your project
+                source code.
               </FieldDescription>
+              <FieldError id="repoUrl-error" errors={[errors.repoUrl]} />
             </Field>
-          </div> */}
 
-          {/* Staging / Deployed URL */}
-          <Field>
-            <FieldLabel htmlFor="liveUrl">
-              Staging / Deployed URL (Optional)
-            </FieldLabel>
-            <Input
-              id="liveUrl"
-              type="url"
-              placeholder="https://gateway-preview.internal.assessment.run"
-              className="w-full h-10 px-3 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-              {...form.register("liveUrl")}
-            />
-            <FieldDescription>
-              Provide the deployed, publicly accessible version of your
-              application.
-            </FieldDescription>
-            <FieldError errors={[form.formState.errors.liveUrl]} />
-          </Field>
+            {/* Live Project URL */}
+            <Field data-invalid={!!errors.liveUrl}>
+              <FieldLabel htmlFor="liveUrl">
+                Live Project
+                <span
+                  className="text-error font-sans font-bold"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </FieldLabel>
+              <Input
+                id="liveUrl"
+                type="url"
+                inputMode="url"
+                className="pl-9 border-surface-container-high border"
+                placeholder="https://orchestrator-app.vercel.app"
+                isError={!!errors.liveUrl}
+                aria-invalid={!!errors.liveUrl}
+                aria-describedby={errors.liveUrl ? "liveUrl-error" : undefined}
+                disabled={isDisabled}
+                leadingIcon={
+                  <span
+                    className="material-symbols-outlined text-[18px]"
+                    aria-hidden="true"
+                  >
+                    rocket_launch
+                  </span>
+                }
+                {...form.register("liveUrl")}
+              />
+              <FieldDescription>
+                Provide the deployed, publicly accessible version of your
+                application.
+              </FieldDescription>
+              <FieldError id="liveUrl-error" errors={[errors.liveUrl]} />
+            </Field>
+
+            {/* Description */}
+            <Field data-invalid={!!errors.description}>
+              <FieldLabel htmlFor="description">
+                Description
+                <span
+                  className="text-error font-sans font-bold"
+                  aria-hidden="true"
+                >
+                  *
+                </span>
+              </FieldLabel>
+              <Textarea
+                id="description"
+                rows={5}
+                className="min-h-32 resize-y bg-surface-container-lowest border-surface-container-high text-on-surface text-body-md placeholder:text-outline focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary"
+                placeholder="Briefly describe what your application does, its core architecture, primary tech stack (e.g. Next.js, Redis, Tailwind), and key features tested…"
+                maxLength={DESCRIPTION_MAX_LENGTH}
+                aria-invalid={!!errors.description}
+                aria-describedby={
+                  errors.description ? "description-error" : undefined
+                }
+                disabled={isDisabled}
+                {...form.register("description")}
+              />
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-body-sm text-secondary">
+                  Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is
+                  supported.
+                </span>
+                <span className="text-code-sm text-secondary font-medium">
+                  {descriptionLength} / {DESCRIPTION_MAX_LENGTH}
+                </span>
+              </div>
+              <FieldError id="description-error" errors={[errors.description]} />
+            </Field>
+          </FieldGroup>
 
           {/* Certification */}
           <div className="p-3 rounded-lg bg-surface-container flex items-start gap-3">

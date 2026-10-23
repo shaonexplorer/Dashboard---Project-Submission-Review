@@ -28,6 +28,7 @@ import type {
   StudentSubmissionListQuery,
   Submission,
 } from "@/lib/api/submissions";
+import type { SubmissionFormValues } from "@/lib/validations/submission";
 import type { SortingState } from "@tanstack/react-table";
 
 /**
@@ -351,20 +352,9 @@ export default function StudentMyProjectsPage() {
     router.push(`/student/submission/${submission.id}`);
   }
 
-  async function handleSubmitDeliverable(values: {
-    projectId: string;
-    repoUrl: string;
-    branch: string;
-    commitSha?: string;
-    liveUrl?: string;
-  }) {
+  async function handleSubmitDeliverable(values: SubmissionFormValues) {
     try {
-      await createSubmissionMutation.mutateAsync({
-        projectId: values.projectId,
-        repoUrl: values.repoUrl,
-        liveUrl: values.liveUrl || "",
-        description: `Branch: ${values.branch}${values.commitSha ? `, Commit: ${values.commitSha}` : ""}`,
-      });
+      await createSubmissionMutation.mutateAsync(values);
       setIsModalOpen(false);
       void refetchSubmissions();
     } catch (error) {
