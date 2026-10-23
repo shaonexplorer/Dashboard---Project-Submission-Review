@@ -248,7 +248,11 @@ export function NewSubmissionModal({
                 disabled={isDisabled}
                 {...form.register("description")}
               />
-              <div className="flex items-center justify-between px-0.5" id="description-hint" aria-hidden="true">
+              <div
+                className="flex items-center justify-between px-0.5"
+                id="description-hint"
+                aria-hidden="true"
+              >
                 <span className="text-body-sm text-secondary">
                   Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is
                   supported.
@@ -285,10 +289,12 @@ export function NewSubmissionModal({
               variant="secondary"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              size={"lg"}
             >
               Cancel
             </Button>
             <Button
+              size={"lg"}
               type="submit"
               disabled={isSubmitting}
               className="px-6 py-2 rounded-lg font-label-md text-label-md bg-primary-container text-on-primary hover:bg-primary transition-colors shadow-sm flex items-center gap-2"

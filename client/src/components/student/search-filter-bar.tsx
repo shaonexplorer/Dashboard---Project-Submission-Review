@@ -53,11 +53,7 @@ export function SearchFilterBar({
   );
 
   function handleStatusChange(
-    statusValue:
-      | SubmissionStatus
-      | "all"
-      | "active"
-      | "archived",
+    statusValue: SubmissionStatus | "all" | "active" | "archived",
   ) {
     if (statusValue === "all") {
       onStatusChange(undefined);
@@ -122,7 +118,7 @@ export function SearchFilterBar({
           <Button
             onClick={onSubmitClick}
             className={cn(
-              "h-10 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-medium hover:bg-primary-container transition-all shadow-sm flex items-center gap-1 shrink-0",
+              "w-full h-10 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-medium hover:bg-primary-container transition-all shadow-sm flex items-center gap-1 shrink-0",
             )}
           >
             <span

@@ -96,7 +96,7 @@ export function StatusFilterTabs({
                 : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low",
             )}
           >
-            <span>{tab.label}</span>
+            <span className="text-sm sm:text-base ">{tab.label}</span>
             <span
               className={cn(
                 "px-1.5 py-0.2 rounded-full font-code-sm text-code-sm",

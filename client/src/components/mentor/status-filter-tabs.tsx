@@ -54,7 +54,9 @@ export function StatusFilterTabs({
           const next = values[values.length - 1];
 
           if (next) {
-            onStatusChange(next === "ALL" ? undefined : (next as SubmissionStatus));
+            onStatusChange(
+              next === "ALL" ? undefined : (next as SubmissionStatus),
+            );
           }
         }}
         aria-label="Filter submissions by status"
@@ -68,7 +70,7 @@ export function StatusFilterTabs({
                   aria-hidden="true"
                 />
               ) : null}
-              <span>{filter.label}</span>
+              <span className="text-xs sm:text-sm">{filter.label}</span>
               <span
                 className={cn(
                   "rounded-full px-1.5 py-0.2 text-code-sm",
