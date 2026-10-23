@@ -1,8 +1,12 @@
-import { UserRole } from "@prisma/client";
+import { UserRole } from "../../generated/prisma/client";
 import { prisma } from "../../config/prisma";
 import type { Prisma, SubmissionStatus } from "../../generated/prisma/client";
 import { ApiError } from "../../utils/api-error";
-import type { ResubmitInput, SubmissionListQuery, StudentSubmissionListQuery } from "./submission.validations";
+import type {
+  ResubmitInput,
+  SubmissionListQuery,
+  StudentSubmissionListQuery,
+} from "./submission.validations";
 
 /**
  * Machine-readable discriminators returned alongside a conflicting request.
@@ -89,7 +93,7 @@ const buildDuplicateError = (existingStatus: string) => {
       "This project was rejected. Resubmit it with the requested changes.",
       undefined,
       true,
-      SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED
+      SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED,
     );
   }
 
@@ -98,7 +102,7 @@ const buildDuplicateError = (existingStatus: string) => {
     "You have already submitted this project",
     undefined,
     true,
-    SUBMISSION_ERROR_CODES.DUPLICATE_SUBMISSION
+    SUBMISSION_ERROR_CODES.DUPLICATE_SUBMISSION,
   );
 };
 
@@ -123,7 +127,12 @@ const buildDuplicateError = (existingStatus: string) => {
  */
 export const createSubmissionService = async (
   studentId: string,
-  data: { projectId: string; repoUrl: string; liveUrl: string; description: string }
+  data: {
+    projectId: string;
+    repoUrl: string;
+    liveUrl: string;
+    description: string;
+  },
 ) => {
   // Verify user is a student
   const user = await prisma.user.findUnique({ where: { id: studentId } });
@@ -176,7 +185,12 @@ export const createSubmissionService = async (
     return getSafeSubmission(submission);
   } catch (error) {
     // Handle Prisma unique constraint violation (P2002) for concurrent duplicates
-    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
       const prismaError = error as {
         meta?: { target?: string[] | string; modelName?: string };
       };
@@ -265,7 +279,7 @@ export const getStudentSubmissionsService = async (studentId: string) => {
  */
 const buildStudentSubmissionWhere = (
   studentId: string,
-  query: StudentSubmissionListQuery
+  query: StudentSubmissionListQuery,
 ): Prisma.SubmissionWhereInput => {
   const where: Prisma.SubmissionWhereInput = { studentId };
 
@@ -295,7 +309,7 @@ const buildStudentSubmissionWhere = (
  */
 const buildStudentSubmissionOrderBy = (
   sortBy: StudentSubmissionListQuery["sortBy"],
-  sortOrder: StudentSubmissionListQuery["sortOrder"]
+  sortOrder: StudentSubmissionListQuery["sortOrder"],
 ): Prisma.SubmissionOrderByWithRelationInput => {
   if (sortBy === "projectName") {
     return { projectName: sortOrder };
@@ -324,7 +338,7 @@ const buildStudentSubmissionOrderBy = (
  */
 export const getStudentSubmissionsPaginatedService = async (
   studentId: string,
-  query: StudentSubmissionListQuery
+  query: StudentSubmissionListQuery,
 ) => {
   const { page, limit, sortBy, sortOrder } = query;
 
@@ -395,7 +409,7 @@ export const getStudentSubmissionsPaginatedService = async (
 export const resubmitSubmissionService = async (
   studentId: string,
   submissionId: string,
-  data: ResubmitInput
+  data: ResubmitInput,
 ) => {
   const existing = await prisma.submission.findUnique({
     where: { id: submissionId },
@@ -419,7 +433,7 @@ export const resubmitSubmissionService = async (
       "This submission cannot be resubmitted",
       undefined,
       true,
-      SUBMISSION_ERROR_CODES.NOT_RESUBMITTABLE
+      SUBMISSION_ERROR_CODES.NOT_RESUBMITTABLE,
     );
   }
 
@@ -510,7 +524,9 @@ export type MentorSubmission = MentorSubmissionRow & {
  * fields combine with OR semantics. A blank search is dropped rather than
  * turned into a filter that matches nothing.
  */
-const buildSubmissionWhere = (query: SubmissionListQuery): Prisma.SubmissionWhereInput => {
+const buildSubmissionWhere = (
+  query: SubmissionListQuery,
+): Prisma.SubmissionWhereInput => {
   const where: Prisma.SubmissionWhereInput = {};
 
   if (query.status) {
@@ -541,7 +557,7 @@ const buildSubmissionWhere = (query: SubmissionListQuery): Prisma.SubmissionWher
  */
 const buildSubmissionOrderBy = (
   sortBy: SubmissionListQuery["sortBy"],
-  sortOrder: SubmissionListQuery["sortOrder"]
+  sortOrder: SubmissionListQuery["sortOrder"],
 ): Prisma.SubmissionOrderByWithRelationInput => {
   if (sortBy === "projectName") {
     return { projectName: sortOrder };
@@ -699,7 +715,7 @@ export const getSubmissionStatsService = async (): Promise<SubmissionStats> => {
  * @returns The total and per-status breakdown for the student
  */
 export const getStudentSubmissionStatsService = async (
-  studentId: string
+  studentId: string,
 ): Promise<StudentSubmissionStats> => {
   const [total, groups] = await Promise.all([
     prisma.submission.count({ where: { studentId } }),
@@ -760,7 +776,7 @@ export const getStudentSubmissionStatsService = async (
 export const updateSubmissionStatusService = async (
   reviewerId: string,
   submissionId: string,
-  data: { status: "APPROVED" | "REJECTED"; feedback?: string }
+  data: { status: "APPROVED" | "REJECTED"; feedback?: string },
 ) => {
   const existing = await prisma.submission.findUnique({
     where: { id: submissionId },

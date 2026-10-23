@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "../../generated/prisma/client";
 
 import { ApiError } from "../../utils/api-error";
 import { verifyToken } from "../../utils/jwt";
@@ -15,7 +15,7 @@ import { verifyToken } from "../../utils/jwt";
 export const authenticate = (
   req: Request,
   _res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const token = req.cookies?.token;
 
