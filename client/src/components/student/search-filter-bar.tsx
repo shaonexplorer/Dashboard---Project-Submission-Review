@@ -3,6 +3,10 @@
 import { cn } from "@/lib/utils";
 import { Kbd } from "@/components/ui/kbd";
 import { Button } from "@/components/ui/button";
+import { StatusFilterTabs } from "./status-filter-tabs";
+import { useMemo, useState } from "react";
+import { StudentSubmissionListQuery } from "@/lib/api/submissions";
+import { useMySubmissionStats } from "@/hooks/use-submissions";
 
 export interface SearchFilterBarProps {
   /** Current search term */
@@ -66,10 +70,48 @@ export function SearchFilterBar({
     "Sort by: Grade (High to Low)",
   ];
 
+  const [statusFilter, setStatusFilter] =
+    useState<StudentSubmissionListQuery["status"]>(undefined);
+
+  const [page, setPage] = useState(1);
+  const { data: stats } = useMySubmissionStats();
+
+  // Map status filter for display (moved before early returns)
+  const statusCounts = useMemo(
+    () => ({
+      all: stats?.total ?? 0,
+      active: stats?.active ?? 0,
+      approved: stats?.approved ?? 0,
+      pending: stats?.pending ?? 0,
+      rejected: stats?.rejected ?? 0,
+      archived: stats?.archived ?? 0,
+    }),
+    [stats],
+  );
+
+  function handleStatusChange(
+    status:
+      | StudentSubmissionListQuery["status"]
+      | "all"
+      | "active"
+      | "archived",
+  ) {
+    if (status === "all") {
+      setStatusFilter(undefined);
+    } else if (status === "active") {
+      setStatusFilter("PENDING");
+    } else if (status === "archived") {
+      setStatusFilter(undefined);
+    } else {
+      setStatusFilter(status);
+    }
+    setPage(1);
+  }
+
   return (
     <div className="flex flex-col gap-4 bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-outline-variant/40">
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-        <div className="relative flex-1 min-w-[280px]">
+        <div className="relative flex-1 min-w-[280px] max-w-md">
           <span
             className="material-symbols-outlined absolute left-3 top-2.5 text-secondary text-[20px] pointer-events-none"
             aria-hidden="true"
@@ -82,7 +124,7 @@ export function SearchFilterBar({
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search projects, milestones, technologies, or commits..."
             className={cn(
-              "w-full h-10 pl-10 pr-16 bg-surface-container-low/60 text-on-surface font-body-md text-body-md rounded-lg border border-transparent focus:border-primary/30 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all",
+              "w-full max-w-md h-10 pl-10 pr-16 bg-surface-container-low/60 text-on-surface font-body-md text-body-md rounded-lg border border-transparent focus:border-primary/30 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all",
               isSearching && "bg-surface-container-lowest",
             )}
             aria-label="Search projects"
@@ -94,49 +136,7 @@ export function SearchFilterBar({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <select
-              value={cohort}
-              onChange={(e) => onCohortChange(e.target.value)}
-              className={cn(
-                "h-10 pl-4 pr-8 rounded-lg bg-surface-container-low/60 hover:bg-surface-container-low text-on-surface font-label-md text-label-md appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors border border-transparent",
-              )}
-            >
-              {cohortOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-            <span
-              className="material-symbols-outlined text-secondary text-[18px] absolute right-3 top-2.5 pointer-events-none"
-              aria-hidden="true"
-            >
-              expand_more
-            </span>
-          </div>
-          <div className="relative">
-            <select
-              value={techStack}
-              onChange={(e) => onTechStackChange(e.target.value)}
-              className={cn(
-                "h-10 pl-4 pr-8 rounded-lg bg-surface-container-low/60 hover:bg-surface-container-low text-on-surface font-label-md text-label-md appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors border border-transparent",
-              )}
-            >
-              {techStackOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-            <span
-              className="material-symbols-outlined text-secondary text-[18px] absolute right-3 top-2.5 pointer-events-none"
-              aria-hidden="true"
-            >
-              expand_more
-            </span>
-          </div>
-          <div className="relative">
+          {/* <div className="relative">
             <select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value)}
@@ -156,7 +156,7 @@ export function SearchFilterBar({
             >
               expand_more
             </span>
-          </div>
+          </div> */}
           <Button
             onClick={onSubmitClick}
             className={cn(
@@ -173,6 +173,18 @@ export function SearchFilterBar({
           </Button>
         </div>
       </div>
+
+      <StatusFilterTabs
+        activeStatus={
+          statusFilter === undefined
+            ? "all"
+            : statusFilter === "PENDING"
+              ? "active"
+              : statusFilter
+        }
+        onStatusChange={handleStatusChange}
+        counts={statusCounts}
+      />
     </div>
   );
 }

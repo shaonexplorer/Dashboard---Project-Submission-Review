@@ -7,7 +7,9 @@ export interface StatusFilterTabsProps {
   /** Currently active status filter */
   activeStatus: SubmissionStatus | "all" | "active" | "archived" | undefined;
   /** Callback when status filter changes */
-  onStatusChange: (status: SubmissionStatus | "all" | "active" | "archived" | undefined) => void;
+  onStatusChange: (
+    status: SubmissionStatus | "all" | "active" | "archived" | undefined,
+  ) => void;
   /** Counts for each status */
   counts: {
     all: number;
@@ -39,11 +41,31 @@ export function StatusFilterTabs({
 }: StatusFilterTabsProps) {
   const tabs: StatusTabConfig[] = [
     { value: "all", label: "All Projects", countKey: "all" },
-    { value: "active", label: "Active / In Progress", countKey: "active", icon: "schedule" },
-    { value: "APPROVED", label: "Approved", countKey: "approved", icon: "check_circle" },
-    { value: "PENDING", label: "Under Review", countKey: "pending", icon: "hourglass_top" },
-    { value: "REJECTED", label: "Changes Required", countKey: "rejected", icon: "edit" },
-    { value: "archived", label: "Archived", countKey: "archived", icon: "archive" },
+    {
+      value: "active",
+      label: "Active / In Progress",
+      countKey: "active",
+      icon: "schedule",
+    },
+    {
+      value: "APPROVED",
+      label: "Approved",
+      countKey: "approved",
+      icon: "check_circle",
+    },
+    // {
+    //   value: "PENDING",
+    //   label: "Under Review",
+    //   countKey: "pending",
+    //   icon: "hourglass_top",
+    // },
+    {
+      value: "REJECTED",
+      label: "Changes Required",
+      countKey: "rejected",
+      icon: "edit",
+    },
+    // { value: "archived", label: "Archived", countKey: "archived", icon: "archive" },
   ];
 
   const isActive = (value: StatusTabConfig["value"]) => activeStatus === value;

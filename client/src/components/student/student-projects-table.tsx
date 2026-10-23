@@ -137,39 +137,39 @@ export function StudentProjectsTable({
           );
         },
       }),
-      columnHelper.accessor((row) => row.project, {
-        id: "techStack",
-        header: "Tech Stack",
-        enableSorting: false,
-        cell: ({ row }) => {
-          // In a real app, tech stack would come from project metadata
-          // For now, we'll show a placeholder based on project ID
-          const techStacks: Record<string, string[]> = {
-            "ph-01": ["TypeScript", "React", "Next.js"],
-            "ph-02": ["Go", "Redis", "Docker", "gRPC"],
-            "ph-03": ["Kafka", "ClickHouse", "Rust"],
-            "ph-04": ["C++", "Raft", "ZeroMQ"],
-            "ph-00": ["C", "Linux", "Makefile"],
-          };
-          const stacks = techStacks[row.original.project.id] || [];
+      // columnHelper.accessor((row) => row.project, {
+      //   id: "techStack",
+      //   header: "Tech Stack",
+      //   enableSorting: false,
+      //   cell: ({ row }) => {
+      //     // In a real app, tech stack would come from project metadata
+      //     // For now, we'll show a placeholder based on project ID
+      //     const techStacks: Record<string, string[]> = {
+      //       "ph-01": ["TypeScript", "React", "Next.js"],
+      //       "ph-02": ["Go", "Redis", "Docker", "gRPC"],
+      //       "ph-03": ["Kafka", "ClickHouse", "Rust"],
+      //       "ph-04": ["C++", "Raft", "ZeroMQ"],
+      //       "ph-00": ["C", "Linux", "Makefile"],
+      //     };
+      //     const stacks = techStacks[row.original.project.id] || [];
 
-          return (
-            <div className="flex flex-wrap items-center gap-1 min-w-[200px]">
-              {stacks.map((stack) => (
-                <span
-                  key={stack}
-                  className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface font-code-sm text-code-sm"
-                >
-                  {stack}
-                </span>
-              ))}
-              {stacks.length === 0 && (
-                <span className="text-body-sm text-on-surface-variant">—</span>
-              )}
-            </div>
-          );
-        },
-      }),
+      //     return (
+      //       <div className="flex flex-wrap items-center gap-1 min-w-[200px]">
+      //         {stacks.map((stack) => (
+      //           <span
+      //             key={stack}
+      //             className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface font-code-sm text-code-sm"
+      //           >
+      //             {stack}
+      //           </span>
+      //         ))}
+      //         {stacks.length === 0 && (
+      //           <span className="text-body-sm text-on-surface-variant">—</span>
+      //         )}
+      //       </div>
+      //     );
+      //   },
+      // }),
       columnHelper.accessor((row) => row.submission, {
         id: "repository",
         header: "Repository & Commit",
@@ -285,12 +285,12 @@ export function StudentProjectsTable({
           }
 
           return (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 font-label-sm text-label-sm font-medium">
+            <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 font-label-sm text-label-sm font-medium">
               <span
                 className="w-2 h-2 rounded-full bg-amber-500 animate-ping"
                 aria-hidden="true"
               />
-              <span>Under Review · In Queue</span>
+              <span>Under Review</span>
             </span>
           );
         },

@@ -13,7 +13,6 @@ import { AppFooter, AppHeader } from "@/components/layout";
 import {
   MetricCard,
   SearchFilterBar,
-  StatusFilterTabs,
   StudentProjectsTable,
   TablePagination,
   KeyboardShortcutsStrip,
@@ -129,7 +128,6 @@ export default function StudentMyProjectsPage() {
             <PageHeaderSkeleton />
             <MetricStripSkeleton />
             <SearchFilterBarSkeleton />
-            <StatusFilterTabsSkeleton />
             <TableSkeleton />
             <TablePaginationSkeleton />
             <KeyboardShortcutsStripSkeleton />
@@ -215,7 +213,7 @@ export default function StudentMyProjectsPage() {
             <MetricCard
               label="Milestones Tracked"
               value={stats?.total ?? 0}
-              subtitle="/ 3 active"
+              subtitle="/ 6 active"
               icon="timeline"
               indicatorColor="emerald"
               trendLabel="3 active"
@@ -263,19 +261,6 @@ export default function StudentMyProjectsPage() {
               setIsModalOpen(true);
             }}
             isSearching={isRefetching}
-          />
-
-          {/* Status Filter Tabs */}
-          <StatusFilterTabs
-            activeStatus={
-              statusFilter === undefined
-                ? "all"
-                : statusFilter === "PENDING"
-                  ? "active"
-                  : statusFilter
-            }
-            onStatusChange={handleStatusChange}
-            counts={statusCounts}
           />
 
           {/* Projects Table */}
@@ -337,25 +322,6 @@ export default function StudentMyProjectsPage() {
       <AppFooter />
     </div>
   );
-
-  function handleStatusChange(
-    status:
-      | StudentSubmissionListQuery["status"]
-      | "all"
-      | "active"
-      | "archived",
-  ) {
-    if (status === "all") {
-      setStatusFilter(undefined);
-    } else if (status === "active") {
-      setStatusFilter("PENDING");
-    } else if (status === "archived") {
-      setStatusFilter(undefined);
-    } else {
-      setStatusFilter(status);
-    }
-    setPage(1);
-  }
 
   function handleStartSubmission(project: StudentProjectRow) {
     setPreSelectedProject(project);
@@ -451,16 +417,6 @@ function SearchFilterBarSkeleton() {
   return (
     <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-outline-variant/40 animate-pulse">
       <Skeleton className="h-10 w-full max-w-md rounded-lg" />
-    </div>
-  );
-}
-
-function StatusFilterTabsSkeleton() {
-  return (
-    <div className="flex items-center gap-1 overflow-x-auto pt-1 border-t border-outline-variant/30 animate-pulse">
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <Skeleton key={i} className="h-10 w-32 rounded-lg" />
-      ))}
     </div>
   );
 }
