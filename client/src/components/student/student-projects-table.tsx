@@ -579,7 +579,7 @@ export function StudentProjectsTable({
             key={row.id}
             project={row.original}
             isBusy={busyProjectId === row.original.project.id}
-            isSubmitting={isSubmitting}
+            isSubmitting={isSubmitting ?? false}
             onSubmitDeliverable={onSubmitDeliverable}
             onViewFeedback={onViewFeedback}
             onTrackStatus={onTrackStatus}
@@ -741,7 +741,8 @@ function MobileProjectCard({
       <div className="flex flex-col gap-0.5 min-w-[150px] whitespace-nowrap">
         <span className="text-on-surface font-medium">Submitted Today</span>
         <span className="text-secondary font-code-sm text-code-sm">
-          {formatUtcDateTime(submission.submittedAt).split(",")[1]?.trim() || "09:14 UTC"}
+          {formatUtcDateTime(submission.submittedAt).split(",")[1]?.trim() ||
+            "09:14 UTC"}
         </span>
       </div>
     );
