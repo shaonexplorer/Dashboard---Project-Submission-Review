@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Backend API URL for verifying authentication
-const API_URL =
-  process.env.API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5000/api";
-
 /**
  * Protected routes configuration
  */
@@ -57,6 +51,11 @@ function getRequiredRole(pathname: string): "STUDENT" | "MENTOR" | null {
 async function verifyAuth(
   token: string,
 ): Promise<{ user: { role: string; id: string } } | null> {
+  // Backend API URL for verifying authentication
+  const API_URL =
+    process.env.API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:5000/api";
   try {
     console.log(`Verifying token with API: ${API_URL}/auth/me`);
     const response = await fetch(`${API_URL}/auth/me`, {
