@@ -1,6 +1,7 @@
 import { getApiUrl } from "@/lib/utils";
 
-const API_BASE_URL = getApiUrl();
+// Use Next.js API routes for authentication (they proxy to backend and set cookies on frontend domain)
+const AUTH_API_BASE_URL = "/api/auth";
 
 export interface User {
   id: string;
@@ -50,12 +51,12 @@ export async function signupApi(input: {
   email: string;
   password: string;
 }): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+  const response = await fetch(`${AUTH_API_BASE_URL}/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
+    // No credentials: "include" needed - cookies are set by Next.js API routes on same domain
     body: JSON.stringify(input),
   });
 
@@ -66,12 +67,12 @@ export async function loginApi(input: {
   email: string;
   password: string;
 }): Promise<AuthResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await fetch(`${AUTH_API_BASE_URL}/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
+    // No credentials: "include" needed - cookies are set by Next.js API routes on same domain
     body: JSON.stringify(input),
   });
 
@@ -79,19 +80,26 @@ export async function loginApi(input: {
 }
 
 export async function meApi(): Promise<MeResponse> {
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+  const response = await fetch(`${AUTH_API_BASE_URL}/me`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
+    // No credentials: "include" needed - cookies are automatically sent for same-domain requests
   });
 
   return handleResponse<MeResponse>(response);
 }
 
 export async function logoutApi(): Promise<void> {
-  // Since we use cookie-based auth, logout is just clearing the cookie
-  // The backend doesn't need a specific logout endpoint
-  // We'll handle token removal on the frontend
+  const response = await fetch(`${AUTH_API_BASE_URL}/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Logout failed");
+  }
 }
