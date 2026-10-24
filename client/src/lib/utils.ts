@@ -5,6 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Returns the base URL for API calls.
+ * Uses Next.js proxy route (/api/backend) to handle cross-origin cookies.
+ * The auth cookie is set on the Next.js domain and automatically forwarded to the backend.
+ */
 export function getApiUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+  return "/api/backend"
 }

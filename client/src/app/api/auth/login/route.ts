@@ -5,11 +5,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 /**
  * Cookie options for the JWT access token.
  * Set on the frontend (Next.js) domain so middleware can read it.
+ * In production with cross-origin backend, use "none" + secure for cross-site cookie.
+ * Note: This cookie is for Next.js middleware. API calls to backend are proxied via Next.js API routes.
  */
+const isProduction = process.env.NODE_ENV === "production";
+
 const cookieOptions = {
   httpOnly: true,
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  secure: isProduction,
   maxAge: 60 * 60 * 24 * 7, // 7 days
   path: "/",
 };
