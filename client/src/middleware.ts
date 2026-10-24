@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { jwtVerify } from "jose";
+
+// Ensure middleware runs in Node.js runtime for JWT verification compatibility
+export const runtime = "nodejs";
 
 /**
  * Protected routes configuration
@@ -46,46 +50,36 @@ function getRequiredRole(pathname: string): "STUDENT" | "MENTOR" | null {
 }
 
 /**
- * Verify authentication token with backend and get user data
+ * JWT payload structure (must match backend TokenPayload)
  */
-async function verifyAuth(
-  token: string,
-): Promise<{ user: { role: string; id: string } } | null> {
-  // Backend API URL for verifying authentication
-  const API_URL =
-    process.env.API_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:5000/api";
+interface TokenPayload {
+  userId: string;
+  role: string;
+}
+
+/**
+ * Verify JWT token locally using the shared secret.
+ * This avoids cross-domain cookie issues when frontend and backend are on different domains.
+ * Uses jose (Edge Runtime compatible) instead of jsonwebtoken.
+ */
+async function verifyToken(token: string): Promise<TokenPayload | null> {
+  const secret = process.env.JWT_SECRET;
+
+  if (!secret) {
+    console.error("JWT_SECRET not configured in middleware");
+    return null;
+  }
 
   try {
-    console.log(`Verifying token with API: ${API_URL}/auth/me`);
-    const response = await fetch(`${API_URL}/auth/me`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `token=${token}`,
-      },
-      cache: "no-store",
-      // credentials: "include",
-    });
-
-    if (!response.ok) {
-      console.error(`Auth verification failed with status: ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-    if (!data.success || !data.data?.user) {
-      console.error("Auth response missing user data:", data);
-      return null;
-    }
-
-    return { user: data.data.user };
+    const secretKey = new TextEncoder().encode(secret);
+    const { payload } = await jwtVerify(token, secretKey);
+    return payload as unknown as TokenPayload;
   } catch (error) {
-    console.error("Auth verification exception:", error);
+    console.error("JWT verification failed:", error);
     return null;
   }
 }
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -112,10 +106,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Verify token with backend
-  const authResult = await verifyAuth(token);
+  // Verify token locally (no cross-domain call to backend)
+  const payload = await verifyToken(token);
 
-  if (!authResult) {
+  if (!payload) {
     // Invalid/expired token - clear cookie and redirect to login
     const loginUrl = new URL("/auth", request.url);
     loginUrl.searchParams.set("tab", "login");
@@ -125,7 +119,7 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  const userRole = authResult.user.role;
+  const userRole = payload.role;
 
   // Check role-based access
   if (userRole !== requiredRole) {
