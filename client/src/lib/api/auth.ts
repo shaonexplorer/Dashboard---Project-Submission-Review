@@ -1,5 +1,3 @@
-import { getApiUrl } from "@/lib/utils";
-
 // Use Next.js API routes for authentication (they proxy to backend and set cookies on frontend domain)
 const AUTH_API_BASE_URL = "/api/auth";
 

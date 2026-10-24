@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       // If token is invalid/expired, clear the cookie
-      const errorResponse = NextResponse.json(data, { status: response.status });
+      const errorResponse = NextResponse.json(data, {
+        status: response.status,
+      });
       if (response.status === 401) {
         errorResponse.cookies.delete("token");
       }

@@ -30,9 +30,11 @@ export function useCurrentUser(): CurrentUserState {
     queryKey: queryKeys.currentUser,
     queryFn: async () => {
       const response = await meApi();
+
       if (!response.data?.user) {
         throw new Error("No user data returned");
       }
+
       return response.data.user;
     },
     // The request only runs when a token is stored locally, which is the
@@ -71,7 +73,8 @@ export function useLogin() {
       // Redirect based on role and redirectTo parameter
       const user = data.data?.user;
       if (user) {
-        const redirectTo = searchParams.get("redirectTo") ||
+        const redirectTo =
+          searchParams.get("redirectTo") ||
           (user.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard");
         router.push(redirectTo);
         router.refresh();
@@ -95,8 +98,11 @@ export function useSignup() {
         // If signup returns a token, redirect to dashboard
         const user = data.data.user;
         // Signup always creates STUDENT, but respect redirectTo if provided
-        const redirectTo = searchParams.get("redirectTo") ||
-          (user?.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard");
+        const redirectTo =
+          searchParams.get("redirectTo") ||
+          (user?.role === "MENTOR"
+            ? "/mentor/dashboard"
+            : "/student/dashboard");
         router.push(redirectTo);
         router.refresh();
       } else {

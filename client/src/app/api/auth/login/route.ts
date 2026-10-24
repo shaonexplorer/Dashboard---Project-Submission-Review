@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const responseWithCookie = NextResponse.json({
       success: true,
       message: data.message,
-      data: { user },
+      data: { user, token },
     });
 
     responseWithCookie.cookies.set("token", token, cookieOptions);

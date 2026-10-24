@@ -25,6 +25,8 @@ export default function StudentDashboardPage() {
   const { user, isResolving: isUserResolving } = useCurrentUser();
   const { data: submissions = [], error: submissionError } = useMySubmissions();
 
+  // console.log({ user });
+
   // An expired session is handled by the authentication flow, not by the page.
   useEffect(() => {
     if (
