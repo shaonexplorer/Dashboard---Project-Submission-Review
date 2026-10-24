@@ -7,15 +7,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 /**
  * Protected routes configuration
  */
-// const PROTECTED_ROUTES = {
-//   student: ["/student"],
-//   mentor: ["/mentor"],
-// } as const;
-
 const PROTECTED_ROUTES = {
-  student: ["/hello"],
-  mentor: ["hello"],
+  student: ["/student"],
+  mentor: ["/mentor"],
 } as const;
+
+// const PROTECTED_ROUTES = {
+//   student: ["/hello"],
+//   mentor: ["hello"],
+// } as const;
 
 /**
  * Public routes that don't require authentication

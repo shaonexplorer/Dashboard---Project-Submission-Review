@@ -19,40 +19,46 @@ const cookieOptions: CookieOptions = {
 
 export const signupController = asyncHandler(
   async (req: Request, res: Response) => {
-    const { user, token } = await signupService(req.body as {
-      fullName: string;
-      email: string;
-      password: string;
-    });
+    const { user, token } = await signupService(
+      req.body as {
+        fullName: string;
+        email: string;
+        password: string;
+      },
+    );
 
     res.cookie("token", token, cookieOptions);
 
     sendResponse(res, 201, "Account created successfully", { user });
-  }
+  },
 );
 
 export const loginController = asyncHandler(
   async (req: Request, res: Response) => {
-    const { user, token } = await loginService(req.body as {
-      email: string;
-      password: string;
-    });
+    const { user, token } = await loginService(
+      req.body as {
+        email: string;
+        password: string;
+      },
+    );
 
     res.cookie("token", token, cookieOptions);
 
     sendResponse(res, 200, "Login successful", { user, token });
-  }
+  },
 );
 
-export const meController = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    throw new ApiError(401, "Authentication required");
-  }
+export const meController = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new ApiError(401, "Authentication required");
+    }
 
-  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-  if (!user) {
-    throw new ApiError(401, "User not found");
-  }
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      throw new ApiError(401, "User not found");
+    }
 
-  sendResponse(res, 200, "Authenticated user", { user: getSafeUser(user) });
-});
+    sendResponse(res, 200, "Authenticated user", { user: getSafeUser(user) });
+  },
+);
