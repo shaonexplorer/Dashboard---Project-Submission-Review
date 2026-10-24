@@ -2,20 +2,23 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Backend API URL for verifying authentication
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
 
 /**
  * Protected routes configuration
  */
-// const PROTECTED_ROUTES = {
-//   student: ["/student"],
-//   mentor: ["/mentor"],
-// } as const;
-
 const PROTECTED_ROUTES = {
-  student: ["/hello"],
-  mentor: ["/hello"],
+  student: ["/student"],
+  mentor: ["/mentor"],
 } as const;
+
+// const PROTECTED_ROUTES = {
+//   student: ["/hello"],
+//   mentor: ["/hello"],
+// } as const;
 
 /**
  * Public routes that don't require authentication
