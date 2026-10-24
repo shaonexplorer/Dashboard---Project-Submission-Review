@@ -50,31 +50,33 @@ async function verifyAuth(
   token: string,
 ): Promise<{ user: { role: string; id: string } } | null> {
   try {
+    console.log(`Verifying token with API: ${API_URL}/auth/me`);
     const response = await fetch(`${API_URL}/auth/me`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Cookie: `token=${token}`,
       },
-      // Don't cache auth verification
       cache: "no-store",
     });
 
     if (!response.ok) {
+      console.error(`Auth verification failed with status: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
     if (!data.success || !data.data?.user) {
+      console.error("Auth response missing user data:", data);
       return null;
     }
 
     return { user: data.data.user };
-  } catch {
+  } catch (error) {
+    console.error("Auth verification exception:", error);
     return null;
   }
 }
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
