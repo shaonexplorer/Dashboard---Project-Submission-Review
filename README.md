@@ -21,10 +21,11 @@ A simple, secure, and maintainable full-stack platform where students submit the
 | Data table | TanStack Table |
 | Backend | Node.js, Express.js |
 | Database | PostgreSQL + Prisma ORM |
-| Authentication | JWT + bcrypt |
+| Authentication | JWT (HS256) + bcrypt |
 | Authorization | Role-Based Access Control (STUDENT / MENTOR) |
 | Rate limiting | express-rate-limit |
 | HTTP security | Helmet + CORS |
+| JWT verification (frontend) | jose (Edge-compatible) |
 
 ## Repository structure
 
@@ -81,7 +82,36 @@ Backend responsibility chain:
 Route → Authentication → Authorization → Validation → Controller → Service → Prisma ORM → PostgreSQL
 ```
 
-## Environment variables
+## Authentication flow
+
+The frontend uses **Next.js API routes** (`client/src/app/api/auth/*`) as a proxy layer between the browser and the Express backend. This solves cross-domain cookie issues in production (Vercel frontend ↔ Render/Railway backend).
+
+```
+Browser → Next.js API route → Express backend (sets JWT in httpOnly cookie)
+                                    ↓
+                         Next.js reads cookie, sets it on own domain
+                                    ↓
+                         Returns { user, token } to browser
+```
+
+**Key points:**
+- JWT lives in an **httpOnly cookie** on the Next.js domain (set by `/api/auth/login` and `/api/auth/signup`)
+- The token is also returned in the JSON response body so the client can store it in `localStorage` as a **session marker** (enables `useCurrentUser` query)
+- Middleware verifies the JWT **locally** using the shared `JWT_SECRET` — no cross-domain call to the backend
+- `/api/auth/me` proxies to the backend with the cookie for fresh user data
+- Logout clears the cookie via `/api/auth/logout`
+
+This architecture works identically on localhost and in production.
+
+## Middleware
+
+The Next.js middleware (`client/src/middleware.ts`) protects `/student/*` and `/mentor/*` routes:
+
+1. Reads the `token` cookie from the request (same domain — always available)
+2. Verifies JWT locally using `jose` with `JWT_SECRET` (Node.js runtime)
+3. Extracts `userId` and `role` from the payload
+4. Redirects to `/auth` if token is missing, invalid, or role doesn't match the route
+5. Runs in **Node.js runtime** (`export const runtime = "nodejs"`) for crypto compatibility
 
 Copy the example files and fill in real values before running the app:
 
@@ -162,23 +192,28 @@ The password is hashed with bcrypt and taken from the `SEED_MENTOR_PASSWORD` env
 
 ## API endpoints
 
-Auth:
+All endpoints below are **Next.js API routes** (under `client/src/app/api/*`) that proxy to the Express backend. The browser calls these on the frontend domain, avoiding CORS/cookie issues.
 
-- `POST /api/auth/signup` — student registration
-- `POST /api/auth/login` — student or mentor login
-- `GET /api/auth/me` — current user (protected)
+Auth (Next.js routes):
 
-Student:
+- `POST /api/auth/signup` — student registration (proxies to backend, sets httpOnly cookie + returns token)
+- `POST /api/auth/login` — student or mentor login (proxies to backend, sets httpOnly cookie + returns token)
+- `GET /api/auth/me` — current user (proxies to backend with cookie, returns user)
+- `POST /api/auth/logout` — clears httpOnly cookie
+
+Student (proxied to backend with auth cookie):
 
 - `POST /api/submissions` — create a submission (STUDENT, rate-limited)
 - `GET /api/submissions/me` — own submission (STUDENT)
 
-Mentor:
+Mentor (proxied to backend with auth cookie):
 
 - `GET /api/submissions` — paginated, filterable, searchable, sortable list (MENTOR)
 - `GET /api/submissions/stats` — submission statistics (MENTOR)
 - `GET /api/submissions/:id` — single submission (MENTOR)
 - `PATCH /api/submissions/:id/status` — approve or reject with optional feedback (MENTOR)
+
+> **Note:** The actual Express backend endpoints are at `http://<backend>/api/auth/*` and `http://<backend>/api/submissions/*`. The Next.js routes forward requests with the `token` cookie for authentication.
 
 ## Specification documents
 
@@ -199,6 +234,7 @@ Mentor:
 - Passwords are hashed with bcrypt (never stored or returned in plain text)
 - JWT contains only identity claims (`userId`, `role`)
 - Protected API routes with backend-enforced RBAC
+- Middleware verifies JWT **locally** using shared `JWT_SECRET` (no backend call, works cross-domain)
 - Rate limiting on auth and submission endpoints
 - Helmet security headers and strict CORS (no `origin: "*"`)
 - Server-side validation with Zod; database-level uniqueness constraints on `User.email` and `Submission.studentId`

@@ -10,10 +10,15 @@ import { signupService, loginService, getSafeUser } from "./auth.service";
  * Cookie options for the JWT access token.
  * httpOnly prevents client-side JavaScript access (mitigates XSS theft).
  */
+const isProduction = process.env.NODE_ENV === "production";
+
 const cookieOptions: CookieOptions = {
   httpOnly: true,
-  sameSite: "none",
-  secure: process.env.NODE_ENV === "production",
+  // sameSite: "none" requires secure: true (HTTPS).
+  // In development (HTTP), use "lax" which allows cross-origin cookies
+  // for top-level navigations and same-site requests.
+  sameSite: isProduction ? "none" : "lax",
+  secure: isProduction,
   maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   path: "/",
 };
