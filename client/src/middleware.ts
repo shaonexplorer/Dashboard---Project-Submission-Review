@@ -66,7 +66,7 @@ async function verifyAuth(
         Cookie: `token=${token}`,
       },
       cache: "no-store",
-      credentials: "include",
+      // credentials: "include",
     });
 
     if (!response.ok) {
