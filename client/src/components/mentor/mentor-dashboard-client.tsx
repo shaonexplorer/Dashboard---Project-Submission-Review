@@ -91,9 +91,7 @@ function isSameSorting(a: SortingState, b: SortingState): boolean {
     a.length === b.length &&
     a.every((entry, index) => {
       const other = b[index];
-      return (
-        entry.id === other?.id && entry.desc === other?.desc
-      );
+      return entry.id === other?.id && entry.desc === other?.desc;
     })
   );
 }
@@ -127,9 +125,8 @@ export function MentorDashboardClient({
 
   const [tableState, setTableState] = useState<TableState>(INITIAL_TABLE_STATE);
   const [searchInput, setSearchInput] = useState("");
-  const [activeSubmission, setActiveSubmission] = useState<MentorSubmission | null>(
-    null,
-  );
+  const [activeSubmission, setActiveSubmission] =
+    useState<MentorSubmission | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
 
@@ -152,7 +149,13 @@ export function MentorDashboardClient({
       sortBy,
       sortOrder,
     }),
-    [tableState.pageIndex, tableState.search, tableState.status, sortBy, sortOrder],
+    [
+      tableState.pageIndex,
+      tableState.search,
+      tableState.status,
+      sortBy,
+      sortOrder,
+    ],
   );
 
   const submissionsQuery = useMentorSubmissions(listQuery, {
@@ -169,6 +172,8 @@ export function MentorDashboardClient({
   const submissions = submissionsQuery.data?.submissions ?? initialSubmissions;
   const pagination = submissionsQuery.data?.pagination ?? initialPagination;
   const stats = statsQuery.data ?? initialStats;
+
+  // console.log({ submissions });
 
   // Apply the settled search term. The page returns to the first one, because
   // the previous page number has no meaning for a different result set.
@@ -238,7 +243,8 @@ export function MentorDashboardClient({
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
     setTableState((previous) => {
-      const next = typeof updater === "function" ? updater(previous.sorting) : updater;
+      const next =
+        typeof updater === "function" ? updater(previous.sorting) : updater;
 
       if (isSameSorting(next, previous.sorting)) {
         return previous;
@@ -496,9 +502,12 @@ export function MentorDashboardClient({
                 onRetry={() => void submissionsQuery.refetch()}
                 isRetrying={submissionsQuery.isFetching}
               />
-            ) : submissions.length === 0 ? (
-              <SubmissionTableEmpty isFiltered={isFiltering} onReset={handleReset} />
-            ) : (
+            ) : submissions?.length === 0 ? (
+              <SubmissionTableEmpty
+                isFiltered={isFiltering}
+                onReset={handleReset}
+              />
+            ) : submissions?.length > 0 ? (
               <>
                 <div
                   className={
@@ -526,6 +535,8 @@ export function MentorDashboardClient({
                   />
                 </div>
               </>
+            ) : (
+              <SubmissionTableSkeleton />
             )}
           </section>
         </div>
@@ -545,8 +556,8 @@ export function MentorDashboardClient({
           reviewMutation.error instanceof ApiRequestError
             ? reviewMutation.error.message
             : reviewMutation.error
-            ? "The review could not be recorded. Please try again."
-            : null
+              ? "The review could not be recorded. Please try again."
+              : null
         }
       />
     </div>

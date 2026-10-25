@@ -44,7 +44,9 @@ const SORT_FIELDS: readonly ("createdAt" | "projectName" | "status")[] = [
   "status",
 ];
 
-function toSortField(id: string | undefined): "createdAt" | "projectName" | "status" {
+function toSortField(
+  id: string | undefined,
+): "createdAt" | "projectName" | "status" {
   return SORT_FIELDS.find((field) => field === id) ?? "createdAt";
 }
 
@@ -85,11 +87,13 @@ export function StudentMyProjectsClient({
   // Table state - synced with URL
   const [searchInput, setSearchInput] = useState("");
   const [sorting, setSorting] = useState<SortingState>(INITIAL_SORTING);
-  const [statusFilter, setStatusFilter] = useState<StudentSubmissionListQuery["status"]>(undefined);
+  const [statusFilter, setStatusFilter] =
+    useState<StudentSubmissionListQuery["status"]>(undefined);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [preSelectedProject, setPreSelectedProject] = useState<StudentProjectRow | null>(null);
+  const [preSelectedProject, setPreSelectedProject] =
+    useState<StudentProjectRow | null>(null);
 
   // Debounce search input to avoid firing a request on every keystroke
   const search = useDebouncedValue(searchInput, 400);
@@ -160,7 +164,9 @@ export function StudentMyProjectsClient({
       params.set("sortBy", sorting[0].id);
       params.set("sortOrder", sorting[0].desc ? "desc" : "asc");
     }
-    router.replace(`/student/my-projects?${params.toString()}`, { scroll: false });
+    router.replace(`/student/my-projects?${params.toString()}`, {
+      scroll: false,
+    });
   }, [page, limit, search, statusFilter, sorting, router, searchParams]);
 
   // Reset page when filters change
@@ -308,7 +314,7 @@ export function StudentMyProjectsClient({
                 <div className="p-6 text-center text-body-md text-on-surface-variant">
                   Failed to load submissions
                 </div>
-              ) : displayProjects.length === 0 ? (
+              ) : displayProjects?.length === 0 ? (
                 <div className="p-6 text-center text-body-md text-on-surface-variant">
                   No projects found. Adjust your filters or start a new
                   submission.
@@ -330,12 +336,14 @@ export function StudentMyProjectsClient({
             </div>
 
             {/* Table Pagination */}
-            <TablePagination
-              pagination={displayPagination}
-              onPageChange={setPage}
-              onPageSizeChange={setLimit}
-              isFetching={isRefetching}
-            />
+            {displayProjects?.length > 0 && (
+              <TablePagination
+                pagination={displayPagination}
+                onPageChange={setPage}
+                onPageSizeChange={setLimit}
+                isFetching={isRefetching}
+              />
+            )}
 
             {/* Keyboard Shortcuts Strip */}
             <KeyboardShortcutsStrip />

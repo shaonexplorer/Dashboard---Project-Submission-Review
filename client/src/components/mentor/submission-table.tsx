@@ -56,7 +56,7 @@ export interface SubmissionTableProps {
  * returned for the current query state.
  */
 export function SubmissionTable({
-  submissions,
+  submissions = [],
   sorting,
   onSortingChange,
   busySubmissionId,
@@ -270,7 +270,7 @@ export function SubmissionTable({
           </TableHeader>
 
           <TableBody>
-            {table.getRowModel().rows.map((row) => (
+            {table?.getRowModel()?.rows?.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
