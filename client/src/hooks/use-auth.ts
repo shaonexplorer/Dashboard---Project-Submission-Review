@@ -94,16 +94,17 @@ export function useLogin() {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: queryKeys.currentUser });
     },
-    onSuccess: () => {
-      // Invalidate and refetch current user
+    onSuccess: (data) => {
+      // Invalidate and refetch current user for future queries
       queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
 
-      // Redirect based on role and redirectTo parameter
-      const sessionData = queryClient.getQueryData<BetterAuthSession>(queryKeys.currentUser);
-      if (sessionData?.user) {
+      // Redirect based on role from the mutation response data
+      // BetterAuth signIn.email returns { user: { role, ... }, ... }
+      const userData = data as { user?: { role?: string } } | undefined;
+      if (userData?.user) {
         const redirectTo =
           searchParams.get("redirectTo") ||
-          (sessionData.user.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard");
+          (userData.user.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard");
         router.push(redirectTo);
         router.refresh();
       }
@@ -127,19 +128,21 @@ export function useSignup() {
       }
       return result.data;
     },
-    onSuccess: () => {
-      // Invalidate and refetch current user
+    onSuccess: (data) => {
+      // Invalidate and refetch current user for future queries
       queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
 
-      // Redirect based on role and redirectTo parameter
-      const sessionData = queryClient.getQueryData<BetterAuthSession>(queryKeys.currentUser);
-      if (sessionData?.user) {
+      // Redirect based on role from the mutation response data
+      // BetterAuth signUp.email returns { user: { role, ... }, ... }
+      const userData = data as { user?: { role?: string } } | undefined;
+      if (userData?.user) {
         const redirectTo =
           searchParams.get("redirectTo") ||
-          (sessionData.user.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard");
+          (userData.user.role === "MENTOR" ? "/mentor/dashboard" : "/student/dashboard");
         router.push(redirectTo);
         router.refresh();
       } else {
+        // Fallback for new signups (default to student)
         router.push("/student/dashboard");
         router.refresh();
       }

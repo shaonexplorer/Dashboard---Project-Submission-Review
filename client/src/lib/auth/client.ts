@@ -7,7 +7,7 @@ export const authClient = createAuthClient({
     inferAdditionalFields({
       user: {
         role: {
-          type: "enum",
+          type: "string",
           required: false, // Server sets default value (STUDENT), client doesn't send it
           options: ["STUDENT", "MENTOR"],
         },

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "@/lib/auth/client";
+import { useLogin } from "@/hooks/use-auth";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { Input } from "@/components/ui";
 import {
@@ -13,12 +13,10 @@ import {
   SSOButtons,
   AuthFooter,
 } from "@/components/auth";
-import { useRouter, useSearchParams } from "next/navigation";
 
 export function LoginForm() {
   const [serverError, setServerError] = useState<string | null>(null);
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { mutate: login, isPending } = useLogin();
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -30,17 +28,11 @@ export function LoginForm() {
 
   async function onSubmit(data: LoginInput) {
     setServerError(null);
-    try {
-      const result = await signIn.email(data);
-      if (result.error) {
-        setServerError(result.error.message || "Login failed. Please try again.");
-      } else {
-        router.push(searchParams.get("redirectTo") || "/student/dashboard");
-        router.refresh();
-      }
-    } catch (error) {
-      setServerError("Login failed. Please try again.");
-    }
+    login(data, {
+      onError: (error) => {
+        setServerError(error.message || "Login failed. Please try again.");
+      },
+    });
   }
 
   const isError = !!serverError;
@@ -78,7 +70,7 @@ export function LoginForm() {
         placeholder="you@university.edu"
         error={emailError}
         isError={!!emailError}
-        disabled={form.formState.isSubmitting}
+        disabled={isPending}
         required
         className="border-surface-container-high border"
         leadingIcon={
@@ -99,7 +91,7 @@ export function LoginForm() {
         placeholder="Enter your security password"
         error={passwordError}
         isError={!!passwordError}
-        disabled={form.formState.isSubmitting}
+        disabled={isPending}
         className="border-surface-container-high border"
         required
         {...form.register("password")}
@@ -126,10 +118,10 @@ export function LoginForm() {
       {/* Submit Button */}
       <PrimaryActionButton
         type="submit"
-        isLoading={form.formState.isSubmitting}
+        isLoading={isPending}
         loadingText="Signing in..."
         icon="login"
-        disabled={form.formState.isSubmitting}
+        disabled={isPending}
       >
         Sign in
       </PrimaryActionButton>
@@ -146,7 +138,7 @@ export function LoginForm() {
         </div>
       </div>
 
-      <SSOButtons disabled={form.formState.isSubmitting} />
+      <SSOButtons disabled={isPending} />
 
       {/* Footer */}
       <AuthFooter
