@@ -152,12 +152,12 @@ export const MAX_SUBMISSION_SEARCH_LENGTH = 200;
  */
 export const submissionListQuerySchema = z.object({
   page: z.coerce
-    .number({ invalid_type_error: "Page must be a number" })
+    .number({ error: "Page must be a number" })
     .int("Page must be a whole number")
     .positive("Page must be greater than 0")
     .default(1),
   limit: z.coerce
-    .number({ invalid_type_error: "Limit must be a number" })
+    .number({ error: "Limit must be a number" })
     .int("Limit must be a whole number")
     .positive("Limit must be greater than 0")
     .max(MAX_SUBMISSION_LIST_LIMIT, `Limit must be at most ${MAX_SUBMISSION_LIST_LIMIT}`)
@@ -181,12 +181,12 @@ export const submissionListQuerySchema = z.object({
  */
 export const studentSubmissionListQuerySchema = z.object({
   page: z.coerce
-    .number({ invalid_type_error: "Page must be a number" })
+    .number({ error: "Page must be a number" })
     .int("Page must be a whole number")
     .positive("Page must be greater than 0")
     .default(1),
   limit: z.coerce
-    .number({ invalid_type_error: "Limit must be a number" })
+    .number({ error: "Limit must be a number" })
     .int("Limit must be a whole number")
     .positive("Limit must be greater than 0")
     .max(MAX_SUBMISSION_LIST_LIMIT, `Limit must be at most ${MAX_SUBMISSION_LIST_LIMIT}`)
@@ -245,9 +245,7 @@ export const MAX_REVIEW_FEEDBACK_LENGTH = 2000;
  * an arbitrary string into the `status` column.
  */
 export const submissionStatusUpdateSchema = z.object({
-  status: z.enum(REVIEW_DECISIONS, {
-    errorMap: () => ({ message: "Status must be APPROVED or REJECTED" }),
-  }),
+  status: z.enum(REVIEW_DECISIONS, { error: "Status must be APPROVED or REJECTED" }),
   feedback: z
     .string()
     .trim()

@@ -81,6 +81,7 @@ export function StudentSubmissionForm() {
 
   const form = useForm<SubmissionFormValues>({
     resolver: zodResolver(submissionSchema),
+    mode: "onBlur",
     defaultValues: {
       projectId: "",
       repoUrl: "",
@@ -90,6 +91,9 @@ export function StudentSubmissionForm() {
   });
 
   const { errors } = form.formState;
+
+  console.log({ errors });
+
   const description = useWatch({ control: form.control, name: "description" });
   const projectId = useWatch({ control: form.control, name: "projectId" });
   const descriptionLength = description?.length ?? 0;
@@ -285,7 +289,7 @@ export function StudentSubmissionForm() {
         />
 
         {/* 2. GitHub Repository */}
-        <Field data-invalid={!!errors.repoUrl}>
+        <Field>
           <FieldLabel htmlFor="repoUrl">
             GitHub Repository
             <span className="text-error font-sans font-bold" aria-hidden="true">
@@ -298,9 +302,9 @@ export function StudentSubmissionForm() {
             inputMode="url"
             className="pl-9 border-surface-container-high border"
             placeholder="https://github.com/username/project-name"
+            error={errors.repoUrl?.message}
             isError={!!errors.repoUrl}
             aria-invalid={!!errors.repoUrl}
-            aria-describedby={errors.repoUrl ? "repoUrl-error" : undefined}
             disabled={isDisabled}
             leadingIcon={
               <span
@@ -316,11 +320,10 @@ export function StudentSubmissionForm() {
             Provide the public GitHub repository containing your project source
             code.
           </FieldDescription>
-          <FieldError id="repoUrl-error" errors={[errors.repoUrl]} />
         </Field>
 
         {/* 3. Live Project URL */}
-        <Field data-invalid={!!errors.liveUrl}>
+        <Field>
           <FieldLabel htmlFor="liveUrl">
             Live Project
             <span className="text-error font-sans font-bold" aria-hidden="true">
@@ -333,9 +336,9 @@ export function StudentSubmissionForm() {
             inputMode="url"
             className="pl-9 border-surface-container-high border"
             placeholder="https://orchestrator-app.vercel.app"
+            error={errors.liveUrl?.message}
             isError={!!errors.liveUrl}
             aria-invalid={!!errors.liveUrl}
-            aria-describedby={errors.liveUrl ? "liveUrl-error" : undefined}
             disabled={isDisabled}
             leadingIcon={
               <span
@@ -351,11 +354,17 @@ export function StudentSubmissionForm() {
             Provide the deployed, publicly accessible version of your
             application.
           </FieldDescription>
-          <FieldError id="liveUrl-error" errors={[errors.liveUrl]} />
+          <FieldError
+            errors={
+              errors.liveUrl?.message
+                ? [{ message: errors.liveUrl.message }]
+                : []
+            }
+          />
         </Field>
 
         {/* 4. Description */}
-        <Field data-invalid={!!errors.description}>
+        <Field>
           <FieldLabel htmlFor="description">
             Description
             <span className="text-error font-sans font-bold" aria-hidden="true">
@@ -377,7 +386,11 @@ export function StudentSubmissionForm() {
             disabled={isDisabled}
             {...form.register("description")}
           />
-          <div className="flex items-center justify-between px-0.5" id="description-hint" aria-hidden="true">
+          <div
+            className="flex items-center justify-between px-0.5"
+            id="description-hint"
+            aria-hidden="true"
+          >
             <span className="text-body-sm text-secondary">
               Up to {DESCRIPTION_MAX_LENGTH} characters. Markdown is supported.
             </span>
@@ -385,7 +398,14 @@ export function StudentSubmissionForm() {
               {descriptionLength} / {DESCRIPTION_MAX_LENGTH}
             </span>
           </div>
-          <FieldError id="description-error" errors={[errors.description]} />
+          <FieldError
+            id="description-error"
+            errors={
+              errors.description
+                ? [{ message: errors.description.message }]
+                : []
+            }
+          />
         </Field>
       </FieldGroup>
 

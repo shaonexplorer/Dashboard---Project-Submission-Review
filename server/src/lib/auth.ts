@@ -30,11 +30,10 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       role: {
-        type: "enum",
+        type: "string",
         required: true,
         defaultValue: "STUDENT",
         input: false, // Don't allow client to set role
-        options: ["STUDENT", "MENTOR"],
       },
     },
   },

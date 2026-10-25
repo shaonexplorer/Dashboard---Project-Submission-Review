@@ -11,7 +11,7 @@ const databaseUrlSchema = z.string().refine(
 );
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  NODE_ENV: z.enum({ development: "development", production: "production", test: "test" }).default("development"),
   PORT: z.coerce.number().int().positive().default(5000),
   DATABASE_URL: databaseUrlSchema,
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters").default("development-jwt-secret-key-change-in-production"),

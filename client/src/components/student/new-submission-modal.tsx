@@ -119,7 +119,7 @@ export function NewSubmissionModal({
         >
           <FieldGroup>
             {/* Target Milestone */}
-            <Field data-invalid={!!errors.projectId}>
+            <Field>
               <FieldLabel htmlFor="projectId">Target Milestone</FieldLabel>
               <select
                 id="projectId"
@@ -143,11 +143,11 @@ export function NewSubmissionModal({
                   ))
                 )}
               </select>
-              <FieldError errors={[errors.projectId]} />
+              <FieldError errors={errors.projectId ? [{ message: errors.projectId.message }] : []} />
             </Field>
 
             {/* Git Repository URL */}
-            <Field data-invalid={!!errors.repoUrl}>
+            <Field>
               <FieldLabel htmlFor="repoUrl">
                 GitHub Repository
                 <span
@@ -163,9 +163,9 @@ export function NewSubmissionModal({
                 inputMode="url"
                 className="pl-9 border-surface-container-high border"
                 placeholder="https://github.com/username/project-name"
+                error={errors.repoUrl?.message}
                 isError={!!errors.repoUrl}
                 aria-invalid={!!errors.repoUrl}
-                aria-describedby={errors.repoUrl ? "repoUrl-error" : undefined}
                 disabled={isDisabled}
                 leadingIcon={
                   <span
@@ -181,11 +181,10 @@ export function NewSubmissionModal({
                 Provide the public GitHub repository containing your project
                 source code.
               </FieldDescription>
-              <FieldError id="repoUrl-error" errors={[errors.repoUrl]} />
             </Field>
 
             {/* Live Project URL */}
-            <Field data-invalid={!!errors.liveUrl}>
+            <Field>
               <FieldLabel htmlFor="liveUrl">
                 Live Project
                 <span
@@ -201,9 +200,9 @@ export function NewSubmissionModal({
                 inputMode="url"
                 className="pl-9 border-surface-container-high border"
                 placeholder="https://orchestrator-app.vercel.app"
+                error={errors.liveUrl?.message}
                 isError={!!errors.liveUrl}
                 aria-invalid={!!errors.liveUrl}
-                aria-describedby={errors.liveUrl ? "liveUrl-error" : undefined}
                 disabled={isDisabled}
                 leadingIcon={
                   <span
@@ -219,11 +218,10 @@ export function NewSubmissionModal({
                 Provide the deployed, publicly accessible version of your
                 application.
               </FieldDescription>
-              <FieldError id="liveUrl-error" errors={[errors.liveUrl]} />
             </Field>
 
             {/* Description */}
-            <Field data-invalid={!!errors.description}>
+            <Field>
               <FieldLabel htmlFor="description">
                 Description
                 <span
@@ -263,7 +261,7 @@ export function NewSubmissionModal({
               </div>
               <FieldError
                 id="description-error"
-                errors={[errors.description]}
+                errors={errors.description ? [{ message: errors.description.message }] : []}
               />
             </Field>
           </FieldGroup>
