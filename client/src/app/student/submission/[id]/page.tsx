@@ -13,7 +13,6 @@ import {
 } from "@/components/student";
 import { Button } from "@/components/ui/button";
 import { ApiRequestError } from "@/lib/api/client";
-import type { Submission, SubmissionStatus } from "@/lib/api/submissions";
 
 /**
  * Student submission detail page.

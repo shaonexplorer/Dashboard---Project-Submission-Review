@@ -1,10 +1,5 @@
-"use client";
-
-import { useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCurrentUser } from "@/hooks/use-auth";
-import { useMySubmissions } from "@/hooks/use-submissions";
+import { redirect } from "next/navigation";
+import { getCurrentUserServer, getMySubmissionsServer } from "@/lib/server/api";
 import { AppFooter, AppHeader } from "@/components/layout";
 import {
   EvaluationRubricCard,
@@ -12,87 +7,21 @@ import {
   StudentSubmissionForm,
   SubmissionSnapshotCard,
 } from "@/components/student";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ApiRequestError } from "@/lib/api/client";
-import type { Submission } from "@/lib/api/submissions";
+import Link from "next/link";
 import { formatUtcDateTime } from "@/lib/format";
 
-export default function StudentDashboardPage() {
-  const router = useRouter();
-  // `isResolving` covers both the server render and the first client render,
-  // so the two always produce the same markup.
-  const { user, isResolving: isUserResolving } = useCurrentUser();
-  const { data: submissions = [], error: submissionError } = useMySubmissions();
+export default async function StudentDashboardPage() {
+  // Fetch user session on the server
+  const user = await getCurrentUserServer({ cache: "no-store" });
 
   // console.log({ user });
 
-  // An expired session is handled by the authentication flow, not by the page.
-  useEffect(() => {
-    if (
-      submissionError instanceof ApiRequestError &&
-      submissionError.status === 401
-    ) {
-      router.replace("/auth?tab=login&redirectTo=/student/dashboard");
-    }
-  }, [submissionError, router]);
-
-  if (isUserResolving) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <AppHeader />
-        <main className="flex-1 w-full pt-16">
-          <div className="max-w-[1440px] w-full mx-auto px-6 py-10 flex flex-col gap-6">
-            <PageHeaderSkeleton />
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-8">
-              <div className="lg:col-span-7">
-                <FormSkeleton />
-              </div>
-              <div className="lg:col-span-5 flex flex-col gap-6">
-                <PanelSkeleton />
-                <PanelSkeleton />
-              </div>
-            </div>
-          </div>
-        </main>
-        <AppFooter />
-      </div>
-    );
-  }
-
   if (!user) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <AppHeader />
-        <main className="flex-1 w-full pt-16 flex items-center justify-center px-6">
-          <div className="max-w-md text-center flex flex-col gap-4">
-            <span
-              className="material-symbols-outlined text-[32px] text-outline mx-auto"
-              aria-hidden="true"
-            >
-              lock
-            </span>
-            <h1 className="text-headline-md text-on-surface">
-              Please sign in to access the dashboard
-            </h1>
-            <p className="text-body-md text-on-surface-variant">
-              Your session is missing or has expired. Sign in again to continue
-              with your project submission.
-            </p>
-            <Button
-              render={
-                <Link href="/auth?tab=login&redirectTo=/student/dashboard" />
-              }
-              className="self-center"
-            >
-              Sign in
-            </Button>
-          </div>
-        </main>
-        <AppFooter />
-      </div>
-    );
+    redirect("/auth?tab=login&redirectTo=/student/dashboard");
   }
+
+  // Fetch submissions on the server (SSR)
+  const submissions = await getMySubmissionsServer({ cache: "no-store" });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -124,7 +53,8 @@ export default function StudentDashboardPage() {
           {/* Main content grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-8">
             <div className="lg:col-span-7 flex flex-col gap-6 min-w-0">
-              <StudentSubmissionForm />
+              {/* Pass initial data to client component for hydration */}
+              <StudentSubmissionForm initialSubmissions={submissions} />
             </div>
 
             <aside className="lg:col-span-5 flex flex-col gap-6">
@@ -158,7 +88,11 @@ export default function StudentDashboardPage() {
  * Every value shown here comes from the server — no cohort, deadline or mentor
  * assignment is invented.
  */
-function PageHeader({ submissions }: { submissions: Submission[] }) {
+function PageHeader({
+  submissions,
+}: {
+  submissions: Awaited<ReturnType<typeof getMySubmissionsServer>>;
+}) {
   const hasSubmission = submissions.length > 0;
   const latest = submissions[0];
 
@@ -222,7 +156,7 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
               <>
                 Your projects have been handed in.{" "}
                 <Link
-                  href="/student/submission"
+                  href="/student/my-projects"
                   className="text-primary font-medium hover:underline"
                 >
                   View the full submissions
@@ -265,59 +199,5 @@ function PageHeader({ submissions }: { submissions: Submission[] }) {
         </div>
       </div>
     </header>
-  );
-}
-
-/** Loading placeholder for the submission form. */
-function FormSkeleton() {
-  return (
-    <div className="rounded-xl bg-surface-container-lowest border border-surface-container-high/80 p-6 sm:p-7 flex flex-col gap-6">
-      <div className="flex flex-col gap-1 pb-4 border-b border-surface-container-high/60">
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-4 w-full max-w-sm" />
-      </div>
-
-      <div className="flex flex-col gap-5">
-        {[0, 1, 2, 3].map((index) => (
-          <div key={index} className="flex flex-col gap-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-3 w-48" />
-          </div>
-        ))}
-      </div>
-
-      <div className="pt-4 border-t border-surface-container-high/60 flex justify-end">
-        <Skeleton className="h-9 w-36" />
-      </div>
-    </div>
-  );
-}
-
-/** Loading placeholder for a sidebar panel. */
-function PanelSkeleton() {
-  return (
-    <div className="bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-5 flex flex-col gap-4">
-      <Skeleton className="h-4 w-36" />
-      <Skeleton className="h-3 w-24" />
-      <div className="flex flex-col gap-3 pt-1">
-        {[0, 1, 2, 3].map((index) => (
-          <Skeleton key={index} className="h-3 w-full" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Loading placeholder for the page header. */
-function PageHeaderSkeleton() {
-  return (
-    <div className="pb-8 border-b border-surface-container-high/60 flex flex-col gap-4">
-      <Skeleton className="h-3 w-48" />
-      <div className="flex flex-col gap-3">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-full max-w-md" />
-      </div>
-    </div>
   );
 }

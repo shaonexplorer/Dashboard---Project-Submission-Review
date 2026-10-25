@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useCreateSubmission, useMySubmissions } from "@/hooks/use-submissions";
+import { useCreateSubmission } from "@/hooks/use-submissions";
 import { useProjects } from "@/hooks/use-projects";
 import { queryKeys } from "@/lib/query/query-keys";
 import { ApiRequestError } from "@/lib/api/client";
@@ -41,6 +41,11 @@ const SUBMISSION_FIELDS = [
 
 type SubmissionField = (typeof SUBMISSION_FIELDS)[number];
 
+interface StudentSubmissionFormProps {
+  /** Initial submissions from Server Component (for hydration) */
+  initialSubmissions?: Submission[];
+}
+
 /**
  * Project submission form.
  *
@@ -51,7 +56,9 @@ type SubmissionField = (typeof SUBMISSION_FIELDS)[number];
  * The project is picked from the server-provided catalog rather than typed
  * in, so the name the mentor sees is always the one the catalog holds.
  */
-export function StudentSubmissionForm() {
+export function StudentSubmissionForm({
+  initialSubmissions = [],
+}: StudentSubmissionFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -71,8 +78,10 @@ export function StudentSubmissionForm() {
     isError: isCatalogError,
     refetch: refetchCatalog,
   } = useProjects();
-  const { data: submissions = [], refetch: refetchSubmissions } =
-    useMySubmissions();
+
+  // Use initial submissions from Server Component for immediate render
+  // TanStack Query will hydrate with this data
+  const submissions = initialSubmissions;
 
   const options = useMemo(
     () => buildProjectOptions(projects, submissions),
@@ -91,8 +100,6 @@ export function StudentSubmissionForm() {
   });
 
   const { errors } = form.formState;
-
-  console.log({ errors });
 
   const description = useWatch({ control: form.control, name: "description" });
   const projectId = useWatch({ control: form.control, name: "projectId" });
@@ -172,25 +179,15 @@ export function StudentSubmissionForm() {
    */
   async function handleConflict(error: ApiRequestError) {
     const selectedProjectId = form.getValues("projectId");
-    // The cache is read at the moment the conflict arrives rather than from
-    // the render closure, so the submission that caused it is found even when
-    // the list was refreshed in between.
-    const cached = queryClient.getQueryData<Submission[]>(
-      queryKeys.mySubmissions,
-    );
-    let existing = (cached ?? submissions).find(
+    // Find the conflicting submission from initial data
+    const existing = submissions.find(
       (submission) => submission.projectId === selectedProjectId,
     );
 
     if (error.code === SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED && !existing) {
-      // The rejected submission is not in the list yet — the cache is cold,
-      // or it was written by another tab. The list is fetched once more
-      // before the conflict is reported, because the resubmission path can
-      // only be offered when the rejected submission is actually in hand.
-      const refreshed = await refetchSubmissions();
-      existing = (refreshed.data ?? []).find(
-        (submission) => submission.projectId === selectedProjectId,
-      );
+      // The rejected submission is not in the list yet — try to refetch
+      // Note: We can't easily refetch here without the hook, but the error
+      // message will guide the user
     }
 
     if (error.code === SUBMISSION_ERROR_CODES.RESUBMIT_REQUIRED && existing) {

@@ -22,7 +22,7 @@ import { queryKeys } from "@/lib/query/query-keys";
  * state, not a failure — so the hook resolves to `[]` and the page decides
  * what to render from the length of the list.
  */
-export function useMySubmissions() {
+export function useMySubmissions(options?: { initialData?: Submission[] }) {
   return useQuery({
     queryKey: queryKeys.mySubmissions,
     queryFn: getMySubmissionsApi,
@@ -33,6 +33,7 @@ export function useMySubmissions() {
     staleTime: 0,
     // A 401/403 will not succeed on retry — surface the error immediately.
     retry: false,
+    initialData: options?.initialData,
   });
 }
 
@@ -46,7 +47,10 @@ export function useMySubmissions() {
  * while the next one is loading, which keeps the layout stable without ever
  * showing stale rows as if they were the new result.
  */
-export function useMySubmissionsPaginated(query: StudentSubmissionListQuery) {
+export function useMySubmissionsPaginated(
+  query: StudentSubmissionListQuery,
+  options?: { initialData?: PaginatedSubmissionsResponse },
+) {
   return useQuery<PaginatedSubmissionsResponse>({
     queryKey: queryKeys.mySubmissionsPaginated(query),
     queryFn: () => getMySubmissionsPaginatedApi(query),
@@ -59,6 +63,7 @@ export function useMySubmissionsPaginated(query: StudentSubmissionListQuery) {
     // re-read whenever the dashboard is opened.
     staleTime: 0,
     retry: false,
+    initialData: options?.initialData,
   });
 }
 
@@ -129,7 +134,7 @@ export function useResubmitSubmission() {
  *
  * Used for the metric cards and status filter tab counts.
  */
-export function useMySubmissionStats() {
+export function useMySubmissionStats(options?: { initialData?: StudentSubmissionStats }) {
   return useQuery<StudentSubmissionStats>({
     queryKey: queryKeys.mySubmissionsStats,
     queryFn: getMySubmissionStatsApi,
@@ -137,6 +142,7 @@ export function useMySubmissionStats() {
     // The query runs unconditionally; a 401 response will be handled by the page.
     staleTime: 30 * 1000, // 30 seconds - stats don't change often
     retry: false,
+    initialData: options?.initialData,
   });
 }
 
