@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getProjectsApi } from "@/lib/api/projects";
 import { queryKeys } from "@/lib/query/query-keys";
-import { hasToken } from "@/lib/auth/token";
 
 /**
  * Loads the project catalog.
@@ -17,9 +16,8 @@ export function useProjects() {
   return useQuery({
     queryKey: queryKeys.projects,
     queryFn: getProjectsApi,
-    // The request only runs when a token is stored locally, which is the
-    // session marker the logout flow clears.
-    enabled: hasToken(),
+    // Authentication is handled by BetterAuth via httpOnly cookies.
+    // The query runs unconditionally; a 401 response will be handled by the page.
     // The catalog only changes when the seed is re-run, so five minutes of
     // freshness is plenty.
     staleTime: 5 * 60 * 1000,

@@ -501,8 +501,8 @@ type MentorSubmissionRow = {
   updatedAt: Date;
   student: {
     id: string;
-    name: string | null;
-    email: string | null;
+    fullName: string;
+    email: string;
   };
 };
 
@@ -606,6 +606,11 @@ export const getSubmissionsService = async (query: SubmissionListQuery) => {
   const data: MentorSubmission[] = submissions.map((submission) => ({
     ...submission,
     submittedAt: submission.createdAt,
+    student: {
+      id: submission.student.id,
+      fullName: submission.student.name ?? "Unknown Student",
+      email: submission.student.email ?? "",
+    },
   }));
 
   return {
@@ -805,5 +810,10 @@ export const updateSubmissionStatusService = async (
   return {
     ...submission,
     submittedAt: submission.createdAt,
+    student: {
+      id: submission.student.id,
+      fullName: submission.student.name ?? "Unknown Student",
+      email: submission.student.email ?? "",
+    },
   };
 };
