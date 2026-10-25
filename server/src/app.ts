@@ -24,7 +24,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 // Helmet security headers
@@ -64,13 +64,16 @@ app.use((req, _res, next) => {
     req.body = trimStrings(req.body) as Record<string, unknown>;
   }
   if (req.query) {
-    const trimmedQuery = trimStrings(req.query) as Record<string, string | string[] | undefined>;
+    const trimmedQuery = trimStrings(req.query) as Record<
+      string,
+      string | string[] | undefined
+    >;
     req.query = trimmedQuery;
   }
   next();
 });
 
-// Global rate limiter — 100 requests per 15 minutes per session.
+// Global rate limiter — 100 requests per 02 minutes per session.
 app.use(globalRateLimiter);
 
 // Application routes
