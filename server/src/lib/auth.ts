@@ -11,6 +11,21 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: env.CLIENT_URL.split(",").map((origin) => origin.trim()),
 
+  advanced: {
+    useSecureCookies: true, // Force Secure flag
+    defaultCookieAttributes: {
+      sameSite: "none", // Allow cross-origin
+      secure: true, // Required for SameSite: none
+      httpOnly: true,
+      path: "/",
+    },
+    // If backend and frontend share a parent domain, use this instead:
+    // crossSubDomainCookies: {
+    //   enabled: true,
+    //   domain: "your-shared-domain.com",
+    // },
+  },
+
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false, // Can enable later
