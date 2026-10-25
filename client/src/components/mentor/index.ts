@@ -14,3 +14,4 @@ export { SubmissionTable } from "./submission-table";
 export { SubmissionTableEmpty } from "./submission-table-empty";
 export { SubmissionTableSkeleton } from "./submission-table-skeleton";
 export { SubmissionToolbar } from "./submission-toolbar";
+export { MentorDashboardClient } from "./mentor-dashboard-client";

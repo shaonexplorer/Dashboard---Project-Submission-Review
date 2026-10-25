@@ -5,6 +5,6 @@ import { auth } from "../../lib/auth";
 const router = express.Router();
 
 // Mount BetterAuth handler for all auth routes
-router.use("/", toNodeHandler(auth));
+router.use("/*", toNodeHandler(auth));
 
 export default router;

@@ -31,6 +31,7 @@ export { TablePagination } from "./table-pagination";
 export { KeyboardShortcutsStrip } from "./keyboard-shortcuts-strip";
 export { AcademicIntegrityCard } from "./academic-integrity-card";
 export { NewSubmissionModal } from "./new-submission-modal";
+export { StudentMyProjectsClient } from "./student-my-projects-client";
 export { SubmissionDetailHeader } from "./submission-detail-header";
 export { SubmissionIntegrityChecks } from "./submission-integrity-checks";
 export { SubmissionRubricBreakdown } from "./submission-rubric-breakdown";

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getProjectsApi } from "@/lib/api/projects";
 import { queryKeys } from "@/lib/query/query-keys";
+import type { Project } from "@/lib/api/projects";
 
 /**
  * Loads the project catalog.
@@ -12,7 +13,7 @@ import { queryKeys } from "@/lib/query/query-keys";
  * refetched on every navigation. The picker opens against this list, and a
  * catalog that is already in memory opens instantly.
  */
-export function useProjects() {
+export function useProjects(options?: { initialData?: Project[] }) {
   return useQuery({
     queryKey: queryKeys.projects,
     queryFn: getProjectsApi,
@@ -23,5 +24,6 @@ export function useProjects() {
     staleTime: 5 * 60 * 1000,
     // A 401/403 will not succeed on retry — surface the error immediately.
     retry: false,
+    initialData: options?.initialData,
   });
 }

@@ -58,7 +58,7 @@ export interface StudentProjectsTableProps {
  * exactly the rows returned for the current query state.
  */
 export function StudentProjectsTable({
-  projects,
+  projects = [],
   sorting,
   onSortingChange,
   busyProjectId,

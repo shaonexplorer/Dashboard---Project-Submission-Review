@@ -11,7 +11,7 @@ import { createHash } from "node:crypto";
  * *traffic*.
  *
  * Configuration:
- * - 100 requests per 15 minutes
+ * - 100 requests per 2 minutes
  * - Returns 429 Too Many Requests when exceeded
  * - Uses the application's standard API error format
  * - Standard rate-limit headers (RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset)
@@ -29,7 +29,7 @@ import { createHash } from "node:crypto";
  */
 
 /** Length of the rate-limiting window. */
-export const GLOBAL_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+export const GLOBAL_RATE_LIMIT_WINDOW_MS = 2 * 60 * 1000;
 
 /** Number of requests allowed inside one window. */
 export const GLOBAL_RATE_LIMIT_MAX_REQUESTS = 100;

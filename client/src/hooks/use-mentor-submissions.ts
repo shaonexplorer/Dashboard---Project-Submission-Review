@@ -14,6 +14,9 @@ import {
 import type {
   ReviewSubmissionPayload,
   SubmissionListQuery,
+  MentorSubmission,
+  PaginationMeta,
+  SubmissionStats,
 } from "@/lib/api/mentor-submissions";
 import { queryKeys } from "@/lib/query/query-keys";
 
@@ -26,7 +29,10 @@ import { queryKeys } from "@/lib/query/query-keys";
  * while the next one is loading, which keeps the layout stable without ever
  * showing stale rows as if they were the new result.
  */
-export function useMentorSubmissions(query: SubmissionListQuery) {
+export function useMentorSubmissions(
+  query: SubmissionListQuery,
+  options?: { initialData?: { submissions: MentorSubmission[]; pagination: PaginationMeta } },
+) {
   return useQuery({
     queryKey: queryKeys.mentorSubmissions(query),
     queryFn: () => getSubmissionsApi(query),
@@ -39,6 +45,7 @@ export function useMentorSubmissions(query: SubmissionListQuery) {
     // re-read whenever the dashboard is opened.
     staleTime: 0,
     retry: false,
+    initialData: options?.initialData,
   });
 }
 
@@ -48,7 +55,7 @@ export function useMentorSubmissions(query: SubmissionListQuery) {
  * The counts describe the whole table, so they are never derived from the
  * rows the table happens to have loaded.
  */
-export function useSubmissionStats() {
+export function useSubmissionStats(options?: { initialData?: SubmissionStats }) {
   return useQuery({
     queryKey: queryKeys.mentorSubmissionStats,
     queryFn: getSubmissionStatsApi,
@@ -56,6 +63,7 @@ export function useSubmissionStats() {
     // The query runs unconditionally; a 401 response will be handled by the page.
     staleTime: 0,
     retry: false,
+    initialData: options?.initialData,
   });
 }
 

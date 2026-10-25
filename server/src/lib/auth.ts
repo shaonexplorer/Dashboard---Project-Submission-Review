@@ -12,10 +12,10 @@ export const auth = betterAuth({
   trustedOrigins: env.CLIENT_URL.split(",").map((origin) => origin.trim()),
 
   advanced: {
-    useSecureCookies: true, // Force Secure flag
+    useSecureCookies: env.NODE_ENV === "production", // Secure flag only in production (HTTPS)
     defaultCookieAttributes: {
-      sameSite: "none", // Allow cross-origin
-      secure: true, // Required for SameSite: none
+      sameSite: env.NODE_ENV === "production" ? "none" : "lax", // none requires secure
+      secure: env.NODE_ENV === "production",
       httpOnly: true,
       path: "/",
     },
