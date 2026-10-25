@@ -74,12 +74,14 @@ async function main(): Promise<void> {
       name: SEED_NAME,
       role: SEED_ROLE,
       passwordHash,
+      emailVerified: true, // Mentor account is pre-verified
     },
     create: {
       name: SEED_NAME,
       email,
       passwordHash,
       role: SEED_ROLE,
+      emailVerified: true, // Mentor account is pre-verified
     },
   });
 
