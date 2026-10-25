@@ -13,4 +13,8 @@ export default defineConfig({
   datasource: {
     url: process.env["DATABASE_URL"],
   },
+  // Shadow database for migration diff (required for CI/CD)
+  experimental: {
+    shadowDatabaseUrl: process.env["DATABASE_URL"],
+  },
 });

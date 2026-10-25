@@ -13,7 +13,7 @@ import { prisma } from "../src/config/prisma";
  */
 
 const SEED_EMAIL = "mentor@example.com";
-const SEED_FULL_NAME = "System Mentor";
+const SEED_NAME = "System Mentor";
 const SEED_ROLE = UserRole.MENTOR;
 
 // Password for the seeded mentor account. Override with the
@@ -71,12 +71,12 @@ async function main(): Promise<void> {
   const user = await prisma.user.upsert({
     where: { email },
     update: {
-      fullName: SEED_FULL_NAME,
+      name: SEED_NAME,
       role: SEED_ROLE,
       passwordHash,
     },
     create: {
-      fullName: SEED_FULL_NAME,
+      name: SEED_NAME,
       email,
       passwordHash,
       role: SEED_ROLE,

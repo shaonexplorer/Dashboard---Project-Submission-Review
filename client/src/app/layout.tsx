@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { materialSymbolsHref } from "@/lib/material-symbols";
 
@@ -33,10 +34,12 @@ export default function RootLayout({
         <link rel="stylesheet" href={materialSymbolsHref} />
       </head>
       <body className="bg-background text-foreground min-h-screen antialiased">
-        <QueryProvider>
-          {children}
-          <Toaster />
-        </QueryProvider>
+        <AuthProvider>
+          <QueryProvider>
+            {children}
+            <Toaster />
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

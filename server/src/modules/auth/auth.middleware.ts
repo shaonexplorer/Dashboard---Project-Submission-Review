@@ -1,34 +1,38 @@
 import type { NextFunction, Request, Response } from "express";
-import { UserRole } from "../../generated/prisma/client";
-
+import { auth } from "../../lib/auth";
 import { ApiError } from "../../utils/api-error";
-import { verifyToken } from "../../utils/jwt";
 
 /**
- * Authentication middleware (cookie-based).
+ * Authentication middleware using BetterAuth session verification.
  *
- * Reads the JWT access token from the `token` cookie instead of a
- * `Authorization: Bearer` header, verifies it, and attaches the
- * authenticated user identity to `req.user`. Rejects missing,
- * invalid, or expired tokens with 401 Unauthorized.
+ * Verifies the session from cookies/headers and attaches the authenticated
+ * user identity to `req.user`. Rejects missing, invalid, or expired sessions
+ * with 401 Unauthorized.
  */
-export const authenticate = (
+export const authenticate = async (
   req: Request,
   _res: Response,
   next: NextFunction,
-): void => {
-  const token = req.cookies?.token;
-
-  if (!token) {
-    return next(new ApiError(401, "Missing authentication token"));
-  }
-
+): Promise<void> => {
   try {
-    const payload = verifyToken(token);
-    req.user = { id: payload.userId, role: payload.role as UserRole };
+    const session = await auth.api.getSession({
+      headers: req.headers,
+    });
+
+    if (!session) {
+      return next(new ApiError(401, "Missing authentication token"));
+    }
+
+    // The role is stored as an additional field on the user
+    const userRole = (session.user as { role?: string }).role ?? "STUDENT";
+
+    req.user = {
+      id: session.user.id,
+      role: userRole as "STUDENT" | "MENTOR",
+    };
     next();
   } catch {
-    return next(new ApiError(401, "Invalid or expired token"));
+    return next(new ApiError(401, "Invalid or expired session"));
   }
 };
 

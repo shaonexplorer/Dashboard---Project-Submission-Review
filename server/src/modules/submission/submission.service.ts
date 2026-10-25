@@ -478,7 +478,7 @@ const MENTOR_SUBMISSION_SELECT = {
   student: {
     select: {
       id: true,
-      fullName: true,
+      name: true,
       email: true,
     },
   },
@@ -501,8 +501,8 @@ type MentorSubmissionRow = {
   updatedAt: Date;
   student: {
     id: string;
-    fullName: string;
-    email: string;
+    name: string | null;
+    email: string | null;
   };
 };
 
@@ -541,7 +541,7 @@ const buildSubmissionWhere = (
   if (search) {
     where.OR = [
       { projectName: { contains: search, mode: "insensitive" } },
-      { student: { fullName: { contains: search, mode: "insensitive" } } },
+      { student: { name: { contains: search, mode: "insensitive" } } },
       { student: { email: { contains: search, mode: "insensitive" } } },
     ];
   }

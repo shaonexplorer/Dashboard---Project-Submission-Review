@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useSignup } from "@/hooks/use-auth";
+import { signUp } from "@/lib/auth/client";
 import { signupSchema, type SignupInput } from "@/lib/validations/auth";
 import { Input } from "@/components/ui";
 import {
@@ -16,10 +16,12 @@ import {
   AuthFooter,
 } from "@/components/auth";
 import React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function SignupForm() {
   const [serverError, setServerError] = React.useState<string | null>(null);
-  const { mutate: signup, isPending } = useSignup();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const form = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
@@ -27,19 +29,31 @@ export function SignupForm() {
       fullName: "",
       email: "",
       password: "",
+      confirmPassword: "",
+      honorCode: false,
     },
   });
 
   const passwordValue = form.watch("password");
   const confirmPasswordValue = form.watch("confirmPassword");
 
-  function onSubmit(data: SignupInput) {
+  async function onSubmit(data: SignupInput) {
     setServerError(null);
-    signup(data, {
-      onError: (error) => {
-        setServerError(error.message || "Signup failed. Please try again.");
-      },
-    });
+    try {
+      const result = await signUp.email({
+        name: data.fullName,
+        email: data.email,
+        password: data.password,
+      });
+      if (result.error) {
+        setServerError(result.error.message || "Signup failed. Please try again.");
+      } else {
+        router.push(searchParams.get("redirectTo") || "/student/dashboard");
+        router.refresh();
+      }
+    } catch (error) {
+      setServerError("Signup failed. Please try again.");
+    }
   }
 
   const isError = !!serverError;
@@ -104,7 +118,7 @@ export function SignupForm() {
         placeholder="John Doe"
         error={fullNameError}
         isError={!!fullNameError}
-        disabled={isPending}
+        disabled={form.formState.isSubmitting}
         required
         leadingIcon={
           <span
@@ -127,7 +141,7 @@ export function SignupForm() {
         hint="Use .edu or university domain"
         error={emailError}
         isError={!!emailError}
-        disabled={isPending}
+        disabled={form.formState.isSubmitting}
         className="border-surface-container-high border"
         required
         leadingIcon={
@@ -149,7 +163,7 @@ export function SignupForm() {
           placeholder="Create a password"
           error={passwordError}
           isError={!!passwordError}
-          disabled={isPending}
+          disabled={form.formState.isSubmitting}
           className="border-surface-container-high border"
           required
           {...form.register("password")}
@@ -174,7 +188,7 @@ export function SignupForm() {
         placeholder="Confirm your password"
         error={confirmPasswordError}
         isError={!!confirmPasswordError}
-        disabled={isPending}
+        disabled={form.formState.isSubmitting}
         className="border-surface-container-high border"
         required
         {...form.register("confirmPassword")}
@@ -215,11 +229,11 @@ export function SignupForm() {
       {/* Submit Button */}
       <PrimaryActionButton
         type="submit"
-        isLoading={isPending}
+        isLoading={form.formState.isSubmitting}
         loadingText="Creating account..."
         icon="arrow_forward"
         iconPosition="end"
-        disabled={isPending}
+        disabled={form.formState.isSubmitting}
       >
         Create account
       </PrimaryActionButton>
@@ -236,7 +250,7 @@ export function SignupForm() {
         </div>
       </div>
 
-      <SSOButtons disabled={isPending} />
+      <SSOButtons disabled={form.formState.isSubmitting} />
 
       {/* Footer */}
       <AuthFooter
