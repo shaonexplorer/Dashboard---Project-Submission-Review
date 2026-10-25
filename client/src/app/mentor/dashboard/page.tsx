@@ -433,7 +433,7 @@ export default function MentorDashboardPage() {
       <main className="flex-1 w-full pt-16">
         <div className="max-w-[1440px] w-full mx-auto px-6 py-10 flex flex-col gap-6">
           <MentorDashboardHeader
-            mentorName={user.fullName}
+            mentorName={user.name ?? "Mentor"}
             isRefreshing={submissionsQuery.isFetching}
             onRefresh={handleRefresh}
           />

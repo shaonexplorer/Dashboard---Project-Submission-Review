@@ -93,7 +93,7 @@ export function AppHeader() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-label-md text-on-surface leading-tight font-medium block truncate">
-                      {user?.fullName ?? "Student"}
+                      {user?.name ?? "Student"}
                     </span>
                     <span className="text-label-sm text-on-surface-variant text-code-sm block truncate">
                       {user
@@ -250,7 +250,7 @@ export function AppHeader() {
             </div>
             <div className="hidden sm:flex flex-col text-left">
               <span className="text-label-md text-on-surface leading-tight font-medium">
-                {user?.fullName ?? "Student"}
+                {user?.name ?? "Student"}
               </span>
               <span className="text-label-sm text-on-surface-variant text-code-sm">
                 {user ? accountSubLabel(user.role, user.id) : "Student Portal"}

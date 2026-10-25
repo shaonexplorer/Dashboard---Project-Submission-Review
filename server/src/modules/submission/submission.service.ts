@@ -478,7 +478,7 @@ const MENTOR_SUBMISSION_SELECT = {
   student: {
     select: {
       id: true,
-      fullName: true,
+      name: true,
       email: true,
     },
   },
@@ -541,7 +541,7 @@ const buildSubmissionWhere = (
   if (search) {
     where.OR = [
       { projectName: { contains: search, mode: "insensitive" } },
-      { student: { fullName: { contains: search, mode: "insensitive" } } },
+      { student: { name: { contains: search, mode: "insensitive" } } },
       { student: { email: { contains: search, mode: "insensitive" } } },
     ];
   }
@@ -606,6 +606,11 @@ export const getSubmissionsService = async (query: SubmissionListQuery) => {
   const data: MentorSubmission[] = submissions.map((submission) => ({
     ...submission,
     submittedAt: submission.createdAt,
+    student: {
+      id: submission.student.id,
+      fullName: submission.student.name ?? "Unknown Student",
+      email: submission.student.email ?? "",
+    },
   }));
 
   return {
@@ -805,5 +810,10 @@ export const updateSubmissionStatusService = async (
   return {
     ...submission,
     submittedAt: submission.createdAt,
+    student: {
+      id: submission.student.id,
+      fullName: submission.student.name ?? "Unknown Student",
+      email: submission.student.email ?? "",
+    },
   };
 };

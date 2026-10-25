@@ -1,3 +1,4 @@
+
 generator client {
   // The application imports the client from `src/generated/prisma/client`,
   // so the generator has to write there rather than into node_modules.
@@ -7,6 +8,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  
 }
 
 enum UserRole {
@@ -21,17 +23,93 @@ enum SubmissionStatus {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  fullName     String
-  email        String   @unique
-  passwordHash String
-  role         UserRole @default(STUDENT)
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  passwordHash  String?
+  role          UserRole  @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
+  // BetterAuth relations
+  accounts      Account[]
+  sessions      Session[]
+  verifications Verification[]
+
+  // App relations
   submissions         Submission[] @relation("StudentSubmission")
   reviewedSubmissions Submission[] @relation("SubmissionReviewer")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@map("user")
+}
+
+model Account {
+  id                     String   @id @default(uuid())
+  accountId              String   @default(uuid())
+  providerId             String   @default("credential")
+  userId                 String
+  accessToken            String?  @db.Text
+  refreshToken           String?  @db.Text
+  idToken                String?  @db.Text
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt  DateTime?
+  scope                  String?
+  password               String?  @db.Text
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Legacy columns (required by database NOT NULL constraints)
+  type                   String   @default("credential")
+  provider               String   @default("credential")
+  providerAccountId      String   @default(uuid())
+  refresh_token          String?  @db.Text
+  access_token           String?  @db.Text
+  expires_at             Int?
+  token_type             String?
+  id_token               String?  @db.Text
+  session_state          String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @default(uuid())
+  userId       String
+  expiresAt    DateTime
+  expires      DateTime @default(now())
+  token        String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  ipAddress    String?
+  userAgent    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  identifier String
+  value      String
+  expiresAt  DateTime
+  userId     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([identifier])
+  @@map("verification")
 }
 
 /// A catalog of assignable projects.
@@ -39,13 +117,14 @@ model User {
 /// The `id` is a human-readable catalog code ("ph-01") rather than a generated
 /// UUID: mentors and students refer to "project 01" out loud, and a stable
 /// readable code keeps the catalog and the API payloads self-describing.
+
 model Project {
   id          String  @id
   name        String  @unique
   description String?
   /// Whether the entry is currently assignable. A retired entry keeps its
   /// submissions — it is hidden from the picker rather than deleted.
-  isActive Boolean @default(true)
+  isActive    Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -57,8 +136,8 @@ model Submission {
   id String @id @default(uuid())
 
   /// The catalog project this submission belongs to.
-  projectId String
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
   /// A server-written snapshot of the catalog name at submission time.
   ///
   /// The client never supplies it. It exists so the mentor table can search

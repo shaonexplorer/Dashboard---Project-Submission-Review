@@ -27,19 +27,28 @@ export function SignupForm() {
       fullName: "",
       email: "",
       password: "",
+      confirmPassword: "",
+      honorCode: false,
     },
   });
 
   const passwordValue = form.watch("password");
   const confirmPasswordValue = form.watch("confirmPassword");
 
-  function onSubmit(data: SignupInput) {
+  async function onSubmit(data: SignupInput) {
     setServerError(null);
-    signup(data, {
-      onError: (error) => {
-        setServerError(error.message || "Signup failed. Please try again.");
+    signup(
+      {
+        name: data.fullName,
+        email: data.email,
+        password: data.password,
       },
-    });
+      {
+        onError: (error) => {
+          setServerError(error.message || "Signup failed. Please try again.");
+        },
+      }
+    );
   }
 
   const isError = !!serverError;
@@ -187,6 +196,7 @@ export function SignupForm() {
             id="honorCode"
             type="checkbox"
             className="w-4 h-4 rounded text-primary focus:ring-primary border-outline-variant focus:ring-offset-0 cursor-pointer mt-0.5"
+            disabled={isPending}
             {...form.register("honorCode")}
           />
           <label

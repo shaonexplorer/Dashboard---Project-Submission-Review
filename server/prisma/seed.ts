@@ -1,6 +1,6 @@
-import { hash } from "bcryptjs";
 import { UserRole } from "@prisma/client";
 import { prisma } from "../src/config/prisma";
+import { auth } from "../src/lib/auth";
 
 /**
  * Seed the system mentor account and the project catalog.
@@ -13,7 +13,7 @@ import { prisma } from "../src/config/prisma";
  */
 
 const SEED_EMAIL = "mentor@example.com";
-const SEED_FULL_NAME = "System Mentor";
+const SEED_NAME = "System Mentor";
 const SEED_ROLE = UserRole.MENTOR;
 
 // Password for the seeded mentor account. Override with the
@@ -66,26 +66,44 @@ const PROJECT_CATALOG = [
 
 async function main(): Promise<void> {
   const email = SEED_EMAIL.trim().toLowerCase();
-  const passwordHash = await hash(SEED_PASSWORD, 10);
 
-  const user = await prisma.user.upsert({
-    where: { email },
-    update: {
-      fullName: SEED_FULL_NAME,
-      role: SEED_ROLE,
-      passwordHash,
-    },
-    create: {
-      fullName: SEED_FULL_NAME,
-      email,
-      passwordHash,
-      role: SEED_ROLE,
-    },
-  });
+  // Check if user already exists
+  const existingUser = await prisma.user.findUnique({ where: { email } });
 
-  console.log(
-    `Seeded mentor account: ${user.email} (${user.role}) — id: ${user.id}`,
-  );
+  if (existingUser) {
+    // Update existing user to ensure role is MENTOR and email is verified
+    await prisma.user.update({
+      where: { email },
+      data: {
+        name: SEED_NAME,
+        role: SEED_ROLE,
+        emailVerified: true,
+      },
+    });
+    console.log(`Updated mentor account: ${email} (${SEED_ROLE}) — id: ${existingUser.id}`);
+  } else {
+    // Create new user using BetterAuth API to ensure proper password hashing and Account record creation
+    await auth.api.signUpEmail({
+      body: {
+        email,
+        password: SEED_PASSWORD,
+        name: SEED_NAME,
+      },
+    });
+
+    // Update the role to MENTOR (default is STUDENT)
+    const createdUser = await prisma.user.findUnique({ where: { email } });
+    if (createdUser) {
+      await prisma.user.update({
+        where: { email },
+        data: {
+          role: SEED_ROLE,
+          emailVerified: true,
+        },
+      });
+      console.log(`Seeded mentor account: ${email} (${SEED_ROLE}) — id: ${createdUser.id}`);
+    }
+  }
 
   // The catalog is upserted by its id, never deleted. Re-running the seed
   // therefore updates the name and description of an entry that already

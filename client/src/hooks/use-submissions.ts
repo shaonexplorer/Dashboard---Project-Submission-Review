@@ -14,7 +14,6 @@ import {
 } from "@/lib/api/submissions";
 import { ApiRequestError } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query/query-keys";
-import { hasToken } from "@/lib/auth/token";
 
 /**
  * Loads every submission the authenticated student owns.
@@ -27,9 +26,8 @@ export function useMySubmissions() {
   return useQuery({
     queryKey: queryKeys.mySubmissions,
     queryFn: getMySubmissionsApi,
-    // The request only runs when a token is stored locally, which is the
-    // session marker the logout flow clears.
-    enabled: hasToken(),
+    // Authentication is handled by BetterAuth via httpOnly cookies.
+    // The query runs unconditionally; a 401 response will be handled by the page.
     // The server is the source of truth for "what has been submitted", so the
     // query should never be served from a stale cache after a navigation.
     staleTime: 0,
@@ -52,7 +50,8 @@ export function useMySubmissionsPaginated(query: StudentSubmissionListQuery) {
   return useQuery<PaginatedSubmissionsResponse>({
     queryKey: queryKeys.mySubmissionsPaginated(query),
     queryFn: () => getMySubmissionsPaginatedApi(query),
-    enabled: hasToken(),
+    // Authentication is handled by BetterAuth via httpOnly cookies.
+    // The query runs unconditionally; a 401 response will be handled by the page.
     // Keep the previous page visible while the next one loads, instead of
     // collapsing the table into a skeleton on every interaction.
     placeholderData: keepPreviousData,
@@ -134,7 +133,8 @@ export function useMySubmissionStats() {
   return useQuery<StudentSubmissionStats>({
     queryKey: queryKeys.mySubmissionsStats,
     queryFn: getMySubmissionStatsApi,
-    enabled: hasToken(),
+    // Authentication is handled by BetterAuth via httpOnly cookies.
+    // The query runs unconditionally; a 401 response will be handled by the page.
     staleTime: 30 * 1000, // 30 seconds - stats don't change often
     retry: false,
   });
@@ -156,7 +156,9 @@ export function useSubmissionById(submissionId: string | undefined) {
       const submissions = await getMySubmissionsApi();
       return submissions.find((s) => s.id === submissionId) ?? null;
     },
-    enabled: hasToken() && !!submissionId,
+    // Authentication is handled by BetterAuth via httpOnly cookies.
+    // The query runs unconditionally when submissionId is provided.
+    enabled: !!submissionId,
     staleTime: 0,
     retry: false,
   });

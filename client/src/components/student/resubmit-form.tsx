@@ -225,7 +225,7 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
           ) : null}
 
           <FieldGroup>
-            <Field data-invalid={!!errors.repoUrl}>
+            <Field>
               <FieldLabel htmlFor="resubmit-repoUrl">
                 GitHub Repository
                 <span
@@ -241,11 +241,9 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
                 inputMode="url"
                 className="pl-9 border-surface-container-high border"
                 placeholder="https://github.com/username/project-name"
+                error={errors.repoUrl?.message}
                 isError={!!errors.repoUrl}
                 aria-invalid={!!errors.repoUrl}
-                aria-describedby={
-                  errors.repoUrl ? "resubmit-repoUrl-error" : undefined
-                }
                 disabled={isPending}
                 leadingIcon={
                   <span
@@ -260,13 +258,9 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
               <FieldDescription>
                 Point this at the commit that answers the mentor&apos;s notes.
               </FieldDescription>
-              <FieldError
-                id="resubmit-repoUrl-error"
-                errors={[errors.repoUrl]}
-              />
             </Field>
 
-            <Field data-invalid={!!errors.liveUrl}>
+            <Field>
               <FieldLabel htmlFor="resubmit-liveUrl">
                 Live Project
                 <span
@@ -282,11 +276,9 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
                 inputMode="url"
                 className="pl-9 border-surface-container-high border"
                 placeholder="https://orchestrator-app.vercel.app"
+                error={errors.liveUrl?.message}
                 isError={!!errors.liveUrl}
                 aria-invalid={!!errors.liveUrl}
-                aria-describedby={
-                  errors.liveUrl ? "resubmit-liveUrl-error" : undefined
-                }
                 disabled={isPending}
                 leadingIcon={
                   <span
@@ -301,13 +293,9 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
               <FieldDescription>
                 Make sure the deployment matches the submitted commit.
               </FieldDescription>
-              <FieldError
-                id="resubmit-liveUrl-error"
-                errors={[errors.liveUrl]}
-              />
             </Field>
 
-            <Field data-invalid={!!errors.description}>
+            <Field>
               <FieldLabel htmlFor="resubmit-description">
                 Description
                 <span
@@ -343,7 +331,7 @@ export function ResubmitForm({ submission }: { submission: Submission }) {
               </div>
               <FieldError
                 id="resubmit-description-error"
-                errors={[errors.description]}
+                errors={errors.description ? [{ message: errors.description.message }] : []}
               />
             </Field>
           </FieldGroup>

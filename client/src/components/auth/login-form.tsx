@@ -26,7 +26,7 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(data: LoginInput) {
+  async function onSubmit(data: LoginInput) {
     setServerError(null);
     login(data, {
       onError: (error) => {

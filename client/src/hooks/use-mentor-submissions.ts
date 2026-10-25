@@ -16,7 +16,6 @@ import type {
   SubmissionListQuery,
 } from "@/lib/api/mentor-submissions";
 import { queryKeys } from "@/lib/query/query-keys";
-import { hasToken } from "@/lib/auth/token";
 
 /**
  * Loads one page of the mentor submission table.
@@ -31,7 +30,8 @@ export function useMentorSubmissions(query: SubmissionListQuery) {
   return useQuery({
     queryKey: queryKeys.mentorSubmissions(query),
     queryFn: () => getSubmissionsApi(query),
-    enabled: hasToken(),
+    // Authentication is handled by BetterAuth via httpOnly cookies.
+    // The query runs unconditionally; a 401 response will be handled by the page.
     // Keep the previous page visible while the next one loads, instead of
     // collapsing the table into a skeleton on every interaction.
     placeholderData: keepPreviousData,
@@ -52,7 +52,8 @@ export function useSubmissionStats() {
   return useQuery({
     queryKey: queryKeys.mentorSubmissionStats,
     queryFn: getSubmissionStatsApi,
-    enabled: hasToken(),
+    // Authentication is handled by BetterAuth via httpOnly cookies.
+    // The query runs unconditionally; a 401 response will be handled by the page.
     staleTime: 0,
     retry: false,
   });
