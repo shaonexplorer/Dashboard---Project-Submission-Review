@@ -149,6 +149,13 @@ async function serverFetch<T>(
     headers.set("Cookie", cookieHeader);
   }
 
+  // const response = await fetch(`${getServerApiUrl()}${path}`, {
+  //   ...init,
+  //   headers,
+  //   credentials: "include", // Include cookies for cross-domain if needed
+  //   next: nextOptions,
+  // });
+
   const response = await fetch(`${getServerApiUrl()}${path}`, {
     ...init,
     headers,
