@@ -19,13 +19,21 @@ import { revalidateTag } from "next/cache";
  */
 export async function createSubmissionAction(
   payload: CreateSubmissionPayload,
-): Promise<{ success: true; data: Submission } | { success: false; error: string; code?: string; fieldErrors?: Array<{ field: string; message: string }> }> {
+): Promise<
+  | { success: true; data: Submission }
+  | {
+      success: false;
+      error: string;
+      code?: string;
+      fieldErrors?: Array<{ field: string; message: string }>;
+    }
+> {
   try {
     const submission = await createSubmissionServer(payload);
     // Revalidate relevant queries
-    revalidateTag("student-submissions");
-    revalidateTag("student-submissions-paginated");
-    revalidateTag("student-submission-stats");
+    revalidateTag("student-submissions", "max");
+    revalidateTag("student-submissions-paginated", "max");
+    revalidateTag("student-submission-stats", "max");
     return { success: true, data: submission };
   } catch (error) {
     if (error instanceof ServerApiError) {
@@ -47,13 +55,21 @@ export async function createSubmissionAction(
 export async function resubmitSubmissionAction(
   submissionId: string,
   payload: ResubmitSubmissionPayload,
-): Promise<{ success: true; data: Submission } | { success: false; error: string; code?: string; fieldErrors?: Array<{ field: string; message: string }> }> {
+): Promise<
+  | { success: true; data: Submission }
+  | {
+      success: false;
+      error: string;
+      code?: string;
+      fieldErrors?: Array<{ field: string; message: string }>;
+    }
+> {
   try {
     const submission = await resubmitSubmissionServer(submissionId, payload);
-    revalidateTag("student-submissions");
-    revalidateTag("student-submissions-paginated");
-    revalidateTag("student-submission-stats");
-    revalidateTag(`submission-${submissionId}`);
+    revalidateTag("student-submissions", "max");
+    revalidateTag("student-submissions-paginated", "max");
+    revalidateTag("student-submission-stats", "max");
+    revalidateTag(`submission-${submissionId}`, "max");
     return { success: true, data: submission };
   } catch (error) {
     if (error instanceof ServerApiError) {
@@ -75,12 +91,23 @@ export async function resubmitSubmissionAction(
 export async function updateSubmissionStatusAction(
   submissionId: string,
   payload: ReviewSubmissionPayload,
-): Promise<{ success: true; data: MentorSubmission } | { success: false; error: string; code?: string; fieldErrors?: Array<{ field: string; message: string }> }> {
+): Promise<
+  | { success: true; data: MentorSubmission }
+  | {
+      success: false;
+      error: string;
+      code?: string;
+      fieldErrors?: Array<{ field: string; message: string }>;
+    }
+> {
   try {
-    const submission = await updateSubmissionStatusServer(submissionId, payload);
-    revalidateTag("mentor-submissions");
-    revalidateTag("mentor-submission-stats");
-    revalidateTag(`submission-${submissionId}`);
+    const submission = await updateSubmissionStatusServer(
+      submissionId,
+      payload,
+    );
+    revalidateTag("mentor-submissions", "max");
+    revalidateTag("mentor-submission-stats", "max");
+    revalidateTag(`submission-${submissionId}`, "max");
     return { success: true, data: submission };
   } catch (error) {
     if (error instanceof ServerApiError) {
