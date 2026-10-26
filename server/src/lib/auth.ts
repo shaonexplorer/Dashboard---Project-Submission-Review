@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "../config/prisma";
 import { env } from "../config/env";
+import "dotenv/config";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -19,7 +20,10 @@ export const auth = betterAuth({
       secure: env.NODE_ENV === "production",
       httpOnly: true,
       path: "/",
-      // domain: process.env.COOKIE_DOMAIN ?? "http://localhost:5000",
+      domain:
+        env.NODE_ENV === "production"
+          ? process.env.COOKIE_DOMAIN
+          : " localhost",
     },
     // If backend and frontend share a parent domain, use this instead:
     // crossSubDomainCookies: {
