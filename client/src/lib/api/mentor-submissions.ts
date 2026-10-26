@@ -1,4 +1,4 @@
-import { fetcher } from "./fetcher";
+import { unifiedFetch as fetcher } from "./unified-fetcher";
 import type { Submission, SubmissionStatus } from "./submissions";
 
 /**

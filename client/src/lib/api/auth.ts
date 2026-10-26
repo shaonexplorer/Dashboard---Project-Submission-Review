@@ -1,4 +1,4 @@
-import { fetcher } from "./fetcher";
+import { unifiedFetch as fetcher } from "./unified-fetcher";
 
 const AUTH_API_BASE_URL = "/api/auth";
 
