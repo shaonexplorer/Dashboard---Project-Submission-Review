@@ -1,6 +1,6 @@
 "use client";
 
-import { useMySubmissions, useProjects } from "@/hooks/use-submissions";
+import { useMySubmissions } from "@/hooks/use-submissions";
 import { AppFooter, AppHeader } from "@/components/layout";
 import {
   EvaluationRubricCard,
@@ -14,7 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Submission } from "@/lib/api/submissions";
 
 export default function StudentDashboardPage() {
-  const { data: submissions = [], isPending: isSubmissionsPending } = useMySubmissions();
+  const { data: submissions = [], isPending: isSubmissionsPending } =
+    useMySubmissions();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -83,11 +84,7 @@ export default function StudentDashboardPage() {
 /**
  * Page header with the current submission state.
  */
-function PageHeader({
-  submissions,
-}: {
-  submissions: Submission[];
-}) {
+function PageHeader({ submissions }: { submissions: Submission[] }) {
   const hasSubmission = submissions.length > 0;
   const latest = submissions[0];
 
