@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
-import { getCurrentUserServer, getMySubmissionsServer } from "@/lib/server/api";
+"use client";
+
+import { useMySubmissions, useProjects } from "@/hooks/use-submissions";
 import { AppFooter, AppHeader } from "@/components/layout";
 import {
   EvaluationRubricCard,
@@ -7,21 +8,13 @@ import {
   StudentSubmissionForm,
   SubmissionSnapshotCard,
 } from "@/components/student";
-import Link from "next/link";
+import Link from "next/navigation";
 import { formatUtcDateTime } from "@/lib/format";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Submission } from "@/lib/api/submissions";
 
-export default async function StudentDashboardPage() {
-  // Fetch user session on the server
-  const user = await getCurrentUserServer({ cache: "no-store" });
-
-  // console.log({ user });
-
-  if (!user) {
-    redirect("/auth?tab=login&redirectTo=/student/dashboard");
-  }
-
-  // Fetch submissions on the server (SSR)
-  const submissions = await getMySubmissionsServer({ cache: "no-store" });
+export default function StudentDashboardPage() {
+  const { data: submissions = [], isPending: isSubmissionsPending } = useMySubmissions();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -29,7 +22,13 @@ export default async function StudentDashboardPage() {
 
       <main className="flex-1 w-full pt-16">
         <div className="max-w-[1440px] w-full mx-auto px-6 py-10 flex flex-col gap-6">
-          <PageHeader submissions={submissions} />
+          {isSubmissionsPending ? (
+            <div className="py-12 flex justify-center">
+              <Skeleton className="h-32 w-full rounded-xl" />
+            </div>
+          ) : (
+            <PageHeader submissions={submissions} />
+          )}
 
           {/* Submission policy */}
           <div className="p-4 rounded-lg bg-surface-container-lowest border border-surface-container-high/80 flex items-start sm:items-center justify-between gap-4">
@@ -53,7 +52,6 @@ export default async function StudentDashboardPage() {
           {/* Main content grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-8">
             <div className="lg:col-span-7 flex flex-col gap-6 min-w-0">
-              {/* Pass initial data to client component for hydration */}
               <StudentSubmissionForm initialSubmissions={submissions} />
             </div>
 
@@ -84,14 +82,11 @@ export default async function StudentDashboardPage() {
 
 /**
  * Page header with the current submission state.
- *
- * Every value shown here comes from the server — no cohort, deadline or mentor
- * assignment is invented.
  */
 function PageHeader({
   submissions,
 }: {
-  submissions: Awaited<ReturnType<typeof getMySubmissionsServer>>;
+  submissions: Submission[];
 }) {
   const hasSubmission = submissions.length > 0;
   const latest = submissions[0];
@@ -155,12 +150,12 @@ function PageHeader({
             {hasSubmission ? (
               <>
                 Your projects have been handed in.{" "}
-                <Link
+                <a
                   href="/student/my-projects"
                   className="text-primary font-medium hover:underline"
                 >
                   View the full submissions
-                </Link>
+                </a>
                 .
               </>
             ) : (
