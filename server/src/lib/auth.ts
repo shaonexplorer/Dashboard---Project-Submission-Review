@@ -16,7 +16,7 @@ export const auth = betterAuth({
     trustedProxyHeaders: true,
     useSecureCookies: env.NODE_ENV === "production", // Secure flag only in production (HTTPS)
     defaultCookieAttributes: {
-      sameSite: "lax", // Safe same-domain attributes enabled by Next.js rewrites proxy architecture
+      sameSite: "none", // Safe same-domain attributes enabled by Next.js rewrites proxy architecture
       secure: env.NODE_ENV === "production",
       httpOnly: true,
       path: "/",
