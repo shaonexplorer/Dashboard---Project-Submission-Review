@@ -74,7 +74,7 @@ app.use((req, _res, next) => {
 });
 
 // Global rate limiter — 100 requests per 02 minutes per session.
-app.use(globalRateLimiter);
+// app.use(globalRateLimiter);
 
 // Application routes
 app.use("/api", routes);

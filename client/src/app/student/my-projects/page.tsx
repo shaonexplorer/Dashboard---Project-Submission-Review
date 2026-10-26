@@ -1,5 +1,11 @@
 import { redirect } from "next/navigation";
-import { getCurrentUserServer, getMySubmissionsPaginatedServer, getMySubmissionStatsServer, getProjectsServer, type StudentSubmissionListQuery } from "@/lib/server/api";
+import {
+  getCurrentUserServer,
+  getMySubmissionsPaginatedServer,
+  getMySubmissionStatsServer,
+  getProjectsServer,
+  type StudentSubmissionListQuery,
+} from "@/lib/server/api";
 import { StudentMyProjectsClient } from "@/components/student/student-my-projects-client";
 
 /** The columns the server is able to sort by. */
@@ -9,7 +15,9 @@ const SORT_FIELDS: readonly ("createdAt" | "projectName" | "status")[] = [
   "status",
 ];
 
-function toSortField(id: string | undefined): "createdAt" | "projectName" | "status" {
+function toSortField(
+  id: string | undefined,
+): "createdAt" | "projectName" | "status" {
   return SORT_FIELDS.find((field) => field === id) ?? "createdAt";
 }
 
@@ -37,9 +45,13 @@ export default async function StudentMyProjectsPage({
 
   // Parse query parameters
   const page = Math.max(1, parseInt(resolvedSearchParams.page ?? "1", 10));
-  const limit = Math.min(100, Math.max(1, parseInt(resolvedSearchParams.limit ?? "10", 10)));
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(resolvedSearchParams.limit ?? "10", 10)),
+  );
   const search = resolvedSearchParams.search ?? "";
-  const status = (resolvedSearchParams.status ?? "") as StudentSubmissionListQuery["status"];
+  const status = (resolvedSearchParams.status ??
+    "") as StudentSubmissionListQuery["status"];
   const sortBy = toSortField(resolvedSearchParams.sortBy);
   const sortOrder = resolvedSearchParams.sortOrder === "asc" ? "asc" : "desc";
 
