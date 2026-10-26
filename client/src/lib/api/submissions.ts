@@ -1,4 +1,5 @@
-import { apiRequest, ApiRequestError } from "./client";
+import { fetcher } from "./fetcher";
+import { ApiRequestError } from "./client";
 
 /** Submission lifecycle states, mirroring the Prisma `SubmissionStatus` enum. */
 export type SubmissionStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -177,7 +178,7 @@ interface SubmissionResponse {
  */
 export async function getMySubmissionsApi(): Promise<Submission[]> {
   // Use the paginated endpoint with max limit to get all submissions
-  const response = await apiRequest<{
+  const response = await fetcher<{
     success: boolean;
     message: string;
     data?: (Submission & { project: Submission["project"] })[];
@@ -196,7 +197,7 @@ export async function getMySubmissionsApi(): Promise<Submission[]> {
 export async function createSubmissionApi(
   payload: CreateSubmissionPayload
 ): Promise<Submission> {
-  const response = await apiRequest<SubmissionResponse>("/submissions", {
+  const response = await fetcher<SubmissionResponse>("/submissions", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -219,7 +220,7 @@ export async function resubmitSubmissionApi(
   submissionId: string,
   payload: ResubmitSubmissionPayload
 ): Promise<Submission> {
-  const response = await apiRequest<SubmissionResponse>(
+  const response = await fetcher<SubmissionResponse>(
     `/submissions/${submissionId}/resubmit`,
     {
       method: "PUT",
@@ -312,7 +313,7 @@ export interface StudentSubmissionStats {
  * Fetches aggregate submission counts for the authenticated student.
  */
 export async function getMySubmissionStatsApi(): Promise<StudentSubmissionStats> {
-  const response = await apiRequest<{
+  const response = await fetcher<{
     success: boolean;
     message: string;
     data?: StudentSubmissionStats;
@@ -338,7 +339,7 @@ export async function getMySubmissionsPaginatedApi(
   query: StudentSubmissionListQuery,
 ): Promise<PaginatedSubmissionsResponse> {
   const params = buildStudentSubmissionListSearchParams(query);
-  const response = await apiRequest<{
+  const response = await fetcher<{
     success: boolean;
     message: string;
     data?: (Submission & { project: Submission["project"] })[];
