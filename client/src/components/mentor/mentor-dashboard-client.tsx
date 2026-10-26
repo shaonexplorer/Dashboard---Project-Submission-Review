@@ -97,15 +97,15 @@ function isSameSorting(a: SortingState, b: SortingState): boolean {
 }
 
 interface MentorDashboardClientProps {
-  /** Initial data from Server Component for hydration */
-  initialSubmissions: MentorSubmission[];
-  initialPagination: {
+  /** Initial data from Server Component for hydration (optional for client-side fetching) */
+  initialSubmissions?: MentorSubmission[];
+  initialPagination?: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
   };
-  initialStats: {
+  initialStats?: {
     total: number;
     pending: number;
     approved: number;
@@ -159,19 +159,32 @@ export function MentorDashboardClient({
   );
 
   const submissionsQuery = useMentorSubmissions(listQuery, {
-    initialData: {
-      submissions: initialSubmissions,
-      pagination: initialPagination,
-    },
+    initialData:
+      initialSubmissions && initialPagination
+        ? {
+            submissions: initialSubmissions,
+            pagination: initialPagination,
+          }
+        : undefined,
   });
   const statsQuery = useSubmissionStats({
     initialData: initialStats,
   });
   const reviewMutation = useReviewSubmission();
 
-  const submissions = submissionsQuery.data?.submissions ?? initialSubmissions;
-  const pagination = submissionsQuery.data?.pagination ?? initialPagination;
-  const stats = statsQuery.data ?? initialStats;
+  const submissions = submissionsQuery.data?.submissions ?? initialSubmissions ?? [];
+  const pagination = submissionsQuery.data?.pagination ?? initialPagination ?? {
+    page: 1,
+    limit: PAGE_SIZE,
+    total: 0,
+    totalPages: 1,
+  };
+  const stats = statsQuery.data ?? initialStats ?? {
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  };
 
   // console.log({ submissions });
 

@@ -52,14 +52,14 @@ function toSortField(
 
 interface StudentMyProjectsClientProps {
   /** Initial data from Server Component for hydration */
-  initialProjects: StudentProjectRow[];
-  initialPagination: {
+  initialProjects?: StudentProjectRow[];
+  initialPagination?: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
   };
-  initialStats: {
+  initialStats?: {
     total: number;
     pending: number;
     active: number;
@@ -67,7 +67,7 @@ interface StudentMyProjectsClientProps {
     rejected: number;
     archived: number;
   };
-  initialProjectsCatalog: {
+  initialProjectsCatalog?: {
     id: string;
     name: string;
     description: string | null;
@@ -132,10 +132,13 @@ export function StudentMyProjectsClient({
     isFetching: isRefetching,
     refetch: refetchSubmissions,
   } = useMySubmissionsPaginated(query, {
-    initialData: {
-      submissions: initialProjects,
-      pagination: initialPagination,
-    },
+    initialData:
+      initialProjects && initialPagination
+        ? {
+            submissions: initialProjects,
+            pagination: initialPagination,
+          }
+        : undefined,
   });
 
   const { data: stats } = useMySubmissionStats({
@@ -148,9 +151,24 @@ export function StudentMyProjectsClient({
     initialData: initialProjectsCatalog,
   });
 
-  const displayProjects = paginatedData?.submissions ?? initialProjects;
-  const displayPagination = paginatedData?.pagination ?? initialPagination;
-  const displayStats = stats ?? initialStats;
+  const displayProjects =
+    paginatedData?.submissions ?? initialProjects ?? [];
+  const displayPagination = paginatedData?.pagination ??
+    initialPagination ?? {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 1,
+    };
+  const displayStats = stats ??
+    initialStats ?? {
+      total: 0,
+      pending: 0,
+      active: 0,
+      approved: 0,
+      rejected: 0,
+      archived: 0,
+    };
 
   // Sync URL with state
   useEffect(() => {

@@ -1,83 +1,64 @@
-import { redirect } from "next/navigation";
-import {
-  getCurrentUserServer,
-  getMySubmissionsPaginatedServer,
-  getMySubmissionStatsServer,
-  getProjectsServer,
-  type StudentSubmissionListQuery,
-} from "@/lib/server/api";
+"use client";
+
+import { useCurrentUser } from "@/hooks/use-auth";
 import { StudentMyProjectsClient } from "@/components/student/student-my-projects-client";
+import { AppFooter, AppHeader } from "@/components/layout";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-/** The columns the server is able to sort by. */
-const SORT_FIELDS: readonly ("createdAt" | "projectName" | "status")[] = [
-  "createdAt",
-  "projectName",
-  "status",
-];
+export default function StudentMyProjectsPage() {
+  const { user, isResolving: isUserResolving } = useCurrentUser();
 
-function toSortField(
-  id: string | undefined,
-): "createdAt" | "projectName" | "status" {
-  return SORT_FIELDS.find((field) => field === id) ?? "createdAt";
-}
-
-export default async function StudentMyProjectsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    page?: string;
-    limit?: string;
-    search?: string;
-    status?: string;
-    sortBy?: string;
-    sortOrder?: string;
-  }>;
-}) {
-  // Await searchParams (Next.js 15)
-  const resolvedSearchParams = await searchParams;
-
-  // Fetch user session on the server
-  const user = await getCurrentUserServer({ cache: "no-store" });
-
-  if (!user) {
-    redirect("/auth?tab=login&redirectTo=/student/my-projects");
+  if (isUserResolving) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <AppHeader />
+        <main className="flex-1 w-full pt-16">
+          <div className="max-w-[1440px] w-full mx-auto px-6 py-10 flex flex-col gap-6 animate-pulse">
+            <Skeleton className="h-12 w-64 rounded-lg" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+        </main>
+        <AppFooter />
+      </div>
+    );
   }
 
-  // Parse query parameters
-  const page = Math.max(1, parseInt(resolvedSearchParams.page ?? "1", 10));
-  const limit = Math.min(
-    100,
-    Math.max(1, parseInt(resolvedSearchParams.limit ?? "10", 10)),
-  );
-  const search = resolvedSearchParams.search ?? "";
-  const status = (resolvedSearchParams.status ??
-    "") as StudentSubmissionListQuery["status"];
-  const sortBy = toSortField(resolvedSearchParams.sortBy);
-  const sortOrder = resolvedSearchParams.sortOrder === "asc" ? "asc" : "desc";
+  if (!user) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <AppHeader />
+        <main className="flex-1 w-full pt-16 flex items-center justify-center px-6">
+          <div className="max-w-md text-center flex flex-col gap-4">
+            <span
+              className="material-symbols-outlined text-[32px] text-outline mx-auto"
+              aria-hidden="true"
+            >
+              lock
+            </span>
+            <h1 className="text-headline-md text-on-surface">
+              Please sign in to view your projects
+            </h1>
+            <p className="text-body-md text-on-surface-variant">
+              Your session is missing or has expired. Sign in again to continue.
+            </p>
+            <Button
+              render={
+                <Link
+                  href="/auth?tab=login&redirectTo=/student/my-projects"
+                />
+              }
+              className="self-center"
+            >
+              Sign in
+            </Button>
+          </div>
+        </main>
+        <AppFooter />
+      </div>
+    );
+  }
 
-  const query: StudentSubmissionListQuery = {
-    page,
-    limit,
-    search: search || undefined,
-    status: status || undefined,
-    sortBy,
-    sortOrder,
-  };
-
-  // Fetch data in parallel on the server
-  const [paginatedData, stats, projects] = await Promise.all([
-    getMySubmissionsPaginatedServer(query, { cache: "no-store" }),
-    getMySubmissionStatsServer({ cache: "no-store" }),
-    getProjectsServer({ revalidate: 3600 }),
-  ]);
-
-  // Pass initial data to client component for hydration
-  return (
-    <StudentMyProjectsClient
-      initialProjects={paginatedData.submissions}
-      initialPagination={paginatedData.pagination}
-      initialStats={stats}
-      initialProjectsCatalog={projects}
-    />
-  );
+  return <StudentMyProjectsClient />;
 }
