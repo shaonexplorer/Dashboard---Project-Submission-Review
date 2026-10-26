@@ -1,4 +1,4 @@
-import { fetcher } from "./fetcher";
+import { unifiedFetch as fetcher } from "./unified-fetcher";
 
 /**
  * An entry in the project catalog.

@@ -1,4 +1,4 @@
-import { fetcher } from "./fetcher";
+import { unifiedFetch as fetcher } from "./unified-fetcher";
 import { ApiRequestError } from "./client";
 
 /** Submission lifecycle states, mirroring the Prisma `SubmissionStatus` enum. */
