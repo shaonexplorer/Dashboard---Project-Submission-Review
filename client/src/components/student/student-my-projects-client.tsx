@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   useMySubmissionsPaginated,
@@ -30,6 +29,7 @@ import type {
 } from "@/lib/api/submissions";
 import type { SubmissionFormValues } from "@/lib/validations/submission";
 import type { SortingState } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
 
 /** Rows per page. The server enforces the same maximum. */
 const PAGE_SIZE = 10;
@@ -81,9 +81,6 @@ export function StudentMyProjectsClient({
   initialStats,
   initialProjectsCatalog,
 }: StudentMyProjectsClientProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   // Table state - synced with URL
   const [searchInput, setSearchInput] = useState("");
   const [sorting, setSorting] = useState<SortingState>(INITIAL_SORTING);
@@ -94,6 +91,8 @@ export function StudentMyProjectsClient({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [preSelectedProject, setPreSelectedProject] =
     useState<StudentProjectRow | null>(null);
+
+  const router = useRouter();
 
   // Debounce search input to avoid firing a request on every keystroke
   const search = useDebouncedValue(searchInput, 400);
@@ -155,19 +154,32 @@ export function StudentMyProjectsClient({
 
   // Sync URL with state
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams();
+
     params.set("page", String(page));
     params.set("limit", String(limit));
-    if (search) params.set("search", search);
-    if (statusFilter) params.set("status", statusFilter);
+
+    if (search) {
+      params.set("search", search);
+    } else {
+      params.delete("search");
+    }
+
+    if (statusFilter) {
+      params.set("status", statusFilter);
+    } else {
+      params.delete("status");
+    }
+
     if (sorting[0]) {
       params.set("sortBy", sorting[0].id);
       params.set("sortOrder", sorting[0].desc ? "desc" : "asc");
     }
+
     router.replace(`/student/my-projects?${params.toString()}`, {
       scroll: false,
     });
-  }, [page, limit, search, statusFilter, sorting, router, searchParams]);
+  }, [page, limit, search, statusFilter, sorting, router]);
 
   // Reset page when filters change
   useEffect(() => {

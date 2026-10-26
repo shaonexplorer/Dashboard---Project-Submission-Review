@@ -20,10 +20,10 @@ export const auth = betterAuth({
       secure: env.NODE_ENV === "production",
       httpOnly: true,
       path: "/",
-      domain:
-        env.NODE_ENV === "production"
-          ? process.env.COOKIE_DOMAIN
-          : " localhost",
+      // domain:
+      //   env.NODE_ENV === "production"
+      //     ? process.env.COOKIE_DOMAIN
+      //     : " localhost",
     },
     // If backend and frontend share a parent domain, use this instead:
     // crossSubDomainCookies: {
