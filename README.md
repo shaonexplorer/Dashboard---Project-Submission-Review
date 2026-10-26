@@ -21,11 +21,10 @@ A simple, secure, and maintainable full-stack platform where students submit the
 | Data table | TanStack Table |
 | Backend | Node.js, Express.js |
 | Database | PostgreSQL + Prisma ORM |
-| Authentication | JWT (HS256) + bcrypt |
+| Authentication | JWT (HS256) + bcrypt (via BetterAuth) |
 | Authorization | Role-Based Access Control (STUDENT / MENTOR) |
 | Rate limiting | express-rate-limit |
 | HTTP security | Helmet + CORS |
-| JWT verification (frontend) | jose (Edge-compatible) |
 
 ## Repository structure
 
@@ -34,14 +33,14 @@ project-submission-dashboard/
 │
 ├── client/              # Next.js frontend (App Router)
 │   ├── src/
-│   │   ├── app/         # Pages: (auth)/login, (auth)/signup, student/dashboard, mentor/dashboard
-│   │   ├── components/  # ui, auth, student, mentor, shared
-│   │   ├── services/    # API wrappers (auth.service.ts, submission.service.ts)
-│   │   ├── hooks/       # TanStack Query hooks
+│   │   ├── app/         # Pages: (auth)/login, (auth)/signup, student/dashboard, student/my-projects, student/submission/[id], mentor/dashboard
+│   │   ├── components/  # ui, auth, student, mentor, shared, layout
+│   │   ├── lib/         # Utility helpers (api client, auth client, material-symbols, utils)
+│   │   ├── hooks/       # Custom React hooks
+│   │   ├── providers/   # QueryClientProvider + AuthProvider (combined in Providers)
 │   │   ├── schemas/     # Zod validation schemas
 │   │   ├── types/       # TypeScript types
-│   │   ├── providers/   # Query client + auth providers
-│   │   └── lib/         # Utility helpers
+│   │   └── lib/         # API client (apiRequest), validations
 │   ├── .env.local       # Frontend environment variables (not committed)
 │   ├── .env.example     # Frontend environment variable template
 │   └── package.json
@@ -53,13 +52,26 @@ project-submission-dashboard/
 │   │   └── migrations/
 │   ├── src/
 │   │   ├── config/      # env.ts, prisma.ts
-│   │   ├── controllers/ # auth.controller.ts, submission.controller.ts
-│   │   ├── services/    # auth.service.ts, submission.service.ts
-│   │   ├── routes/      # auth.routes.ts, submission.routes.ts
-│   │   ├── schemas/     # auth.schema.ts, submission.schema.ts
-│   │   ├── middleware/  # authenticate, authorize, validate, rate-limit, not-found, error-handler
-│   │   ├── utils/       # api-error, jwt, password
-│   │   ├── types/       # express.d.ts
+│   │   ├── modules/     # Feature modules (auth, project, submission)
+│   │   │   ├── auth/
+│   │   │   │   ├── auth.middleware.ts
+│   │   │   │   ├── auth.routes.ts
+│   │   │   │   └── lib/auth.ts (BetterAuth config)
+│   │   │   ├── project/
+│   │   │   │   ├── project.controller.ts
+│   │   │   │   ├── project.routes.ts
+│   │   │   │   ├── project.service.ts
+│   │   │   │   └── project.validations.ts
+│   │   │   └── submission/
+│   │   │       ├── submission.controller.ts
+│   │   │       ├── submission.routes.ts
+│   │   │       ├── submission.service.ts
+│   │   │       ├── submission.validations.ts
+│   │   │       ├── submissionRateLimiter.middleware.ts
+│   │   │       └── authRateLimiter.middleware.ts
+│   │   ├── middleware/  # Global middleware (rateLimiter, error, not-found, validate)
+│   │   ├── utils/       # api-error, api-response, async-handler, jwt
+│   │   ├── types/       # express.d.ts, generated Prisma types
 │   │   ├── app.ts
 │   │   └── server.ts
 │   ├── .env             # Backend environment variables (not committed)
@@ -76,7 +88,7 @@ project-submission-dashboard/
 └── README.md
 ```
 
-Backend responsibility chain:
+Backend responsibility chain (module-based):
 
 ```text
 Route → Authentication → Authorization → Validation → Controller → Service → Prisma ORM → PostgreSQL
@@ -84,34 +96,32 @@ Route → Authentication → Authorization → Validation → Controller → Ser
 
 ## Authentication flow
 
-The frontend uses **Next.js API routes** (`client/src/app/api/auth/*`) as a proxy layer between the browser and the Express backend. This solves cross-domain cookie issues in production (Vercel frontend ↔ Render/Railway backend).
+The frontend uses a **centralized API client** (`client/src/lib/api/client.ts`) with an `apiRequest` utility that handles all authenticated requests to the Express backend. Authentication is cookie-based — the `apiRequest` function always sends `credentials: "include"`.
 
 ```
-Browser → Next.js API route → Express backend (sets JWT in httpOnly cookie)
-                                    ↓
-                         Next.js reads cookie, sets it on own domain
-                                    ↓
-                         Returns { user, token } to browser
+Browser → apiRequest (credentials: include) → Express backend (sets/reads JWT in httpOnly cookie)
 ```
 
 **Key points:**
-- JWT lives in an **httpOnly cookie** on the Next.js domain (set by `/api/auth/login` and `/api/auth/signup`)
-- The token is also returned in the JSON response body so the client can store it in `localStorage` as a **session marker** (enables `useCurrentUser` query)
-- Middleware verifies the JWT **locally** using the shared `JWT_SECRET` — no cross-domain call to the backend
-- `/api/auth/me` proxies to the backend with the cookie for fresh user data
-- Logout clears the cookie via `/api/auth/logout`
+- JWT lives in an **httpOnly cookie** on the backend domain (set by backend auth endpoints)
+- The `apiRequest` utility automatically includes credentials on every request
+- BetterAuth manages session state on the client via nanostores (no SessionProvider needed)
+- Middleware verifies the JWT on the backend using the shared `JWT_SECRET`
+- Logout clears the cookie via the backend auth endpoint
 
 This architecture works identically on localhost and in production.
 
 ## Middleware
 
-The Next.js middleware (`client/src/middleware.ts`) protects `/student/*` and `/mentor/*` routes:
-
-1. Reads the `token` cookie from the request (same domain — always available)
-2. Verifies JWT locally using `jose` with `JWT_SECRET` (Node.js runtime)
-3. Extracts `userId` and `role` from the payload
-4. Redirects to `/auth` if token is missing, invalid, or role doesn't match the route
-5. Runs in **Node.js runtime** (`export const runtime = "nodejs"`) for crypto compatibility
+The Express middleware chain (`server/src/middleware/`) handles:
+- **Global rate limiting** — 100 requests per 2 minutes
+- **Auth rate limiting** — 5 requests per minute on auth endpoints
+- **Submission rate limiting** — 5 requests per 10 minutes on submission endpoints
+- **Validation** — Zod schema validation via `validate` middleware
+- **Authentication** — JWT verification via `authenticate` middleware
+- **Authorization** — Role checking via `authorize("MENTOR")` / `authorize("STUDENT")`
+- **Error handling** — Centralized error responses via `errorHandler`
+- **Not found** — 404 handler for unmatched routes
 
 Copy the example files and fill in real values before running the app:
 
@@ -144,8 +154,9 @@ The schema lives in `server/prisma/schema.prisma`:
 
 - `User` — id, fullName, email (unique), passwordHash, role (STUDENT / MENTOR), createdAt, updatedAt
 - `Submission` — id, projectName, repoUrl, liveUrl, description, status (PENDING / APPROVED / REJECTED), studentId (unique), student relation, feedback, reviewedAt, reviewedById, createdAt, updatedAt
+- `Project` — id, name, slug (unique), description, repoUrl, liveUrl, thumbnailUrl, technologies[], order, isActive, createdAt, updatedAt
 
-Indexes: `Submission.status`, `Submission.createdAt`.
+Indexes: `Submission.status`, `Submission.createdAt`, `Project.slug`.
 
 ## Setup
 
@@ -192,28 +203,34 @@ The password is hashed with bcrypt and taken from the `SEED_MENTOR_PASSWORD` env
 
 ## API endpoints
 
-All endpoints below are **Next.js API routes** (under `client/src/app/api/*`) that proxy to the Express backend. The browser calls these on the frontend domain, avoiding CORS/cookie issues.
+All endpoints are **Express backend routes** (mounted at `/api/*`). The frontend calls these directly via the `apiRequest` utility.
 
-Auth (Next.js routes):
+Auth (`/api/auth`):
 
-- `POST /api/auth/signup` — student registration (proxies to backend, sets httpOnly cookie + returns token)
-- `POST /api/auth/login` — student or mentor login (proxies to backend, sets httpOnly cookie + returns token)
-- `GET /api/auth/me` — current user (proxies to backend with cookie, returns user)
+- `POST /api/auth/signup` — student registration (rate-limited)
+- `POST /api/auth/login` — student or mentor login (rate-limited)
+- `GET /api/auth/me` — current user (requires auth cookie)
 - `POST /api/auth/logout` — clears httpOnly cookie
 
-Student (proxied to backend with auth cookie):
+Student (`/api/submissions`, requires STUDENT role):
 
-- `POST /api/submissions` — create a submission (STUDENT, rate-limited)
-- `GET /api/submissions/me` — own submission (STUDENT)
+- `POST /api/submissions` — create a submission (rate-limited)
+- `GET /api/submissions/me` — own submission
+- `PATCH /api/submissions/me` — update own submission (resubmit)
 
-Mentor (proxied to backend with auth cookie):
+Mentor (`/api/submissions`, requires MENTOR role):
 
-- `GET /api/submissions` — paginated, filterable, searchable, sortable list (MENTOR)
-- `GET /api/submissions/stats` — submission statistics (MENTOR)
-- `GET /api/submissions/:id` — single submission (MENTOR)
-- `PATCH /api/submissions/:id/status` — approve or reject with optional feedback (MENTOR)
+- `GET /api/submissions` — paginated, filterable, searchable, sortable list
+- `GET /api/submissions/stats` — submission statistics
+- `GET /api/submissions/:id` — single submission
+- `PATCH /api/submissions/:id/status` — approve or reject with optional feedback
 
-> **Note:** The actual Express backend endpoints are at `http://<backend>/api/auth/*` and `http://<backend>/api/submissions/*`. The Next.js routes forward requests with the `token` cookie for authentication.
+Project catalog (`/api/projects`, public):
+
+- `GET /api/projects` — list all active projects (paginated)
+- `GET /api/projects/:slug` — single project by slug
+
+> **Note:** The Express backend runs at `http://<backend>/api/*`. The frontend `apiRequest` utility constructs the full URL using `NEXT_PUBLIC_API_URL`.
 
 ## Specification documents
 
@@ -226,7 +243,7 @@ Mentor (proxied to backend with auth cookie):
 
 | Role | Can |
 | --- | --- |
-| STUDENT | Sign up, log in, submit one project, view own submission status and feedback |
+| STUDENT | Sign up, log in, submit one project, view own submission status and feedback, resubmit if rejected |
 | MENTOR | Log in, view all submissions, paginate/filter/search/sort, approve or reject with feedback, view statistics |
 
 ## Security
@@ -234,7 +251,18 @@ Mentor (proxied to backend with auth cookie):
 - Passwords are hashed with bcrypt (never stored or returned in plain text)
 - JWT contains only identity claims (`userId`, `role`)
 - Protected API routes with backend-enforced RBAC
-- Middleware verifies JWT **locally** using shared `JWT_SECRET` (no backend call, works cross-domain)
+- Middleware verifies JWT on backend using shared `JWT_SECRET`
 - Rate limiting on auth and submission endpoints
 - Helmet security headers and strict CORS (no `origin: "*"`)
 - Server-side validation with Zod; database-level uniqueness constraints on `User.email` and `Submission.studentId`
+- BetterAuth handles secure session management with httpOnly cookies
+
+## Frontend Architecture Highlights
+
+- **TanStack Query** for server state management (5 min stale time, 1 retry, no refetch on window focus)
+- **Centralized API client** (`apiRequest`) with typed error handling (`ApiRequestError` with status, fieldErrors, code)
+- **BetterAuth React client** for session management (nanostores-based, no provider needed)
+- **Combined Providers** component wraps `QueryClientProvider` and initializes auth client
+- **Material Symbols** subset font for icons (check `client/src/lib/material-symbols.ts` for available ligatures)
+- **Design system** in `client/src/app/globals.css` with CSS variables for colors, typography, spacing, shadows
+- **Route groups**: `(auth)` for login/signup, `student/` and `mentor/` for protected routes
