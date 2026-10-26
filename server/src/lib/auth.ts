@@ -16,20 +16,11 @@ export const auth = betterAuth({
     trustedProxyHeaders: true,
     useSecureCookies: env.NODE_ENV === "production", // Secure flag only in production (HTTPS)
     defaultCookieAttributes: {
-      sameSite: env.NODE_ENV === "production" ? "none" : "lax", // none requires secure
+      sameSite: "lax", // Safe same-domain attributes enabled by Next.js rewrites proxy architecture
       secure: env.NODE_ENV === "production",
       httpOnly: true,
       path: "/",
-      // domain:
-      //   env.NODE_ENV === "production"
-      //     ? process.env.COOKIE_DOMAIN
-      //     : " localhost",
     },
-    // If backend and frontend share a parent domain, use this instead:
-    // crossSubDomainCookies: {
-    //   enabled: true,
-    //   domain: process.env.COOKIE_DOMAIN,
-    // },
   },
 
   emailAndPassword: {

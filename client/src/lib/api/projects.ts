@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { fetcher } from "./fetcher";
 
 /**
  * An entry in the project catalog.
@@ -33,7 +33,7 @@ interface ProjectsResponse {
  * returned rather than raised as an error.
  */
 export async function getProjectsApi(): Promise<Project[]> {
-  const response = await apiRequest<ProjectsResponse>("/projects");
+  const response = await fetcher<ProjectsResponse>("/projects");
 
   return response.data?.projects ?? [];
 }

@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { fetcher } from "./fetcher";
 import type { Submission, SubmissionStatus } from "./submissions";
 
 /**
@@ -155,7 +155,7 @@ export async function getSubmissionsApi(query: SubmissionListQuery): Promise<{
   pagination: PaginationMeta;
 }> {
   const params = buildSubmissionListSearchParams(query);
-  const response = await apiRequest<PaginatedResponse>(
+  const response = await fetcher<PaginatedResponse>(
     `/submissions?${params.toString()}`,
   );
 
@@ -177,7 +177,7 @@ export async function getSubmissionsApi(query: SubmissionListQuery): Promise<{
  * currently loaded in the table.
  */
 export async function getSubmissionStatsApi(): Promise<SubmissionStats> {
-  const response = await apiRequest<StatsResponse>("/submissions/stats");
+  const response = await fetcher<StatsResponse>("/submissions/stats");
 
   return (
     response.data ?? {
@@ -200,7 +200,7 @@ export async function updateSubmissionStatusApi(
   submissionId: string,
   payload: ReviewSubmissionPayload,
 ): Promise<MentorSubmission> {
-  const response = await apiRequest<SubmissionResponse>(
+  const response = await fetcher<SubmissionResponse>(
     `/submissions/${submissionId}/status`,
     {
       method: "PATCH",
