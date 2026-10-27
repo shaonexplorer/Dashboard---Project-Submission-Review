@@ -93,14 +93,16 @@ npm run lint
 NODE_ENV=development
 PORT=5000
 DATABASE_URL=postgresql://user:pass@localhost:5432/dbname
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=7d
+# BetterAuth
+BETTER_AUTH_SECRET=your-secret-key-min-32-chars
+BETTER_AUTH_URL=http://localhost:5000
 CLIENT_URL=http://localhost:3000
 ```
 
 **Frontend** (`client/.env.local`):
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
+# BetterAuth
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:5000
 ```
 
 Copy from `.env.example` files in each directory.
@@ -144,10 +146,14 @@ export const signupController = asyncHandler(async (req, res) => { ... });
 router.post("/signup", validate(signupSchema, "body"), signupController);
 ```
 
-**Authentication** — Cookie-based JWT:
-- Token stored in `token` cookie (httpOnly, secure in production)
-- `authenticate` middleware reads cookie, verifies JWT, attaches `req.user`
-- `authorize("MENTOR")` middleware checks role
+**Authentication** — BetterAuth with Bearer Token Flow:
+- BetterAuth manages sessions with the `bearer` plugin
+- On sign-in, server returns `set-auth-token` header with session token
+- Client stores token in `auth_token` cookie on Next.js domain (SameSite: lax)
+- All requests send `Authorization: Bearer <token>` header (forwarded by unifiedFetch)
+- Server's bearer plugin validates token from Authorization header
+- Middleware (`client/src/middleware.ts`) checks `auth_token` cookie for route protection
+- `authorize("MENTOR")` / `authorize("STUDENT")` middleware checks role on backend
 
 ### Database Schema
 
@@ -285,7 +291,7 @@ after adding an icon.
 - Backend: Render / Railway / Fly.io
 - Database: Neon / Supabase / Railway PostgreSQL
 
-Production env vars needed: `CLIENT_URL`, `NEXT_PUBLIC_API_URL`, `DATABASE_URL`, `JWT_SECRET`
+Production env vars needed: `CLIENT_URL`, `NEXT_PUBLIC_BETTER_AUTH_URL`, `DATABASE_URL`, `BETTER_AUTH_SECRET`
 
 ## Design System
 
