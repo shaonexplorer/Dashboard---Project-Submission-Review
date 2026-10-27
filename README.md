@@ -96,20 +96,41 @@ Route → Authentication → Authorization → Validation → Controller → Ser
 
 ## Authentication flow
 
-The frontend uses a **centralized API client** (`client/src/lib/api/client.ts`) with an `apiRequest` utility that handles all authenticated requests to the Express backend. Authentication is cookie-based — the `apiRequest` function always sends `credentials: "include"`.
+The frontend uses a **unified fetcher** (`client/src/lib/api/unified-fetcher.ts`) with BetterAuth's **bearer token** flow. The session token is stored in a cookie on the Next.js client domain and forwarded to the Express backend via the `Authorization: Bearer <token>` header.
 
 ```
-Browser → apiRequest (credentials: include) → Express backend (sets/reads JWT in httpOnly cookie)
+Browser (Client Components)     Browser (Server Components)
+         │                              │
+         ▼                              ▼
+auth_client.signIn()             Server Component
+         │                              │
+         ▼                              ▼
+set-auth-token header           cookies().get("auth_token")
+         │                              │
+         ▼                              ▼
+Cookie.set("auth_token")  →  Authorization: Bearer <token>
+         │                              │
+         ▼                              ▼
+unifiedFetch reads cookie       fetch() with Authorization header
+         │                              │
+         └──────────────┬───────────────┘
+                        ▼
+               Express backend
+               bearer plugin validates
+               Authorization header
 ```
 
 **Key points:**
-- JWT lives in an **httpOnly cookie** on the backend domain (set by backend auth endpoints)
-- The `apiRequest` utility automatically includes credentials on every request
-- BetterAuth manages session state on the client via nanostores (no SessionProvider needed)
-- Middleware verifies the JWT on the backend using the shared `JWT_SECRET`
-- Logout clears the cookie via the backend auth endpoint
+- BetterAuth with `bearer` plugin handles session management on the backend
+- On sign-in/sign-up, the server returns the session token in the `set-auth-token` response header
+- Client captures this header and stores the token in an `auth_token` cookie on the **Next.js domain** (SameSite: lax, httpOnly: false for client-side access)
+- **Client Components**: `unifiedFetch` reads the `auth_token` cookie and sends `Authorization: Bearer <token>` header
+- **Server Components**: `fetchFromApi` extracts `auth_token` from incoming request cookies and forwards it as `Authorization: Bearer <token>` header
+- **Route Protection**: Next.js middleware (`client/src/middleware.ts`) checks for `auth_token` cookie presence
+- **Logout**: Clears the `auth_token` cookie via `signOutWithCookieClear()`
+- No `credentials: "include"` needed — token is explicitly forwarded in Authorization header
 
-This architecture works identically on localhost and in production.
+This architecture works identically on localhost and in production (with proper `secure: true` in production).
 
 ## Middleware
 
@@ -136,15 +157,15 @@ Backend (`server/.env`):
 | --- | --- | --- |
 | PORT | Express server port | `5000` |
 | DATABASE_URL | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/db` |
-| JWT_SECRET | Secret for signing JWTs | long random string |
-| JWT_EXPIRES_IN | Token expiration | `7d` |
+| BETTER_AUTH_SECRET | Secret for BetterAuth sessions (min 32 chars) | long random string |
+| BETTER_AUTH_URL | Backend auth base URL | `http://localhost:5000` |
 | CLIENT_URL | Allowed frontend origin (CORS) | `http://localhost:3000` |
 
 Frontend (`client/.env.local`):
 
 | Variable | Description | Example |
 | --- | --- | --- |
-| NEXT_PUBLIC_API_URL | Backend API base URL | `http://localhost:5000/api` |
+| NEXT_PUBLIC_BETTER_AUTH_URL | Backend auth base URL | `http://localhost:5000` |
 
 Never commit actual `.env` files.
 
@@ -249,20 +270,22 @@ Project catalog (`/api/projects`, public):
 ## Security
 
 - Passwords are hashed with bcrypt (never stored or returned in plain text)
-- JWT contains only identity claims (`userId`, `role`)
+- Session tokens managed by BetterAuth with HMAC-signed cookies
 - Protected API routes with backend-enforced RBAC
-- Middleware verifies JWT on backend using shared `JWT_SECRET`
+- BetterAuth bearer plugin validates `Authorization: Bearer <token>` header on backend
+- Token stored in `auth_token` cookie on Next.js domain (SameSite: lax, httpOnly: false for client-side access)
 - Rate limiting on auth and submission endpoints
-- Helmet security headers and strict CORS (no `origin: "*"`)
+- Helmet security headers and strict CORS (no `origin: "*"`, exposes `set-auth-token` header)
 - Server-side validation with Zod; database-level uniqueness constraints on `User.email` and `Submission.studentId`
-- BetterAuth handles secure session management with httpOnly cookies
+- BetterAuth handles secure session management with the `bearer` plugin
 
 ## Frontend Architecture Highlights
 
 - **TanStack Query** for server state management (5 min stale time, 1 retry, no refetch on window focus)
-- **Centralized API client** (`apiRequest`) with typed error handling (`ApiRequestError` with status, fieldErrors, code)
-- **BetterAuth React client** for session management (nanostores-based, no provider needed)
+- **Unified fetcher** (`unifiedFetch`) for both Client and Server Components with typed error handling (`ApiRequestError` with status, fieldErrors, code)
+- **BetterAuth React client** with bearer token flow (stores `auth_token` cookie, sends Authorization header)
 - **Combined Providers** component wraps `QueryClientProvider` and initializes auth client
+- **Next.js middleware** (`client/src/middleware.ts`) for route protection via `auth_token` cookie check
 - **Material Symbols** subset font for icons (check `client/src/lib/material-symbols.ts` for available ligatures)
 - **Design system** in `client/src/app/globals.css` with CSS variables for colors, typography, spacing, shadows
 - **Route groups**: `(auth)` for login/signup, `student/` and `mentor/` for protected routes
