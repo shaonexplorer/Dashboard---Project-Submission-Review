@@ -18,12 +18,14 @@ const app = express();
 const allowedOrigins = env.CLIENT_URL.split(",").map((origin) => origin.trim());
 
 // CORS — allow configured frontend origins; credentials for cross-origin cookies
+// Expose set-auth-token header so the browser can read it after sign-in
 app.use(
   cors({
     origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["set-auth-token"],
   }),
 );
 

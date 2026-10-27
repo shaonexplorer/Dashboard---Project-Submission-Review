@@ -1,12 +1,13 @@
 import { ApiRequestError, ApiFieldError } from "./client";
+import Cookies from "js-cookie";
 
 /**
  * Unified fetcher that works in both Server Components and Client Components.
  *
  * - In Server Components: Uses `cookies()` from `next/headers` to forward the
  *   incoming request's cookies to the Express backend.
- * - In Client Components: Uses `fetch` with `credentials: "include"` to send
- *   cookies automatically.
+ * - In Client Components: Reads the `auth_token` cookie and sends it as
+ *   `Authorization: Bearer <token>` header.
  *
  * This replaces both `fetcher` (client-only) and `fetchFromApi` (server-only).
  */
@@ -28,7 +29,7 @@ export async function unifiedFetch<T>(
   };
 
   // In Server Components, we can forward cookies from the incoming request
-  // In Client Components, credentials: "include" handles cookies automatically
+  // In Client Components, we read the auth_token cookie and send as Bearer token
   let cookieString: string | undefined;
 
   try {
@@ -39,7 +40,17 @@ export async function unifiedFetch<T>(
     cookieString = cookieStore.toString();
   } catch {
     // Not in a Server Component context - cookies() not available
-    // Client Components will use credentials: "include" instead
+    // Client Components will use the auth_token cookie for Authorization header
+  }
+
+  // In Client Components (or when no server cookies), use the auth_token cookie
+  // for Authorization header. The auth_token cookie is set on the Next.js domain
+  // by the authClient's onSuccess handler.
+  if (!cookieString) {
+    const authToken = Cookies.get("auth_token");
+    if (authToken) {
+      requestHeaders.Authorization = `Bearer ${authToken}`;
+    }
   }
 
   if (cookieString) {

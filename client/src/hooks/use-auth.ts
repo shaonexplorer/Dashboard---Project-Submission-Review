@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { authClient } from "@/lib/auth/client";
+import { authClient, signOutWithCookieClear } from "@/lib/auth/client";
 import { queryKeys } from "@/lib/query/query-keys";
 import { useIsHydrated } from "@/hooks/use-is-hydrated";
 
@@ -159,7 +159,7 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      await authClient.signOut();
+      await signOutWithCookieClear();
     },
     onSuccess: () => {
       // Clear all queries
