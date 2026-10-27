@@ -4,9 +4,10 @@ import { getApiUrl } from "@/lib/utils";
 /**
  * Server-side fetcher for Next.js Server Components and Server Actions.
  *
- * Forwards the user's session cookie from the incoming Next.js request
- * to the Express backend API. This enables authenticated server-side
- * data fetching (e.g., in Server Components, generateMetadata, etc.).
+ * Forwards the user's session token from the incoming Next.js request
+ * to the Express backend API via Authorization header. This enables
+ * authenticated server-side data fetching (e.g., in Server Components,
+ * generateMetadata, etc.).
  *
  * @param path - API endpoint path (e.g., "/submissions/me")
  * @param init - Standard fetch RequestInit options
@@ -24,17 +25,24 @@ export async function fetchFromApi<T>(
 ): Promise<T> {
   // Get cookies from the incoming request (Next.js Server Component context)
   const cookieStore = await cookies();
-  const cookieString = cookieStore.toString();
+
+  // Extract auth_token from cookies for Authorization header
+  // The auth_token cookie is set on the Next.js domain by the authClient
+  const authToken = cookieStore.get("auth_token")?.value;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init.headers as Record<string, string> | undefined),
+  };
+
+  // Send the token as Authorization: Bearer header for the bearer plugin
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
 
   const response = await fetch(`${getApiUrl()}${path}`, {
     ...init,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers as Record<string, string> | undefined),
-      // Forward the client's cookie to the Express backend
-      Cookie: cookieString,
-    },
+    headers,
     // Prevent Next.js from caching authenticated responses
     cache: "no-store",
   });

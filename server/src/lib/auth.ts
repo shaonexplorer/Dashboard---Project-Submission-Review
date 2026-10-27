@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
+import { bearer } from "better-auth/plugins";
 import { prisma } from "../config/prisma";
 import { env } from "../config/env";
 import "dotenv/config";
@@ -11,6 +12,7 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: env.CLIENT_URL.split(",").map((origin) => origin.trim()),
+  plugins: [bearer()], // Enable bearer token authentication via Authorization header
 
   advanced: {
     trustedProxyHeaders: true,
